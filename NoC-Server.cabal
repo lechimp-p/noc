@@ -54,6 +54,7 @@ executable NoC-Server
                       , text ==1.1.*
                       , safecopy ==0.8.*
                       , ixset ==1.0.*
+                      , lens ==4.2.*
 
 Test-Suite test-NoC-Server
     type:               detailed-0.9

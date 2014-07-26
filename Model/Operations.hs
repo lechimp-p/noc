@@ -3,6 +3,7 @@ where
 
 import Data.Monoid
 
+import Model.UnsafeOperations
 import Model.Permissions
 import Model.BaseTypes
 import Model.OpMonad

@@ -12,6 +12,7 @@ import qualified Data.Set as S
 import Data.Text 
 import Data.IxSet (Indexable, empty, ixSet, ixFun) 
 import Data.SafeCopy (SafeCopy, base, deriveSafeCopy)
+import Control.Lens
 
 import Model.BaseTypes
 
@@ -35,6 +36,7 @@ instance Ord User where
     compare u u' = compare (_id u) (_id u')
 
 $(deriveSafeCopy 0 'base ''User) 
+makeLenses ''User
 
 -- An index for words in the name.
 newtype IxName = IxName Text 

@@ -12,6 +12,7 @@ import qualified Data.Set as S
 import Data.Text 
 import Data.IxSet (Indexable, empty, ixSet, ixFun) 
 import Data.SafeCopy (SafeCopy, base, deriveSafeCopy)
+import Control.Lens
 
 import Model.BaseTypes
 
@@ -33,6 +34,7 @@ instance Ord Channel where
     compare c c' = compare (_id c) (_id c') 
 
 $(deriveSafeCopy 0 'base ''Channel) 
+makeLenses ''Channel
 
 -- An index for words in the name.
 newtype IxName = IxName Text 
