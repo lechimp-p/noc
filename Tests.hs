@@ -6,4 +6,4 @@ where
 import Distribution.TestSuite
 
 tests :: IO [Test]
-tests = []
+tests = return [] 

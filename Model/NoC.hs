@@ -13,7 +13,7 @@ import Data.Text
 import Data.Time.Clock (UTCTime)
 import Data.IxSet (Indexable, empty, IxSet, ixSet, ixFun) 
 import Data.SafeCopy (SafeCopy, base, deriveSafeCopy)
-import Control.Lens
+import Control.Lens (makeLenses)
 
 import Model.BaseTypes
 import Model.Channel
@@ -22,11 +22,11 @@ import Model.Message
 
 data NoC = NoC 
     { _channels   :: IxSet Channel
-    , _nextChanId :: Int
-    , _user       :: IxSet User 
-    , _nextUserId :: Int
+    , _nextChanId :: ChanId 
+    , _users      :: IxSet User 
+    , _nextUserId :: UserId 
     , _messages   :: IxSet Message
-    , _nextMsgId  :: Int
+    , _nextMsgId  :: MsgId 
     , _admins     :: S.Set UserId
     }
     deriving (Data, Typeable)

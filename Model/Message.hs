@@ -13,7 +13,7 @@ import Data.Text
 import Data.Time.Clock (UTCTime)
 import Data.IxSet (Indexable, empty, ixSet, ixFun) 
 import Data.SafeCopy (SafeCopy, base, deriveSafeCopy)
-import Control.Lens
+import Control.Lens (makeLenses)
 
 import Model.BaseTypes
 

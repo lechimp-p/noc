@@ -1,16 +1,26 @@
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE TemplateHaskell #-}
+
 module Model.OpMonad
 where
 
 import Control.Monad
 import Control.Applicative
+import Control.Lens (makeLenses)
+import Data.Data (Data, Typeable)
 
 import Model.BaseTypes
 import Model.NoC
 
 data OpContext = OpContext
-    { noc       :: NoC
-    , operator  :: UserId
+    { _noc       :: NoC
+    , _operator  :: UserId
     }
+    deriving (Data, Typeable)
+
+makeLenses ''OpContext
+
 
 newtype Operation e a = Operation { runOperation :: OpContext -> Either e (OpContext, a) }
 

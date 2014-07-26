@@ -60,4 +60,9 @@ Test-Suite test-NoC-Server
     type:               detailed-0.9
     test-module:        Tests
     build-depends:      base ==4.6.*
+                      , text ==1.1.*
+                      , safecopy ==0.8.*
+                      , ixset ==1.0.*
+                      , lens ==4.2.*
+                      , Cabal ==1.16.*
   
