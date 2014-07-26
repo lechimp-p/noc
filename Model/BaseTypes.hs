@@ -6,6 +6,7 @@ module Model.BaseTypes
     , ChanId (..)
     , MsgId (..)
     , Login (..)
+    , Password (..)
     , Name (..)
     , Desc (..)
     , Image (..)
@@ -21,7 +22,8 @@ newtype UserId = UserId { uiToInt :: Int } deriving (Eq, Ord, Data, Typeable, Sa
 newtype ChanId = ChanId { ciToInt :: Int } deriving (Eq, Ord, Data, Typeable, SafeCopy)
 newtype MsgId = MsgId { miToInt :: Int } deriving (Eq, Ord, Data, Typeable, SafeCopy)
 
-newtype Login = Login { loginToText :: Text } deriving (Data, Typeable, SafeCopy)
+newtype Login = Login { loginToText :: Text } deriving (Eq, Ord, Data, Typeable, SafeCopy)
+newtype Password = Password { pwToString :: String } deriving (Data, Typeable, SafeCopy)
 newtype Name = Name { nameToText :: Text } deriving (Data, Typeable, SafeCopy)
 newtype Desc = Desc { descToText :: Text } deriving (Data, Typeable, SafeCopy)
 
