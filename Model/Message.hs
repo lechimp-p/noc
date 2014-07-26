@@ -25,6 +25,12 @@ data Message = Message
     }
     deriving (Data, Typeable)
 
+instance Eq Message where
+    m == m' = _id m == _id m' 
+
+instance Ord Message where
+    compare m m' = compare (_id m) (_id m')
+
 $(deriveSafeCopy 0 'base ''Message) 
 
 -- An index for words in the text of the message.
@@ -38,5 +44,3 @@ instance Indexable Message where
         , ixFun $ (:[]) . _timestamp
         , ixFun $ fmap IxText . words . _text
         ]
-
-

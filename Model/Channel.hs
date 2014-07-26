@@ -26,6 +26,12 @@ data Channel = Channel
     } 
     deriving (Data, Typeable)
 
+instance Eq Channel where
+    c == c' = _id c == _id c'
+
+instance Ord Channel where
+    compare c c' = compare (_id c) (_id c') 
+
 $(deriveSafeCopy 0 'base ''Channel) 
 
 -- An index for words in the name.

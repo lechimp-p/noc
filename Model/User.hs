@@ -28,6 +28,12 @@ data User = User
     }
     deriving (Data, Typeable)
 
+instance Eq User where
+    u == u' = _id u == _id u'
+
+instance Ord User where
+    compare u u' = compare (_id u) (_id u')
+
 $(deriveSafeCopy 0 'base ''User) 
 
 -- An index for words in the name.
