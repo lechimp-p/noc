@@ -1,19 +1,21 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Model.Tests
 where
 
 import Model
 import Distribution.TestSuite
 
-tests :: IO [Tests]
-tests = return $ functionalityTests ++ permissionTests
+tests :: IO [Test]
+tests = return $ [functionalityTests, permissionTests]
 
-functionalityTests = group "Tests of functionality" $ concat [nocFuncTests]
+functionalityTests = group "Tests of functionality" $ [nocFuncTests]
 
-nocFunTests = group "Tests of NoCs functionality."
+nocFuncTests = group "Tests of NoCs functionality."
     [ 
     ]
 
-permissionTests = group "Tests of Permissions" $ concat [chanPermTests, userPermTests]
+permissionTests = group "Tests of Permissions" $ [chanPermTests, userPermTests]
 chanPermTests = group "Tests of Permissions on Channels"
     [
     ]
@@ -39,5 +41,9 @@ test n f action = Test $ TestInstance
     }
 
 
-onFreshNoc :: Operation Bool -> Bool
-onFreshNoC = runOp (mkNoC "admin" "admin") "admin" "admin"
+onFreshNoC :: Operation Bool -> Bool
+onFreshNoC op = 
+    case runOp (mkNoC (mkLogin "admin") (mkPassword "admin")) (mkLogin "admin") (mkPassword "admin") op of
+        Left _ -> False
+        Right (_, b) -> b 
+

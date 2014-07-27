@@ -6,9 +6,13 @@ module Model.BaseTypes
     , ChanId (..)
     , MsgId (..)
     , Login (..)
+    , mkLogin
     , Password (..)
+    , mkPassword
     , Name (..)
+    , mkName
     , Desc (..)
+    , mkDesc
     , Image (..)
     , Icon (..)
     , checkPassword
@@ -24,9 +28,13 @@ newtype ChanId = ChanId { ciToInt :: Int } deriving (Eq, Ord, Data, Typeable, Sa
 newtype MsgId = MsgId { miToInt :: Int } deriving (Eq, Ord, Data, Typeable, SafeCopy)
 
 newtype Login = Login { loginToText :: Text } deriving (Eq, Ord, Data, Typeable, SafeCopy)
+mkLogin = Login
 newtype Password = Password { pwToString :: String } deriving (Data, Typeable, SafeCopy)
+mkPassword = Password
 newtype Name = Name { nameToText :: Text } deriving (Data, Typeable, SafeCopy)
+mkName = Name
 newtype Desc = Desc { descToText :: Text } deriving (Data, Typeable, SafeCopy)
+mkDesc = Desc
 
 newtype Image = Image { imgPath :: String } deriving (Data, Typeable, SafeCopy)
 newtype Icon = Icon { icnPath :: String } deriving (Data, Typeable, SafeCopy)

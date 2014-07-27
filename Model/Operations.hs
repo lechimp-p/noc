@@ -167,7 +167,7 @@ setUserIcon = setToUser U.icon
 createUser :: Login -> Password -> Operation UserId
 createUser l pw = checkAccess () forNoCAdmins $ do
     uid <- US.newUserId
-    US.storeUser $ User uid l pw (Name "") (Desc "") Nothing S.empty S.empty S.empty
+    US.storeUser $ User uid l pw (mkName "") (mkDesc "") Nothing S.empty S.empty S.empty
     return uid
 
 -- creation of channels
