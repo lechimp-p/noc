@@ -2,7 +2,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Model.Operations
-    ( addAdmin
+    ( runOp
+    , addAdmin
     , rmAdmin
     , getChanName
     , getChanDesc
@@ -25,6 +26,9 @@ module Model.Operations
     , setUserName
     , setUserDesc
     , setUserIcon
+    , createUser
+    , createChannel
+    , post
     )
 where
 
@@ -40,6 +44,8 @@ import Model.Permissions
 import Model.BaseTypes
 import Model.OpMonad
 import qualified Model.UnsafeOperations as US
+import Model.NoC
+import qualified Model.NoC as N
 import qualified Model.Channel as C
 import Model.Channel
 import qualified Model.User as U
@@ -51,6 +57,25 @@ type SimpleLens a b = Lens a a b b
 a @= b = a US.@= b
 
 -- on noc
+
+logUserIn :: NoC -> Login -> Password -> Maybe UserId
+logUserIn noc l pw = do
+    user <- IX.getOne (N._users noc IX.@= l)
+    if checkPassword (U._password user) pw
+        then return (U._id user)
+        else fail "password mismatch" 
+
+runOp :: NoC -> Login -> Password -> Operation a -> Either Error (NoC, a)
+runOp noc l pw op = 
+    case oid' of
+        Nothing -> Left $ CantLogin l pw
+        otherwise -> case res of
+            Left err -> Left err
+            Right (cont, v) -> Right (_noc cont, v)
+    where
+    res = runOp' noc oid op
+    (Just oid) = oid'
+    oid' = logUserIn noc l pw 
 
 addAdmin :: UserId -> Operation ()
 addAdmin = checkAccess () forNoCAdmins . US.addAdmin 

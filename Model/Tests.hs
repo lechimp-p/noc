@@ -7,13 +7,17 @@ import Distribution.TestSuite
 tests :: IO [Tests]
 tests = return $ functionalityTests ++ permissionTests
 
-functionalityTests = group "Tests of functionality" $ concat []
+functionalityTests = group "Tests of functionality" $ concat [nocFuncTests]
+
+nocFunTests = group "Tests of NoCs functionality."
+    [ 
+    ]
 
 permissionTests = group "Tests of Permissions" $ concat [chanPermTests, userPermTests]
-chanPermTests = group "Tests of Permissions on Channels" $
+chanPermTests = group "Tests of Permissions on Channels"
     [
     ]
-userPermTests = group "Tests of Permissions on Users." $
+userPermTests = group "Tests of Permissions on Users."
     [
     ]
 
@@ -24,7 +28,7 @@ group n ts = Group n False ts
 
 test n f action = Test $ TestInstance
     { run = do
-        success <- action
+        let success = action
         if success 
             then return $ Finished Pass
             else return $ Finished (Fail f) 
@@ -33,3 +37,7 @@ test n f action = Test $ TestInstance
     , options = []
     , setOption = \ _ _ -> Left "There are no options for the Test!"
     }
+
+
+onFreshNoc :: Operation Bool -> Bool
+onFreshNoC = runOp (mkNoC "admin" "admin") "admin" "admin"

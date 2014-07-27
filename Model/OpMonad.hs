@@ -24,7 +24,7 @@ makeLenses ''OpContext
 
 newtype Operation a = Operation { runOperation :: OpContext -> Either Error (OpContext, a) }
 
-runOp noc oid action = runOperation action $ OpContext noc oid 
+runOp' noc oid action = runOperation action $ OpContext noc oid 
 
 instance Monad Operation where
     return v = Operation $ \ s -> Right (s, v)

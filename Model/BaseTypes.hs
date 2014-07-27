@@ -11,6 +11,7 @@ module Model.BaseTypes
     , Desc (..)
     , Image (..)
     , Icon (..)
+    , checkPassword
     )
 where
 
@@ -29,3 +30,6 @@ newtype Desc = Desc { descToText :: Text } deriving (Data, Typeable, SafeCopy)
 
 newtype Image = Image { imgPath :: String } deriving (Data, Typeable, SafeCopy)
 newtype Icon = Icon { icnPath :: String } deriving (Data, Typeable, SafeCopy)
+
+checkPassword :: Password -> Password -> Bool
+checkPassword pw pw' = pwToString pw == pwToString pw'
