@@ -47,3 +47,10 @@ instance Applicative Operation where
         f' <- f
         v' <- v
         return $ f' v'
+
+
+throw :: Error -> Operation a 
+throw e = Operation $ \ s -> Left e
+
+throwOn :: Error -> Bool -> Operation ()
+throwOn e c = if c then throw e else return ()

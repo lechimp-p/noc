@@ -8,6 +8,12 @@ import Model.BaseTypes
 data PermissionViolation =
       JustForbidden
     | NoNoCAdmin UserId
+    | NoChanAdmin UserId ChanId
+    | NoChanOwner UserId ChanId
+    | NoChanProducer UserId ChanId
+    | NoChanConsumer UserId ChanId
+    | NoUserAdmin UserId UserId
+    | NoUserSelf UserId UserId
     | PVAnd PermissionViolation PermissionViolation
 
 instance Monoid PermissionViolation where
@@ -16,4 +22,7 @@ instance Monoid PermissionViolation where
 
 
 data Error =
-     InsufficientPermissions PermissionViolation 
+      InsufficientPermissions PermissionViolation 
+    | UnknownChannel ChanId
+    | UnknownUser UserId
+    | UnknownMessage MsgId

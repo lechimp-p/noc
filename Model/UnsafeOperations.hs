@@ -6,6 +6,7 @@ import qualified Data.Set as S
 import Control.Lens
 
 import Model.BaseTypes
+import Model.Errors
 import Model.OpMonad
 import Model.NoC 
 import qualified Model.NoC as N
@@ -19,8 +20,14 @@ import qualified Model.Message as M
 getChannels :: Operation (IxSet Channel) 
 getChannels = Operation $ \ s -> Right (s, s ^. noc . channels)
 
-getChannel :: ChanId -> Operation (Maybe Channel)
-getChannel cid = Operation $ \ s -> Right (s, getOne $ (s ^. noc . channels) @= cid)
+getChannelMaybe :: ChanId -> Operation (Maybe Channel)
+getChannelMaybe cid = Operation $ \ s -> Right (s, getOne $ (s ^. noc . channels) @= cid)
+
+getChannel :: ChanId -> Operation Channel
+getChannel cid = getChannelMaybe cid >>= \chan ->
+    case chan of
+        (Just chan') -> return chan'
+        Nothing -> throw $ UnknownChannel cid 
 
 storeChannel :: Channel -> Operation ()
 storeChannel chan = Operation $ \ s -> 
@@ -36,8 +43,14 @@ newChanId = Operation $ \ s ->
 getUsers :: Operation (IxSet User)
 getUsers = Operation $ \ s -> Right (s, s ^. noc . users)
 
-getUser :: UserId -> Operation (Maybe User)
-getUser uid = Operation $ \ s -> Right (s, getOne $ (s ^. noc . users) @= uid)
+getUserMaybe :: UserId -> Operation (Maybe User)
+getUserMaybe uid = Operation $ \ s -> Right (s, getOne $ (s ^. noc . users) @= uid)
+
+getUser :: UserId -> Operation User
+getUser uid = getUserMaybe uid >>= \ user ->
+    case user of
+        (Just user') -> return user'
+        Nothing -> throw $ UnknownUser uid
 
 storeUser :: User -> Operation ()
 storeUser user = Operation $ \ s -> 
@@ -53,8 +66,14 @@ newUserId = Operation $ \ s ->
 getMessages :: Operation (IxSet Message) 
 getMessages = Operation $ \ s -> Right (s, s ^. noc . N.messages)
 
-getMessage :: MsgId -> Operation (Maybe Message)
-getMessage mid = Operation $ \ s -> Right (s, getOne $ (s ^. noc . N.messages) @= mid)
+getMessageMaybe :: MsgId -> Operation (Maybe Message)
+getMessageMaybe mid = Operation $ \ s -> Right (s, getOne $ (s ^. noc . N.messages) @= mid)
+
+getMessage :: MsgId -> Operation Message
+getMessage mid = getMessageMaybe mid >>= \ msg ->
+    case msg of
+        (Just msg') -> return msg'
+        Nothing -> throw $ UnknownMessage mid
 
 storeMessage :: Message -> Operation ()
 storeMessage msg = Operation $ \ s -> 
@@ -67,6 +86,9 @@ newMsgId = Operation $ \ s ->
         s' = set (noc . nextMsgId) (MsgId (1 + miToInt mid)) s
     in Right (s', mid)
 
+getAdmins :: Operation (S.Set UserId)
+getAdmins = Operation $ \ s -> Right (s, s ^. noc . admins)
+
 addAdmin :: UserId -> Operation ()
 addAdmin uid = Operation $ \ s ->
     let s' = over (noc . admins) (S.insert uid) s
@@ -76,3 +98,6 @@ rmAdmin :: UserId -> Operation ()
 rmAdmin uid = Operation $ \ s ->
     let s' = over (noc . admins) (S.delete uid) s
     in Right (s', ())
+
+getOperatorId :: Operation UserId
+getOperatorId = Operation $ \ s -> Right (s, _operator s)
