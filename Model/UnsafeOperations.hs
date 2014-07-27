@@ -1,7 +1,9 @@
 module Model.UnsafeOperations
 where
 
-import Data.IxSet 
+import Data.Data (Data, Typeable)
+import Data.IxSet hiding ((@=))
+import qualified Data.IxSet as IX
 import qualified Data.Set as S
 import Control.Lens
 
@@ -21,7 +23,7 @@ getChannels :: Operation (IxSet Channel)
 getChannels = Operation $ \ s -> Right (s, s ^. noc . channels)
 
 getChannelMaybe :: ChanId -> Operation (Maybe Channel)
-getChannelMaybe cid = Operation $ \ s -> Right (s, getOne $ (s ^. noc . channels) @= cid)
+getChannelMaybe cid = Operation $ \ s -> Right (s, getOne $ (s ^. noc . channels) IX.@= cid)
 
 getChannel :: ChanId -> Operation Channel
 getChannel cid = getChannelMaybe cid >>= \chan ->
@@ -44,7 +46,7 @@ getUsers :: Operation (IxSet User)
 getUsers = Operation $ \ s -> Right (s, s ^. noc . users)
 
 getUserMaybe :: UserId -> Operation (Maybe User)
-getUserMaybe uid = Operation $ \ s -> Right (s, getOne $ (s ^. noc . users) @= uid)
+getUserMaybe uid = Operation $ \ s -> Right (s, getOne $ (s ^. noc . users) IX.@= uid)
 
 getUser :: UserId -> Operation User
 getUser uid = getUserMaybe uid >>= \ user ->
@@ -67,7 +69,7 @@ getMessages :: Operation (IxSet Message)
 getMessages = Operation $ \ s -> Right (s, s ^. noc . N.messages)
 
 getMessageMaybe :: MsgId -> Operation (Maybe Message)
-getMessageMaybe mid = Operation $ \ s -> Right (s, getOne $ (s ^. noc . N.messages) @= mid)
+getMessageMaybe mid = Operation $ \ s -> Right (s, getOne $ (s ^. noc . N.messages) IX.@= mid)
 
 getMessage :: MsgId -> Operation Message
 getMessage mid = getMessageMaybe mid >>= \ msg ->
@@ -101,3 +103,9 @@ rmAdmin uid = Operation $ \ s ->
 
 getOperatorId :: Operation UserId
 getOperatorId = Operation $ \ s -> Right (s, _operator s)
+
+infixl 9 @=
+
+(@=) :: (IX.Indexable a, Typeable a, Ord a, Typeable k)
+      => Operation (IxSet a) -> k -> Operation (IxSet a)
+op @= k = fmap (IX.@= k) op

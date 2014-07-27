@@ -13,11 +13,24 @@ module Model.Operations
     , rmChanOwner
     , rmChanProducer
     , rmChanConsumer
+    , getUserLogin
+    , getUserName
+    , getUserDesc
+    , getUserIcon
+    , getUserOwnedChannels
+    , getUserSubscriptions
+    , getUserContacts
+    , setUserLogin
+    , setUserName
+    , setUserDesc
+    , setUserIcon
     )
 where
 
 import qualified Data.Set as S
+import qualified Data.IxSet as IX
 import Control.Lens
+import Control.Applicative ((<$>))
 
 import Model.Errors
 import Model.Permissions
@@ -32,6 +45,7 @@ import qualified Model.Message as M
 import Model.Message 
 
 type SimpleLens a b = Lens a a b b 
+a @= b = a US.@= b
 
 -- on noc
 
@@ -43,6 +57,7 @@ rmAdmin uid = checkAccess () forNoCAdmins $ do
     n <- fmap S.size US.getAdmins
     OnlyOneNoCAdminLeft `throwOn` (n == 1) 
     US.rmAdmin uid
+
 
 -- operations on channels
 
@@ -61,7 +76,6 @@ getChanDesc = getFromChan C.desc
 
 setChanName = setToChan C.name
 setChanDesc = setToChan C.desc
-
 
 addChanXX :: SimpleLens Channel (S.Set UserId)
           -> ChanId -> UserId -> Operation ()
@@ -87,3 +101,40 @@ rmChanProducer = rmChanXX C.producers
 rmChanConsumer = rmChanXX C.consumers
 
 
+-- operations on users
+
+getFromUser :: SimpleLens User a
+            -> UserId -> Operation a
+getFromUser l uid = do
+    user <- US.getUser uid
+    return $ user ^. l 
+
+setToUser :: SimpleLens User a
+          -> UserId -> a -> Operation ()
+setToUser l uid v = checkAccess uid forUserSelfOrAdmins $ do
+    user <- US.getUser uid
+    US.storeUser (set l v user) 
+
+getUserLogin = getFromUser U.login
+getUserName = getFromUser U.name
+getUserDesc = getFromUser U.desc
+getUserIcon = getFromUser U.icon
+getUserOwnedChannels uid = checkAccess uid forUserSelfOrAdmins
+    $ getFromUser U.ownedChannels uid
+getUserSubscriptions uid = checkAccess uid forUserSelfOrAdmins
+    $ getFromUser U.subscriptions uid
+getUserContacts uid = checkAccess uid forUserSelfOrAdmins
+    $ getFromUser U.contacts uid
+
+setUserLogin uid l = do
+    checkDuplicateLogin l
+    setToUser U.login uid l
+setUserName = setToUser U.name
+setUserDesc = setToUser U.desc
+setUserIcon = setToUser U.icon
+
+-- helpers
+
+checkDuplicateLogin l = do
+    n <- IX.size <$> US.getUsers @= l 
+    DuplicateLogin l `throwOn` (n >= 1) 

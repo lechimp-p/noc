@@ -28,3 +28,4 @@ data Error =
     | UnknownMessage MsgId
     | OnlyOneChannelOwnerLeft ChanId
     | OnlyOneNoCAdminLeft
+    | DuplicateLogin Login
