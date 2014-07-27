@@ -90,6 +90,7 @@ mkChannel ret =
             createUser (mkLogin "producer") (mkPassword "consumer")
             createUser (mkLogin "consumer") (mkPassword "consumer")
             createUser (mkLogin "not related") (mkPassword "not related")
+            createUser (mkLogin "not related too") (mkPassword "not related too")
             return ret 
       )
     , ("owner", "owner", do
@@ -100,7 +101,9 @@ mkChannel ret =
       )
     ]
 
-chanPermTests = group "Tests of Permissions on Channels"
+chanId = ChanId 0
+
+chanPermTests = group "Tests of Permissions on Channels" $
     [ test "Check of channel properties." "Assumption on channel properties fail."
         $ onFreshNoCSeq $ mkChannel True ++
             [ ("admin", "admin", do
@@ -125,13 +128,33 @@ chanPermTests = group "Tests of Permissions on Channels"
                 ccc <- isConsumer "consumer"
                 ccn <- not <$> isConsumer "not related"
 
-                return $ and [ oco, ocp, occ, ocn
+                return $ and [ cid == chanId 
+                             , oco, ocp, occ, ocn
                              , pco, pcp, pcc, pcn
                              , cco, ccp, ccc, ccn
                              ]
                )
             ]
     ]
+    ++ (concat . flip fmap [ ("admin", onFreshNoCSeq, " could not ")
+                           , ("owner", onFreshNoCSeq, " could not ")
+                           , ("producer", onFreshNoCFailsSeq, " could ")
+                           , ("consumer", onFreshNoCFailsSeq, " could ")
+                           , ("not related", onFreshNoCFailsSeq, " could ")
+                           ]) 
+        (\ u t w -> 
+            [ test (u ++ " adds owner.") (u ++ w ++ " add an owner.")
+                $ t $ mkChannel True ++
+                    [ (u, u, getUserByLogin "not related too" >>= addOwner chanId) ]
+            , test (u ++ " adds producer.") (u ++ w ++ "add a producer.")
+                $ t $ mkChannel True ++
+                    [ (u, u, getUserByLogin "not related too" >>= addProducer chanId) ]
+            , test (u ++ " adds consumer.") (u ++ w ++ "add a consumer.")
+                $ t $ mkChannel True ++
+                    [ (u, u, getUserByLogin "not related too" >>= addConsumer chanId) ]
+            ]
+        )
+
 userPermTests = group "Tests of Permissions on Users."
     [
     ]
