@@ -136,22 +136,22 @@ chanPermTests = group "Tests of Permissions on Channels" $
                )
             ]
     ]
-    ++ (concat . flip fmap [ ("admin", onFreshNoCSeq, " could not ")
-                           , ("owner", onFreshNoCSeq, " could not ")
-                           , ("producer", onFreshNoCFailsSeq, " could ")
-                           , ("consumer", onFreshNoCFailsSeq, " could ")
-                           , ("not related", onFreshNoCFailsSeq, " could ")
-                           ]) 
-        (\ u t w -> 
+    ++ (Prelude.concat . flip fmap [ ("admin", onFreshNoCSeq, " could not ")
+                                   , ("owner", onFreshNoCSeq, " could not ")
+                                   , ("producer", onFreshNoCFailsSeq, " could ")
+                                   , ("consumer", onFreshNoCFailsSeq, " could ")
+                                   , ("not related", onFreshNoCFailsSeq, " could ")
+                                   ]) 
+        (\ (u,t,w) -> 
             [ test (u ++ " adds owner.") (u ++ w ++ " add an owner.")
                 $ t $ mkChannel True ++
-                    [ (u, u, getUserByLogin "not related too" >>= addOwner chanId) ]
+                    [ (pack u, pack u, getUserByLogin "not related too" >>= addChanOwner chanId >> return True) ]
             , test (u ++ " adds producer.") (u ++ w ++ "add a producer.")
                 $ t $ mkChannel True ++
-                    [ (u, u, getUserByLogin "not related too" >>= addProducer chanId) ]
+                    [ (pack u, pack u, getUserByLogin "not related too" >>= addChanProducer chanId >> return True) ]
             , test (u ++ " adds consumer.") (u ++ w ++ "add a consumer.")
                 $ t $ mkChannel True ++
-                    [ (u, u, getUserByLogin "not related too" >>= addConsumer chanId) ]
+                    [ (pack u, pack u, getUserByLogin "not related too" >>= addChanConsumer chanId >> return True) ]
             ]
         )
 
@@ -208,7 +208,7 @@ onFreshNoCFails op =
     l = mkLogin "admin"
     pw = mkPassword "admin"
 
-onFreshNoCFailsSeq :: [(Text, Text, Operation ())] -> Bool
+onFreshNoCFailsSeq :: [(Text, Text, Operation a)] -> Bool
 onFreshNoCFailsSeq ops = runOpSeq ops (mkNoC (mkLogin "admin") (mkPassword "admin"))
     where
     runOpSeq ((l, pw, op):[]) noc =
