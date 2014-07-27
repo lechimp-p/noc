@@ -5,6 +5,7 @@ where
 
 import Control.Applicative ((<$>))
 import Data.Text hiding (group)
+import qualified Data.Set as S
 
 import Model
 import Model.BaseTypes (UserId (..), ChanId (..), MsgId (..), Login, Password)
@@ -21,9 +22,15 @@ nocFuncTests = group "Tests of NoCs functionality."
     [ test "User added." "Could not retreive user after adding."
         $ onFreshNoC $ do
             let name = "xyz"
-            uid <- createUser (mkLogin name) (mkPassword "password")
+            uid <- createUser (mkLogin name) (mkPassword name)
             name' <- getUserLogin uid
             return $ (mkLogin name) == name'  
+    , test "User added." "Could not retreive user by login after adding."
+        $ onFreshNoC $ do
+            let name = "xyz"
+            uid <- createUser (mkLogin name) (mkPassword name)
+            uid' <- getUserByLogin name
+            return $ uid == uid'
     , test "Admin added." "User is not an admin after adding."
         $ onFreshNoC $ do
             uid <- createUser (mkLogin "user") (mkPassword "password") 
@@ -61,16 +68,69 @@ nocPermTests = group "Tests of Permissions on NoC"
             uid <- createUser (mkLogin "admin2") (mkPassword "admin2")
             not <$> isNoCAdmin uid
     , test "Another user adds admin" "User can add admin despite he is no admin."
-        $ onFreshNoCFailsSeq
+        $ onFreshNoCFailsSeq 
             [ ("admin", "admin", createUser (mkLogin "user") (mkPassword "user") >> return ())
             , ("user", "user", getUserByLogin "user" >>= addAdmin)
             ]
-    --, test "Another user removes admin" "User can remove admin despite he is no admin."
+    , test "Another user removes admin" "User can remove admin despite he is no admin."
+        $ onFreshNoCFailsSeq
+            [ ("admin", "admin", createUser (mkLogin "user") (mkPassword "user") >> return ())
+            , ("user", "user", getUserByLogin "admin" >>= rmAdmin)
+            ]
+    , test "Admin adds another user in two steps." "Assumption that getUserByLogin does work fails."
+        $ onFreshNoCSeq
+            [ ("admin", "admin", createUser (mkLogin "user") (mkPassword "user") >> return True)
+            , ("admin", "admin", getUserByLogin "user" >>= addAdmin >> return True)
+            ]
     ]
     
+mkChannel ret =
+    [ ("admin", "admin", do
+            createUser (mkLogin "owner") (mkPassword "owner")
+            createUser (mkLogin "producer") (mkPassword "consumer")
+            createUser (mkLogin "consumer") (mkPassword "consumer")
+            createUser (mkLogin "not related") (mkPassword "not related")
+            return ret 
+      )
+    , ("owner", "owner", do
+            cid <- createChannel (mkName "channel") (mkDesc "channel description")
+            getUserByLogin "producer" >>= addChanProducer cid
+            getUserByLogin "consumer" >>= addChanConsumer cid
+            return ret
+      )
+    ]
 
 chanPermTests = group "Tests of Permissions on Channels"
-    [
+    [ test "Check of channel properties." "Assumption on channel properties fail."
+        $ onFreshNoCSeq $ mkChannel True ++
+            [ ("admin", "admin", do
+                oid <- getUserByLogin "owner"
+                cid <- Prelude.head . S.toList <$> getUserOwnedChannels oid 
+                let isOwner who = getUserByLogin who >>= flip isOwnerOf cid
+                    isProducer who = getUserByLogin who >>= flip isProducerIn cid
+                    isConsumer who = getUserByLogin who >>= flip isConsumerIn cid
+
+                oco <- isOwner "owner"
+                ocp <- not <$> isOwner "producer"
+                occ <- not <$> isOwner "consumer"
+                ocn <- not <$> isOwner "not related"
+
+                pco <- not <$> isProducer "owner"
+                pcp <- isProducer "producer"
+                pcc <- not <$> isProducer "consumer"
+                pcn <- not <$> isProducer "not related"
+
+                cco <- not <$> isConsumer "owner"
+                ccp <- not <$> isConsumer "producer"
+                ccc <- isConsumer "consumer"
+                ccn <- not <$> isConsumer "not related"
+
+                return $ and [ oco, ocp, occ, ocn
+                             , pco, pcp, pcc, pcn
+                             , cco, ccp, ccc, ccn
+                             ]
+               )
+            ]
     ]
 userPermTests = group "Tests of Permissions on Users."
     [

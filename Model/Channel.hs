@@ -36,6 +36,9 @@ instance Ord Channel where
 $(deriveSafeCopy 0 'base ''Channel) 
 makeLenses ''Channel
 
+
+newtype IxExactName = IxExactName Text
+                      deriving (Eq, Ord, Data, Typeable, SafeCopy) 
 -- An index for words in the name.
 newtype IxName = IxName Text 
                  deriving (Eq, Ord, Data, Typeable, SafeCopy)
@@ -46,6 +49,7 @@ newtype IxDesc = IxDesc Text
 instance Indexable Channel where
     empty = ixSet
         [ ixFun $ (:[]) . _id
+        , ixFun $ (:[]) . nameToText . _name
         , ixFun $ fmap IxName . words . nameToText . _name
         , ixFun $ fmap IxDesc . words . descToText . _desc 
         ]
