@@ -15,6 +15,7 @@ module Model.Operations
     , rmChanOwner
     , rmChanProducer
     , rmChanConsumer
+    , getUserByLogin
     , getUserLogin
     , getUserName
     , getUserDesc
@@ -78,7 +79,9 @@ runOp noc l pw op =
     oid' = logUserIn noc l pw 
 
 addAdmin :: UserId -> Operation ()
-addAdmin = checkAccess () forNoCAdmins . US.addAdmin 
+addAdmin uid = checkAccess () forNoCAdmins $ do
+    US.getUser uid
+    US.addAdmin uid
 
 rmAdmin :: UserId -> Operation ()
 rmAdmin uid = checkAccess () forNoCAdmins $ do
@@ -161,6 +164,12 @@ setUserName = setToUser U.name
 setUserDesc = setToUser U.desc
 setUserIcon = setToUser U.icon
 
+getUserByLogin :: Text -> Operation UserId
+getUserByLogin l = do
+    user <- IX.getOne <$> US.getUsers @= (Login l)
+    case user of
+        (Just user) -> return $ U._id user
+        otherwise -> throw $ UnknownLogin l 
 
 -- creation of users
 

@@ -2,6 +2,7 @@ module Model.Errors
 where
 
 import Data.Monoid
+import Data.Text
 
 import Model.BaseTypes
 
@@ -25,6 +26,7 @@ data Error =
       InsufficientPermissions PermissionViolation 
     | UnknownChannel ChanId
     | UnknownUser UserId
+    | UnknownLogin Text 
     | UnknownMessage MsgId
     | OnlyOneChannelOwnerLeft ChanId
     | OnlyOneNoCAdminLeft

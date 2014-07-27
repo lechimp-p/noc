@@ -47,22 +47,47 @@ executable NoC-Server
     main-is:            Main.hs            
   
   -- Modules included in this executable, other than Main.
-    other-modules:       
+    other-modules:        Model.BaseTypes
+                        , Model.Channel
+                        , Model.Errors
+                        , Model.Message
+                        , Model.NoC 
+                        , Model.Operations
+                        , Model.OpMonad
+                        , Model.Permissions
+                        , Model.UnsafeOperations
+                        , Model.User
+      
   
   -- Other library packages from which modules are imported.
-    build-depends:      base ==4.6.*
-                      , text ==1.1.*
-                      , safecopy ==0.8.*
-                      , ixset ==1.0.*
-                      , lens ==4.2.*
+    build-depends:        base ==4.6.*
+                        , text ==1.1.*
+                        , safecopy ==0.8.*
+                        , ixset ==1.0.*
+                        , lens ==4.2.*
+                        , time ==1.4.*
+                        , containers ==0.5.*
 
 Test-Suite test-NoC-Server
     type:               detailed-0.9
     test-module:        Tests
-    build-depends:      base ==4.6.*
-                      , text ==1.1.*
-                      , safecopy ==0.8.*
-                      , ixset ==1.0.*
-                      , lens ==4.2.*
-                      , Cabal ==1.16.*
+    other-modules:        Model.Tests
+                        , Model.BaseTypes
+                        , Model.Channel
+                        , Model.Errors
+                        , Model.Message
+                        , Model.NoC 
+                        , Model.Operations
+                        , Model.OpMonad
+                        , Model.Permissions
+                        , Model.UnsafeOperations
+                        , Model.User
+    build-depends:        base ==4.6.*
+                        , text ==1.1.*
+                        , safecopy ==0.8.*
+                        , ixset ==1.0.*
+                        , lens ==4.2.*
+                        , time ==1.4.*
+                        , containers ==0.5.*
+                        , Cabal ==1.16.*
   

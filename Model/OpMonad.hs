@@ -34,7 +34,7 @@ instance Monad Operation where
             (Left e) -> Left e
             (Right (s', v)) ->
                 let n = m' v
-                in runOperation n s
+                in runOperation n s'
 
 instance Functor Operation where
     fmap f v = do

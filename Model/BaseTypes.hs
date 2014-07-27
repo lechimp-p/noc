@@ -29,7 +29,7 @@ newtype MsgId = MsgId { miToInt :: Int } deriving (Eq, Ord, Data, Typeable, Safe
 
 newtype Login = Login { loginToText :: Text } deriving (Eq, Ord, Data, Typeable, SafeCopy)
 mkLogin = Login
-newtype Password = Password { pwToString :: String } deriving (Data, Typeable, SafeCopy)
+newtype Password = Password { pwToString :: Text } deriving (Data, Typeable, SafeCopy)
 mkPassword = Password
 newtype Name = Name { nameToText :: Text } deriving (Data, Typeable, SafeCopy)
 mkName = Name
