@@ -5,5 +5,7 @@ where
 
 import Distribution.TestSuite
 
+import qualified Model.Tests as ModelTests
+
 tests :: IO [Test]
-tests = return [] 
+tests = ModelTests.tests 
