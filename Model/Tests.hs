@@ -1,10 +1,11 @@
 module Model.Tests
 where
 
+import Model
 import Distribution.TestSuite
 
 tests :: IO [Tests]
-tests = return $ permissionTests ++ functionTests
+tests = return $ permissionTests ++ functionalityTests
 
 permissionTests = group "Tests of Permissions" $ concat [chanPermTests, userPermTests]
 chanPermTests = group "Tests of Permissions on Channels" $
@@ -14,6 +15,7 @@ userPermTests = group "Tests of Permissions on Users." $
     [
     ]
 
+functionalityTests = group "Tests of functionality" $ concat []
 
 -- helpers
 
@@ -28,4 +30,5 @@ test n f action = Test $ TestInstance
     , name = n
     , tags = []
     , options = []
-    , setOption = Either "There are no options for the Test!"
+    , setOption = \ _ _ -> Left "There are no options for the Test!"
+    }

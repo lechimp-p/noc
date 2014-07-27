@@ -2,6 +2,7 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Model.NoC
 where
@@ -12,6 +13,7 @@ import qualified Data.Set as S
 import Data.Text 
 import Data.Time.Clock (UTCTime)
 import Data.IxSet (Indexable, empty, IxSet, ixSet, ixFun) 
+import qualified Data.IxSet as IX
 import Data.SafeCopy (SafeCopy, base, deriveSafeCopy)
 import Control.Lens (makeLenses)
 
@@ -34,3 +36,11 @@ data NoC = NoC
 $(deriveSafeCopy 0 'base ''NoC)
 makeLenses ''NoC
 
+mkNoC :: Login -> Password -> NoC
+mkNoC l pw = NoC IX.empty (ChanId 0)
+                 users (UserId 1)
+                 IX.empty (MsgId 0)
+                 ((UserId 0) `S.insert` S.empty) 
+    where
+    users = admin `IX.insert` IX.empty 
+    admin = User (UserId 0) l pw (Name "admin") (Desc "The Administrator.") Nothing S.empty S.empty S.empty  

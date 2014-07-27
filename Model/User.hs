@@ -22,7 +22,7 @@ data User = User
     , _password      :: Password
     , _name          :: Name
     , _desc          :: Desc
-    , _icon          :: Icon
+    , _icon          :: Maybe Icon
     , _ownedChannels :: S.Set [ChanId]
     , _subscriptions :: S.Set [ChanId]
     , _contacts      :: S.Set [UserId]
