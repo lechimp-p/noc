@@ -43,7 +43,10 @@ test n f action = Test $ TestInstance
 
 onFreshNoC :: Operation Bool -> Bool
 onFreshNoC op = 
-    case runOp (mkNoC (mkLogin "admin") (mkPassword "admin")) (mkLogin "admin") (mkPassword "admin") op of
+    case runOp (mkNoC l pw) l pw op of
         Left _ -> False
         Right (_, b) -> b 
+    where
+    l = mkLogin "admin"
+    pw = mkPassword "admin"
 

@@ -43,30 +43,38 @@ checkAccess cont (Permission check constr) action = do
 
 -- permissions on noc
 
+isNoCAdmin uid = US.getAdmins >>= \as -> return (uid `S.member` as)
+
 forNoCAdmins :: Permission () 
 forNoCAdmins = Permission 
-    (\ uid _ -> US.getAdmins >>= \as -> return (uid `S.member` as))  
+    (\ uid _ -> isNoCAdmin uid)  
     (\ uid _ -> return (NoNoCAdmin uid))
 
 -- permissions on channel
 
+isAdminOf uid _  = US.getAdmins >>= \as -> return (uid `S.member` as)
+
 forChanAdmins :: Permission ChanId
-forChanAdmins = Permission 
-    (\ uid _ -> US.getAdmins >>= \as -> return (uid `S.member` as))
-    (\ uid cid -> return (NoChanAdmin uid cid))
+forChanAdmins = Permission isAdminOf $ \ u c -> return $ NoChanAdmin u c
+
+isChanXX us uid cid = US.getChannel cid >>= \chan -> return (uid `S.member` (us chan))
 
 forChanXX :: (C.Channel -> S.Set UserId)
           -> (UserId -> ChanId -> PermissionViolation)
           -> Permission ChanId
-forChanXX us cs = Permission
-    (\ uid cid -> US.getChannel cid >>= \chan -> return (uid `S.member` (us chan)))
-    (\ uid cid -> return (cs uid cid))
+forChanXX us cs = Permission (isChanXX us) (\ uid cid -> return (cs uid cid))
+
+isOwnerOf = isChanXX C._owners
 
 forChanOwners :: Permission ChanId
 forChanOwners = forChanXX C._owners NoChanOwner
 
+isProducerIn = isChanXX C._producers
+
 forChanProducers :: Permission ChanId
 forChanProducers = forChanXX C._producers NoChanProducer 
+
+isConsumerIn = isChanXX C._consumers
 
 forChanConsumers :: Permission ChanId
 forChanConsumers = forChanXX C._consumers NoChanConsumer
