@@ -1,7 +1,9 @@
 {-# LANGUAGE RankNTypes #-}
 
 module Model.Operations
-    ( getChanName
+    ( addAdmin
+    , rmAdmin
+    , getChanName
     , getChanDesc
     , setChanName
     , setChanDesc
@@ -17,7 +19,6 @@ where
 import qualified Data.Set as S
 import Control.Lens
 
-import Model.UnsafeOperations
 import Model.Errors
 import Model.Permissions
 import Model.BaseTypes
@@ -31,6 +32,17 @@ import qualified Model.Message as M
 import Model.Message 
 
 type SimpleLens a b = Lens a a b b 
+
+-- on noc
+
+addAdmin :: UserId -> Operation ()
+addAdmin = checkAccess () forNoCAdmins . US.addAdmin 
+
+rmAdmin :: UserId -> Operation ()
+rmAdmin uid = checkAccess () forNoCAdmins $ do
+    n <- fmap S.size US.getAdmins
+    OnlyOneNoCAdminLeft `throwOn` (n == 1) 
+    US.rmAdmin uid
 
 -- operations on channels
 
@@ -69,8 +81,8 @@ addChanConsumer = addChanXX C.consumers
 
 rmChanOwner cid uid = checkAccess cid forChanOwnersOrAdmins $ do
     chan <- US.getChannel cid
-    OnlyOneChannelOwnerLeft `throwOn` (size (chan ^. owners) == 0)
-    US.storeChannel (over l (\ s -> uid `S.delete` s) chan)
+    OnlyOneChannelOwnerLeft cid `throwOn` (S.size (chan ^. owners) == 0)
+    US.storeChannel (over C.owners (\ s -> uid `S.delete` s) chan)
 rmChanProducer = rmChanXX C.producers
 rmChanConsumer = rmChanXX C.consumers
 

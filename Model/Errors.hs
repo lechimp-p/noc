@@ -27,3 +27,4 @@ data Error =
     | UnknownUser UserId
     | UnknownMessage MsgId
     | OnlyOneChannelOwnerLeft ChanId
+    | OnlyOneNoCAdminLeft
