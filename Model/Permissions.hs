@@ -5,19 +5,21 @@ import Data.Monoid
 
 import Model.BaseTypes
 import Model.OpMonad
+import Model.Errors
+import qualified Model.UnsafeOperations as US
 import qualified Model.Channel as C
 import qualified Model.User as U
 import qualified Model.Message as M
 
 -- permissions abstract
 
-data Permission a b e = 
+data Permission a = 
       Permission
-        (UserId -> a -> Operation e Bool) -- definition of the permission
-        (UserId -> a -> Operation e b)    -- info about violation
+        (UserId -> a -> Operation Bool) -- definition of the permission
+        (UserId -> a -> Operation PermissionViolation)    -- info about violation
     | Forbidden                                 
 
-instance Monoid b => Monoid (Permission a b e) where
+instance Monoid (Permission a) where
     mempty = Forbidden
     Forbidden `mappend` p = p
     p `mappend` Forbidden = p
@@ -25,12 +27,9 @@ instance Monoid b => Monoid (Permission a b e) where
         = Permission (\ u o -> (ck u o >>= \ r -> if r then return True else ck' u o))
                      (\ u o -> (sequence [ct u o, ct' u o] >>= \ r -> return (mconcat r)))
 
--- permissions concrete 
+-- permissions on noc
 
-data PermissionViolation =
-      JustForbidden
-    | PVAnd PermissionViolation PermissionViolation
+--forNoCAdmins :: Permission () PermissionViolation e
+--forNoCAdmins = Permission (
 
-instance Monoid PermissionViolation where
-    mempty = JustForbidden
-    pv `mappend` pv' = PVAnd pv pv'
+

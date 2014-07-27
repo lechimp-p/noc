@@ -10,6 +10,7 @@ import Control.Applicative
 import Control.Lens (makeLenses)
 import Data.Data (Data, Typeable)
 
+import Model.Errors
 import Model.BaseTypes
 import Model.NoC
 
@@ -21,12 +22,11 @@ data OpContext = OpContext
 
 makeLenses ''OpContext
 
-
-newtype Operation e a = Operation { runOperation :: OpContext -> Either e (OpContext, a) }
+newtype Operation a = Operation { runOperation :: OpContext -> Either Error (OpContext, a) }
 
 runOp noc oid action = runOperation action $ OpContext noc oid 
 
-instance Monad (Operation e) where
+instance Monad Operation where
     return v = Operation $ \ s -> Right (s, v)
     m >>= m' = Operation $ \ s ->
         let l = runOperation m s
@@ -36,12 +36,12 @@ instance Monad (Operation e) where
                 let n = m' v
                 in runOperation n s
 
-instance Functor (Operation e) where
+instance Functor Operation where
     fmap f v = do
         v' <- v
         return $ f v'
 
-instance Applicative (Operation e) where
+instance Applicative Operation where
     pure = return
     f <*> v = do
         f' <- f
