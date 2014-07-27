@@ -152,6 +152,21 @@ chanPermTests = group "Tests of Permissions on Channels" $
             , test (u ++ " adds consumer.") (u ++ w ++ "add a consumer.")
                 $ t $ mkChannel True ++
                     [ (pack u, pack u, getUserByLogin "not related too" >>= addChanConsumer chanId >> return True) ]
+            , test (u ++ " removes owner.") (u ++ w ++ " remove an owner.")
+                $ t $ mkChannel True ++
+                    [ ("admin", "admin", getUserByLogin "not related too" >>= addChanOwner chanId >> return True)
+                    , (pack u, pack u, getUserByLogin "not related too" >>= rmChanOwner chanId >> return True)
+                    ]
+            , test (u ++ " removes producer.") (u ++ w ++ " remove a producer.")
+                $ t $ mkChannel True ++
+                    [ ("admin", "admin", getUserByLogin "not related too" >>= addChanProducer chanId >> return True)
+                    , (pack u, pack u, getUserByLogin "not related too" >>= rmChanProducer chanId >> return True)
+                    ]
+            , test (u ++ " removes consumer.") (u ++ w ++ " remove a consumer.")
+                $ t $ mkChannel True ++
+                    [ ("admin", "admin", getUserByLogin "not related too" >>= addChanConsumer chanId >> return True)
+                    , (pack u, pack u, getUserByLogin "not related too" >>= rmChanConsumer chanId >> return True)
+                    ]
             ]
         )
 
