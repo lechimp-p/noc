@@ -87,7 +87,7 @@ nocPermTests = group "Tests of Permissions on NoC"
 mkChannel ret =
     [ ("admin", "admin", do
             createUser (mkLogin "owner") (mkPassword "owner")
-            createUser (mkLogin "producer") (mkPassword "consumer")
+            createUser (mkLogin "producer") (mkPassword "producer")
             createUser (mkLogin "consumer") (mkPassword "consumer")
             createUser (mkLogin "not related") (mkPassword "not related")
             createUser (mkLogin "not related too") (mkPassword "not related too")
@@ -143,7 +143,7 @@ chanPermTests = group "Tests of Permissions on Channels" $
                                    , ("not related", onFreshNoCFailsSeq, " could ")
                                    ]) 
         (\ (u,t,w) -> 
-            [ test (u ++ " adds owner.") (u ++ w ++ " add an owner.")
+            [ test (u ++ " adds owner.") (u ++ w ++ "add an owner.")
                 $ t $ mkChannel True ++
                     [ (pack u, pack u, getUserByLogin "not related too" >>= addChanOwner chanId >> return True) ]
             , test (u ++ " adds producer.") (u ++ w ++ "add a producer.")
@@ -152,21 +152,42 @@ chanPermTests = group "Tests of Permissions on Channels" $
             , test (u ++ " adds consumer.") (u ++ w ++ "add a consumer.")
                 $ t $ mkChannel True ++
                     [ (pack u, pack u, getUserByLogin "not related too" >>= addChanConsumer chanId >> return True) ]
-            , test (u ++ " removes owner.") (u ++ w ++ " remove an owner.")
+            , test (u ++ " removes owner.") (u ++ w ++ "remove an owner.")
                 $ t $ mkChannel True ++
                     [ ("admin", "admin", getUserByLogin "not related too" >>= addChanOwner chanId >> return True)
                     , (pack u, pack u, getUserByLogin "not related too" >>= rmChanOwner chanId >> return True)
                     ]
-            , test (u ++ " removes producer.") (u ++ w ++ " remove a producer.")
+            , test (u ++ " removes producer.") (u ++ w ++ "remove a producer.")
                 $ t $ mkChannel True ++
                     [ ("admin", "admin", getUserByLogin "not related too" >>= addChanProducer chanId >> return True)
                     , (pack u, pack u, getUserByLogin "not related too" >>= rmChanProducer chanId >> return True)
                     ]
-            , test (u ++ " removes consumer.") (u ++ w ++ " remove a consumer.")
+            , test (u ++ " removes consumer.") (u ++ w ++ "remove a consumer.")
                 $ t $ mkChannel True ++
                     [ ("admin", "admin", getUserByLogin "not related too" >>= addChanConsumer chanId >> return True)
                     , (pack u, pack u, getUserByLogin "not related too" >>= rmChanConsumer chanId >> return True)
                     ]
+            , test (u ++ " sets name of channel.") (u ++ w ++ "set name of channel.")
+                $ t $ mkChannel True ++
+                    [ (pack u, pack u, setChanName chanId (mkName "new name") >> return True) ]
+            , test (u ++ " sets description of channel.") (u ++ w ++ "set description of channel.")
+                $ t $ mkChannel True ++
+                    [ (pack u, pack u, setChanDesc chanId (mkDesc "new name") >> return True) ]
+            ]
+        )
+    ++ (Prelude.concat . flip fmap [ ("admin", onFreshNoCSeq, " could not ")
+                                   , ("owner", onFreshNoCSeq, " could not ")
+                                   , ("producer", onFreshNoCSeq, " could not ")
+                                   , ("consumer", onFreshNoCSeq, " could not ")
+                                   , ("not related", onFreshNoCFailsSeq, " could ")
+                                   ]) 
+        (\ (u,t,w) -> 
+            [ test (u ++ " reads name of channel.") (u ++ w ++ " read name of channel.")
+                $ t $ mkChannel True ++
+                    [ (pack u, pack u, getChanName chanId >> return True) ]
+            , test (u ++ " reads description of channel.") (u ++ w ++ " read description of channel.")
+                $ t $ mkChannel True ++
+                    [ (pack u, pack u, getChanDesc chanId >> return True) ]
             ]
         )
 
