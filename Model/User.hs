@@ -23,9 +23,9 @@ data User = User
     , _name          :: Name
     , _desc          :: Desc
     , _icon          :: Maybe Icon
-    , _ownedChannels :: S.Set [ChanId]
-    , _subscriptions :: S.Set [ChanId]
-    , _contacts      :: S.Set [UserId]
+    , _ownedChannels :: S.Set ChanId
+    , _subscriptions :: S.Set ChanId
+    , _contacts      :: S.Set UserId
     }
     deriving (Data, Typeable)
 

@@ -1,4 +1,5 @@
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Model.Operations
     ( addAdmin
@@ -29,8 +30,10 @@ where
 
 import qualified Data.Set as S
 import qualified Data.IxSet as IX
+import Data.Text
 import Control.Lens
 import Control.Applicative ((<$>))
+import Data.Time.Clock (UTCTime)
 
 import Model.Errors
 import Model.Permissions
@@ -81,13 +84,13 @@ addChanXX :: SimpleLens Channel (S.Set UserId)
           -> ChanId -> UserId -> Operation ()
 addChanXX l cid uid = checkAccess cid forChanOwnersOrAdmins $ do
     chan <- US.getChannel cid
-    US.storeChannel (over l (\ s -> uid `S.insert` s) chan)
+    US.storeChannel (over l (S.insert uid) chan)
 
 rmChanXX :: SimpleLens Channel (S.Set UserId)
          -> ChanId -> UserId -> Operation ()
 rmChanXX l cid uid = checkAccess cid forChanOwnersOrAdmins $ do
     chan <- US.getChannel cid
-    US.storeChannel (over l (\ s -> uid `S.delete` s) chan)
+    US.storeChannel (over l (S.delete uid) chan)
 
 addChanOwner = addChanXX C.owners
 addChanProducer = addChanXX C.producers
@@ -96,7 +99,7 @@ addChanConsumer = addChanXX C.consumers
 rmChanOwner cid uid = checkAccess cid forChanOwnersOrAdmins $ do
     chan <- US.getChannel cid
     OnlyOneChannelOwnerLeft cid `throwOn` (S.size (chan ^. owners) == 0)
-    US.storeChannel (over C.owners (\ s -> uid `S.delete` s) chan)
+    US.storeChannel (over C.owners (S.delete uid) chan)
 rmChanProducer = rmChanXX C.producers
 rmChanConsumer = rmChanXX C.consumers
 
@@ -132,6 +135,38 @@ setUserLogin uid l = do
 setUserName = setToUser U.name
 setUserDesc = setToUser U.desc
 setUserIcon = setToUser U.icon
+
+
+-- creation of users
+
+createUser :: Login -> Password -> Operation UserId
+createUser l pw = checkAccess () forNoCAdmins $ do
+    uid <- US.newUserId
+    US.storeUser $ User uid l pw (Name "") (Desc "") Nothing S.empty S.empty S.empty
+    return uid
+
+-- creation of channels
+
+createChannel :: Name -> Desc -> Operation ChanId
+createChannel n d = do
+    cid <- US.newChanId
+    oid <- US.getOperatorId
+    user <- US.getUser oid
+    US.storeChannel $ Channel cid n d (S.insert oid S.empty) S.empty S.empty S.empty
+    US.storeUser $ over U.ownedChannels (S.insert cid) user
+    return cid
+
+-- posting of messages
+
+post :: ChanId -> UTCTime -> Text -> Maybe Image -> Operation MsgId
+post cid ts txt img = checkAccess cid forChanProducers $ do
+    mid <- US.newMsgId 
+    oid <- US.getOperatorId
+    chan <- US.getChannel cid
+    US.storeChannel $ over C.messages (S.insert mid) chan
+    US.storeMessage $ Message mid img txt oid ts
+    return mid
+    
 
 -- helpers
 

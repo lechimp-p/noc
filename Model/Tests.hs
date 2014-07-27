@@ -5,7 +5,9 @@ import Model
 import Distribution.TestSuite
 
 tests :: IO [Tests]
-tests = return $ permissionTests ++ functionalityTests
+tests = return $ functionalityTests ++ permissionTests
+
+functionalityTests = group "Tests of functionality" $ concat []
 
 permissionTests = group "Tests of Permissions" $ concat [chanPermTests, userPermTests]
 chanPermTests = group "Tests of Permissions on Channels" $
@@ -15,7 +17,6 @@ userPermTests = group "Tests of Permissions on Users." $
     [
     ]
 
-functionalityTests = group "Tests of functionality" $ concat []
 
 -- helpers
 

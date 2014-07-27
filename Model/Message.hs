@@ -19,7 +19,7 @@ import Model.BaseTypes
 
 data Message = Message 
     { _id           :: MsgId
-    , _image        :: Image
+    , _image        :: Maybe Image
     , _text         :: Text
     , _author       :: UserId
     , _timestamp    :: UTCTime
