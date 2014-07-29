@@ -41,6 +41,9 @@ nocFuncTests = group "Tests of NoCs functionality."
             addAdmin (UserId (-1))
     ]
 
+
+-- Permission Tests
+
 permissionTests = group "Tests of Permissions" $ [nocPermTests, chanPermTests, userPermTests]
 
 nocPermTests = group "Tests of Permissions on NoC"
@@ -83,25 +86,6 @@ nocPermTests = group "Tests of Permissions on NoC"
             , ("admin", "admin", getUserByLogin "user" >>= addAdmin >> return True)
             ]
     ]
-    
-mkChannel ret =
-    [ ("admin", "admin", do
-            createUser (mkLogin "owner") (mkPassword "owner")
-            createUser (mkLogin "producer") (mkPassword "producer")
-            createUser (mkLogin "consumer") (mkPassword "consumer")
-            createUser (mkLogin "not related") (mkPassword "not related")
-            createUser (mkLogin "not related too") (mkPassword "not related too")
-            return ret 
-      )
-    , ("owner", "owner", do
-            cid <- createChannel (mkName "channel") (mkDesc "channel description")
-            getUserByLogin "producer" >>= addChanProducer cid
-            getUserByLogin "consumer" >>= addChanConsumer cid
-            return ret
-      )
-    ]
-
-chanId = ChanId 0
 
 chanPermTests = group "Tests of Permissions on Channels" $
     [ test "Check of channel properties." "Assumption on channel properties fail."
@@ -197,6 +181,26 @@ userPermTests = group "Tests of Permissions on Users."
 
 
 -- helpers
+    
+mkChannel ret =
+    [ ("admin", "admin", do
+            createUser (mkLogin "owner") (mkPassword "owner")
+            createUser (mkLogin "producer") (mkPassword "producer")
+            createUser (mkLogin "consumer") (mkPassword "consumer")
+            createUser (mkLogin "not related") (mkPassword "not related")
+            createUser (mkLogin "not related too") (mkPassword "not related too")
+            return ret 
+      )
+    , ("owner", "owner", do
+            cid <- createChannel (mkName "channel") (mkDesc "channel description")
+            getUserByLogin "producer" >>= addChanProducer cid
+            getUserByLogin "consumer" >>= addChanConsumer cid
+            return ret
+      )
+    ]
+
+chanId = ChanId 0
+
 
 group n ts = Group n False ts
 
