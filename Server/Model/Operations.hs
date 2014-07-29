@@ -68,15 +68,12 @@ logUserIn noc l pw = do
 
 runOp :: NoC -> Login -> Password -> Operation a -> Either Error (NoC, a)
 runOp noc l pw op = 
-    case oid' of
-        Nothing -> Left $ CantLogin l pw
-        otherwise -> case res of
-            Left err -> Left err
-            Right (cont, v) -> Right (_noc cont, v)
-    where
-    res = runOp' noc oid op
-    (Just oid) = oid'
-    oid' = logUserIn noc l pw 
+    case logUserIn noc l pw of
+        Nothing -> Left $ CantLogin l
+        (Just oid) -> 
+            case (runOp' noc oid op) of
+                Left err -> Left err
+                Right (cont, v) -> Right (_noc cont, v)
 
 addAdmin :: UserId -> Operation ()
 addAdmin uid = checkAccess () forNoCAdmins $ do

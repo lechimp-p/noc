@@ -32,5 +32,5 @@ data Error =
     | OnlyOneChannelOwnerLeft ChanId
     | OnlyOneNoCAdminLeft
     | DuplicateLogin Login
-    | CantLogin Login Password
+    | CantLogin Login 
     deriving (Show, Eq)

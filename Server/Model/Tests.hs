@@ -8,6 +8,7 @@ import Data.Text hiding (group)
 import qualified Data.Set as S
 
 import Model
+import Model.Errors
 import Model.BaseTypes (UserId (..), ChanId (..), MsgId (..), Login, Password)
 import Model.NoC (NoC)
 import Model.Permissions (isNoCAdmin, isAdminOf, isOwnerOf, isProducerIn, isConsumerIn)
@@ -25,7 +26,7 @@ nocFuncTests = group "Tests of NoCs functionality."
             uid <- createUser (mkLogin name) (mkPassword name)
             name' <- getUserLogin uid
             return $ (mkLogin name) == name'  
-    , test "User added." "Could not retreive user by login after adding."
+    , test "User added." "Could not retreive user by mkLogin after adding."
         $ onFreshNoC $ do
             let name = "xyz"
             uid <- createUser (mkLogin name) (mkPassword name)
@@ -33,7 +34,7 @@ nocFuncTests = group "Tests of NoCs functionality."
             return $ uid == uid'
     , test "Admin added." "User is not an admin after adding."
         $ onFreshNoC $ do
-            uid <- createUser (mkLogin "user") (mkPassword "password") 
+            uid <- createUser (mkLogin "user") (mkPassword "mkPassword") 
             addAdmin uid
             isNoCAdmin uid
     , test "None existing user added as admin." "Could add non existing users as admins."
@@ -50,6 +51,26 @@ nocPermTests = group "Tests of Permissions on NoC"
     [ test "User with id 0 is admin." "Expectation on implementation failed: user with id 0 is not an admin."
         $ onFreshNoC $ do
             isNoCAdmin (UserId 0)
+    , test "Admin can run commands on NoC." "Admin can't run commands on NoC."
+        $ doesNotFail
+            (let l = mkLogin "admin"
+                 pw = mkPassword "password"
+             in runOp (mkNoC l pw) l pw (return ())
+            )
+    , test "User with wrong mkPassword can not run commands on NoC."
+           "User with wrong mkPassword can run commands on NoC."
+        $ let l = mkLogin "admin"
+              pw = mkPassword "admin"
+              pw' = mkPassword "admin'"
+          in failsWith (CantLogin l) 
+           $ runOp (mkNoC l pw) l pw' (return ())
+    , test "User with non existing username can not run commands on NoC."
+           "User with non existing username can run commands on NoC."
+       $  let l = mkLogin "admin"
+              l' = mkLogin "admin'"
+              pw = mkPassword "admin"
+          in failsWith (CantLogin l') 
+           $ runOp (mkNoC l pw) l' pw (return ())
     , test "Admin creates a new user." "Admin can not create a new user."
         $ onFreshNoC $ do
             uid <- createUser (mkLogin "admin2") (mkPassword "admin2")
@@ -216,6 +237,13 @@ test n f action = Test $ TestInstance
     , setOption = \ _ _ -> Left "There are no options for the Test!"
     }
 
+doesNotFail :: Either Error (NoC, a) -> Bool
+doesNotFail (Left _) = False
+doesNotFail (Right _) = True
+
+failsWith :: Error -> Either Error (NoC, a) -> Bool
+failsWith _ (Right _) = False
+failsWith e (Left e') = e == e' 
 
 onFreshNoC :: Operation Bool -> Bool
 onFreshNoC op = 
