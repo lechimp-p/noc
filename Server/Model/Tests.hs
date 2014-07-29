@@ -57,8 +57,8 @@ nocPermTests = group "Tests of Permissions on NoC"
                  pw = mkPassword "password"
              in runOp (mkNoC l pw) l pw (return ())
             )
-    , test "User with wrong mkPassword can not run commands on NoC."
-           "User with wrong mkPassword can run commands on NoC."
+    , test "User with wrong password can not run commands on NoC."
+           "User with wrong password can run commands on NoC."
         $ let l = mkLogin "admin"
               pw = mkPassword "admin"
               pw' = mkPassword "admin'"
@@ -76,6 +76,8 @@ nocPermTests = group "Tests of Permissions on NoC"
             uid <- createUser (mkLogin "admin2") (mkPassword "admin2")
             getUserLogin uid
             return True 
+    , test "A non admin creates a new user." "A non admin can create a new user."
+        $ onFreshNoCFailsSeq [("owner", "owner", createUser (mkLogin "admin2") (mkPassword "admin2"))]
     , test "Admin adds another admin." "Admin can not add another admin."
         $ onFreshNoC $ do
             uid <- createUser (mkLogin "admin2") (mkPassword "admin2")
@@ -196,10 +198,50 @@ chanPermTests = group "Tests of Permissions on Channels" $
             ]
         )
 
-userPermTests = group "Tests of Permissions on Users."
-    [
-    ]
-
+userPermTests = group "Tests of Permissions on Users." $
+    -- take 'owner' user as examplet
+    ( Prelude.concat . flip fmap [ ("admin", onFreshNoCSeq, " could not")
+                                 , ("owner", onFreshNoCSeq, " could not")
+                                 , ("producer", onFreshNoCSeq, " could not")
+                                 ])
+        (\ (u,t,w) -> 
+            (flip fmap) [ ("login", \x -> getUserLogin x >> return True)
+                        , ("name", \x -> getUserName x >> return True)
+                        , ("desc", \x -> getUserDesc x >> return True)
+                        , ("icon", \x -> getUserIcon x >> return True)
+                        ]
+                (\ (n,a) -> 
+                    test (u ++ " reads " ++ n ++ " of owner.") (u ++ w ++ " read " ++ n ++ " of owner.")
+                        $ t $ mkChannel True ++
+                            [ (pack u, pack u, getUserByLogin "owner" >>= a ) ] 
+                )
+        )
+    ++ ( Prelude.concat . flip fmap [ ("admin", onFreshNoCSeq, " could not")
+                                    , ("owner", onFreshNoCSeq, " could not")
+                                    , ("producer", onFreshNoCFailsSeq, " could")
+                                    ]) 
+        (\ (u,t,w) ->
+            (flip fmap) [ ("login", \x -> setUserLogin x (mkLogin "owwwwner") >> return True)
+                        , ("name", \x -> setUserName x (mkName "the owwwwner") >> return True)
+                        , ("desc", \x -> setUserDesc x (mkDesc "i aarr the owwwner.") >> return True)
+                        , ("icon", \x -> setUserIcon x Nothing >> return True)
+                        ]
+                (\ (n,a) -> 
+                  test (u ++ " sets " ++ n ++ " of owner.") (u ++ w ++ " set " ++ n ++ " of owner.")
+                    $ t $ mkChannel True ++
+                        [ (pack u, pack u, getUserByLogin "owner" >>= a) ]
+                )
+            ++  [ test (u ++ " reads channels owned by owner.") (u ++ w ++ " read channels owned by owner.")
+                    $ t $ mkChannel True ++
+                        [ (pack u, pack u, getUserByLogin "owner" >>= getUserOwnedChannels >> return True) ]
+                , test (u ++ " reads subscriptions of owner.") (u ++ w ++ " read subscriptions of owner.")
+                    $ t $ mkChannel True ++
+                        [ (pack u, pack u, getUserByLogin "owner" >>= getUserSubscriptions >> return True) ]
+                , test (u ++ " reads contacts of owner.") (u ++ w ++ " read contacts of owner.")
+                    $ t $ mkChannel True ++
+                        [ (pack u, pack u, getUserByLogin "owner" >>= getUserContacts >> return True) ] 
+                ]
+        )
 
 -- helpers
     

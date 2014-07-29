@@ -93,7 +93,7 @@ forUserSelf = Permission
 
 forUserAdmins :: Permission UserId
 forUserAdmins = Permission 
-    (\ uid _ -> US.getAdmins >>= \as -> return (uid `S.member` as))
+    (\ oid _ -> US.getAdmins >>= \as -> return (oid `S.member` as))
     (\ oid uid -> return (NoUserAdmin oid uid))
 
 forUserSelfOrAdmins = mconcat [forUserSelf, forUserAdmins]
