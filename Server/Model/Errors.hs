@@ -16,6 +16,7 @@ data PermissionViolation =
     | NoUserAdmin UserId UserId
     | NoUserSelf UserId UserId
     | PVAnd PermissionViolation PermissionViolation
+    deriving (Show, Eq)
 
 instance Monoid PermissionViolation where
     mempty = JustForbidden
@@ -32,3 +33,4 @@ data Error =
     | OnlyOneNoCAdminLeft
     | DuplicateLogin Login
     | CantLogin Login Password
+    deriving (Show, Eq)
