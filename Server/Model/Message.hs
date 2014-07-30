@@ -19,6 +19,7 @@ import Model.BaseTypes
 
 data Message = Message 
     { _id           :: MsgId
+    , _chan         :: ChanId
     , _image        :: Maybe Image
     , _text         :: Text
     , _author       :: UserId
@@ -42,6 +43,7 @@ newtype IxText = IxText Text
 instance Indexable Message where
     empty = ixSet
         [ ixFun $ (:[]) . _id
+        , ixFun $ (:[]) . _chan
         , ixFun $ (:[]) . _author
         , ixFun $ (:[]) . _timestamp
         , ixFun $ fmap IxText . words . _text

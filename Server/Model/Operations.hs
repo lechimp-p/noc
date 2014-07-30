@@ -35,7 +35,7 @@ where
 
 import qualified Data.Set as S
 import qualified Data.IxSet as IX
-import Data.Text
+import Data.Text hiding (drop, take)
 import Control.Lens
 import Control.Applicative ((<$>))
 import Data.Time.Clock (UTCTime)
@@ -57,7 +57,9 @@ import Model.Message
 type SimpleLens a b = Lens a a b b 
 a @= b = a US.@= b
 
+---------
 -- on noc
+---------
 
 logUserIn :: NoC -> Login -> Password -> Maybe UserId
 logUserIn noc l pw = do
@@ -86,8 +88,9 @@ rmAdmin uid = checkAccess () forNoCAdmins $ do
     OnlyOneNoCAdminLeft `throwOn` (n == 1) 
     US.rmAdmin uid
 
-
+-------------------------
 -- operations on channels
+-------------------------
 
 getFromChan :: SimpleLens Channel a -> ChanId -> Operation a
 getFromChan l cid = checkAccess cid forAllChanPeople $ do
@@ -129,16 +132,16 @@ rmChanProducer = rmChanXX C.producers
 rmChanConsumer = rmChanXX C.consumers
 
 
+----------------------
 -- operations on users
+----------------------
 
-getFromUser :: SimpleLens User a
-            -> UserId -> Operation a
+getFromUser :: SimpleLens User a -> UserId -> Operation a
 getFromUser l uid = do
     user <- US.getUser uid
     return $ user ^. l 
 
-setToUser :: SimpleLens User a
-          -> UserId -> a -> Operation ()
+setToUser :: SimpleLens User a -> UserId -> a -> Operation ()
 setToUser l uid v = checkAccess uid forUserSelfOrAdmins $ do
     user <- US.getUser uid
     US.storeUser (set l v user) 
@@ -168,7 +171,9 @@ getUserByLogin l = do
         (Just user) -> return $ U._id user
         otherwise -> throw $ UnknownLogin l 
 
+--------------------
 -- creation of users
+--------------------
 
 createUser :: Login -> Password -> Operation UserId
 createUser l pw = checkAccess () forNoCAdmins $ do
@@ -176,7 +181,9 @@ createUser l pw = checkAccess () forNoCAdmins $ do
     US.storeUser $ User uid l pw (mkName "") (mkDesc "") Nothing S.empty S.empty S.empty
     return uid
 
+-----------------------
 -- creation of channels
+-----------------------
 
 createChannel :: Name -> Desc -> Operation ChanId
 createChannel n d = do
@@ -187,7 +194,9 @@ createChannel n d = do
     US.storeUser $ over U.ownedChannels (S.insert cid) user
     return cid
 
+----------------------
 -- posting of messages
+----------------------
 
 post :: ChanId -> UTCTime -> Text -> Maybe Image -> Operation MsgId
 post cid ts txt img = checkAccess cid forChanProducers $ do
@@ -195,11 +204,23 @@ post cid ts txt img = checkAccess cid forChanProducers $ do
     oid <- US.getOperatorId
     chan <- US.getChannel cid
     US.storeChannel $ over C.messages (S.insert mid) chan
-    US.storeMessage $ Message mid img txt oid ts
+    US.storeMessage $ Message mid cid img txt oid ts
     return mid
-    
 
+----------------------
+-- reading of messages
+----------------------
+
+type Offset = Int
+type Amount = Int
+
+messages :: ChanId -> Offset -> Amount -> Operation [Message]
+messages cid ofs am = checkAccess cid forConsumersOrOwners $ do
+    take am . drop ofs . IX.toDescList (IX.Proxy :: IX.Proxy UTCTime) <$> US.getMessages @= cid  
+    
+----------
 -- helpers
+----------
 
 checkDuplicateLogin l = do
     n <- IX.size <$> US.getUsers @= l 
