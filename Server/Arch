@@ -1,0 +1,34 @@
+* files in ./Model define the datamodel of the NoC
+    - Model.hs exports the interface to model, which is safe
+      to use regarding consistency of the data in model
+    - the model also handles authorisation in terms of
+      admins, channel owners/producers/consumers and the
+      single user
+    - operations are low level (i.e. atomic regarding
+      the model) and need to somehow combined to actions
+      (like creation of a complete user is createUser,
+      setUserName, setUserDesc, setUserIcon and maybe
+      creating a personal channel for the user)
+     
+* api structure (?)
+    /user/$id   /uploadIcon     -- user sets its icon
+                /set            -- user sets (some) of its data
+                /get            -- everyone reads user data
+                /contacts       -- get a list of contact ids, maybe additional data (?)
+                /subscriptions  -- get a list of subscriptions, maybe additional data (?)
+                /channels       -- owned channels, maybe additional data (?)
+    /chan/$id   /get            -- permitted users read info from channel
+                /set            -- permitted user set info to the channel 
+    .. to be continued
+
+* cookie (encrypted!!):
+    login       -- login name of user
+    password    -- password of user
+    timestamp   -- the last time the user send a request. for timeouting
+    .. to be continued (??)
+
+    - permanent or session?
+    - race conditions
+
+* security:
+    - validate input (no html, jscript (... ?))

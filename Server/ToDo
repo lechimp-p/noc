@@ -1,0 +1,12 @@
+* Persistenz implementieren
+    -> acid-state
+    -> SQL-Datenbank für noch dauerhaftere Persistenz?
+* Web-API definieren
+    -> basiert auf Operations
+    -> Mit Nico gemeinsam?
+    -> wie strukturieren?
+    -> JSON (aeson?)
+* Server mit happstack (?) bauen
+    -> Routing
+    -> Authentifizierung (Authorisierung ist von
+       Model geregelt)
