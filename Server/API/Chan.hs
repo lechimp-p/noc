@@ -11,10 +11,12 @@ import Happstack.Server
 
 import Model.BaseTypes
 
+ok' = ok . toResponse . pack
+
 data API
     = Get
     | Set
 
 route :: ChanId -> API -> RouteT API (ServerPartT IO) Response
 route uid url = case url of
-    otherwise -> ok . toResponse . pack $ "channel"
+    otherwise -> ok' $ "channel\n"

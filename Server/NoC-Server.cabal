@@ -68,6 +68,36 @@ executable NoC-Server
                         , time ==1.4.*
                         , containers ==0.5.*
 
+executable NoC-Server-dev
+    main-is:              DevMain.hs            
+    other-modules:        Model.BaseTypes
+                        , Model.Channel
+                        , Model.Errors
+                        , Model.Message
+                        , Model.NoC 
+                        , Model.Operations
+                        , Model.OpMonad
+                        , Model.Permissions
+                        , Model.UnsafeOperations
+                        , Model.User
+                        , API
+                        , API.User
+                        , API.Chan
+      
+    ghc-options:        -threaded
+    build-depends:        base ==4.6.*
+                        , text ==1.1.*
+                        , safecopy ==0.8.*
+                        , ixset ==1.0.*
+                        , lens ==4.2.*
+                        , time ==1.4.*
+                        , containers ==0.5.*
+                        , happstack-server ==7.3.*
+                        , web-routes ==0.27.*
+                        , web-routes-happstack ==0.23.*
+                        , web-routes-th ==0.22.*
+
+
 Test-Suite test-NoC-Server
     type:               detailed-0.9
     test-module:        Tests

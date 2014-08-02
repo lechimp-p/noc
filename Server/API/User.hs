@@ -9,7 +9,9 @@ import Happstack.Server
        ( ServerPartT, Response, ok, toResponse
        )
 
-import Model.BaseTypes
+import qualified Model.BaseTypes as BT
+
+ok' = ok . toResponse . pack
 
 data API
     = Login
@@ -20,7 +22,13 @@ data API
     | Subscriptions
     | Channels
 
-route :: UserId -> API -> RouteT API (ServerPartT IO) Response
+route :: BT.UserId -> API -> RouteT API (ServerPartT IO) Response
 route uid url = case url of
-    otherwise -> ok . toResponse . pack $ "user"
+    Login           -> ok' "login\n"
+    Get             -> ok' "get\n"
+    Set             -> ok' "set\n"
+    UploadIcon      -> ok' "uploadIcon\n"
+    Contacts        -> ok' "contacts\n"
+    Subscriptions   -> ok' "subscriptions\n"
+    Channels        -> ok' "channels\n"
 
