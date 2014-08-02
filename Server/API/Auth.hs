@@ -1,5 +1,6 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module API.Auth
 where
@@ -35,10 +36,10 @@ authGet :: (AuthData -> a) -> MonadAPI url AuthData a
 authGet f = getSession >>= return . f 
 
 authSet :: (AuthData -> AuthData) -> MonadAPI url AuthData ()
-authSet f = getSession >>= setSession . f
+authSet f = getSession >>= putSession . f
 
 authPassword = authGet _password
 authLogin = authGet _login
 authTimestamp = authGet _timestamp
 
-authLogin
+logUserIn = authSet (set login (Just "Foo"))

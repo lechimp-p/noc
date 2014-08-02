@@ -13,7 +13,7 @@ import Happstack.Server
 
 import qualified Model.BaseTypes as BT
 import API.Monad
-import API.Auth
+import API.Auth (AuthData, logUserIn)
 
 ok' = ok . toResponse . pack
 
@@ -30,7 +30,7 @@ data API
 
 route :: BT.UserId -> API -> MonadAPI API AuthData Response
 route uid url = case url of
-    Login           -> ok' "login\n"
+    Login           -> login uid 
     Logout          -> ok' "logout\n"
     Get             -> ok' "get\n"
     Set             -> ok' "set\n"
@@ -39,5 +39,5 @@ route uid url = case url of
     Subscriptions   -> ok' "subscriptions\n"
     Channels        -> ok' "channels\n"
 
---login :: BT.UserId -> MonadAPI API AuthData Response
---login = 
+login :: BT.UserId -> MonadAPI API AuthData Response
+login _ = logUserIn >> ok' "logged in"
