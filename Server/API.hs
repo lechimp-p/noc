@@ -9,10 +9,12 @@ import Web.Routes
         , mkSitePI, runRouteT )
 import Web.Routes.Happstack
 import Happstack.Server 
-       (ServerPartT, Response, ok, toResponse)
+        ( ServerPartT, Response, ok
+        , toResponse)
 
 import Model.BaseTypes
 import API.Monad
+import API.Auth
 import qualified API.User as User
 import qualified API.Channel as Channel
 
@@ -23,16 +25,15 @@ data API
     | Default
     deriving (Generic)
 
-route :: API -> MonadAPI API Response
+route :: API -> MonadAPI API AuthData Response
 route url = case url of
     User uid uapi       -> User uid `nestURL` User.route (UserId uid) uapi 
     Channel cid capi    -> Channel cid `nestURL` Channel.route (ChanId cid) capi
     Default             -> helloWorld
 
-api :: Site API (ServerPartT IO Response)
+api :: Site API (InnerMonadAPI AuthData Response)
 api = setDefault Default $ mkSitePI (runRouteT $ unMonadAPI . route)
-
-helloWorld :: MonadAPI API Response
+helloWorld :: MonadAPI API s Response
 helloWorld = ok . toResponse . pack $ "This is the NoC-Server.\n"
 --showURL (User 100 User.Get) >>= ok . toResponse 
 

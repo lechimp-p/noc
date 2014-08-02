@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
 
 module API.Channel
 where
@@ -20,6 +21,6 @@ data API
     | Set
     deriving (Generic)
 
-route :: ChanId -> API -> MonadAPI API Response
+route :: ChanId -> API -> MonadAPI API s Response
 route uid url = case url of
     otherwise -> ok' $ "channel\n"

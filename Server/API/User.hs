@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
 
 module API.User 
 where
@@ -12,6 +13,7 @@ import Happstack.Server
 
 import qualified Model.BaseTypes as BT
 import API.Monad
+import API.Auth
 
 ok' = ok . toResponse . pack
 
@@ -26,9 +28,10 @@ data API
     | Channels
     deriving (Generic)
 
-route :: BT.UserId -> API -> MonadAPI API Response
+route :: BT.UserId -> API -> MonadAPI API AuthData Response
 route uid url = case url of
     Login           -> ok' "login\n"
+    Logout          -> ok' "logout\n"
     Get             -> ok' "get\n"
     Set             -> ok' "set\n"
     UploadIcon      -> ok' "uploadIcon\n"
@@ -36,3 +39,5 @@ route uid url = case url of
     Subscriptions   -> ok' "subscriptions\n"
     Channels        -> ok' "channels\n"
 
+--login :: BT.UserId -> MonadAPI API AuthData Response
+--login = 

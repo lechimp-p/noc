@@ -87,7 +87,7 @@ executable NoC-Server-dev
                         , time ==1.4.*
                         , containers ==0.5.*
                         , happstack-server ==7.3.*
-                        , happstack-clientsession ==7.1.*
+                        , happstack-clientsession ==7.2.*
                         , web-routes ==0.27.*
                         , web-routes-happstack ==0.23.*
                         , web-routes-th ==0.22.*
