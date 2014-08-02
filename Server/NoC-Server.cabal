@@ -86,11 +86,14 @@ executable NoC-Server-dev
                         , lens ==4.2.*
                         , time ==1.4.*
                         , containers ==0.5.*
+                        , transformers ==0.4.*
+                        , bytestring ==0.10.*
                         , happstack-server ==7.3.*
                         , happstack-clientsession ==7.2.*
                         , web-routes ==0.27.*
                         , web-routes-happstack ==0.23.*
                         , web-routes-th ==0.22.*
+                        , aeson ==0.7.*
 
 
 Test-Suite test-NoC-Server

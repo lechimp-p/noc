@@ -42,4 +42,6 @@ authPassword = authGet _password
 authLogin = authGet _login
 authTimestamp = authGet _timestamp
 
-logUserIn = authSet (set login (Just "Foo"))
+logUserIn l pw = do
+    authSet (set login (Just l)) 
+    authSet (set password (Just pw))
