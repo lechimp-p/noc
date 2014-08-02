@@ -30,7 +30,7 @@ data API
     | Channels
     deriving (Generic)
 
-route :: BT.UserId -> API -> MonadAPI API AuthData Response
+route :: BT.UserId -> API -> APIMonad API AuthData Response
 route uid url = case url of
     Login           -> method [POST, HEAD] >> loginHandler uid 
     Logout          -> ok' "logout\n"
@@ -53,7 +53,7 @@ data LoginJSON = LoginJson
 
 instance FromJSON LoginJSON
 
-loginHandler :: BT.UserId -> MonadAPI API AuthData Response
+loginHandler :: BT.UserId -> APIMonad API AuthData Response
 loginHandler _ = do
     ld <- decode <$> getBody 
     case ld :: Maybe LoginJSON of

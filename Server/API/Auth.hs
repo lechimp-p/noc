@@ -32,10 +32,10 @@ instance ClientSession AuthData where
     emptySession = AuthData Nothing Nothing Nothing 
 
 
-authGet :: (AuthData -> a) -> MonadAPI url AuthData a
+authGet :: (AuthData -> a) -> APIMonad url AuthData a
 authGet f = getSession >>= return . f 
 
-authSet :: (AuthData -> AuthData) -> MonadAPI url AuthData ()
+authSet :: (AuthData -> AuthData) -> APIMonad url AuthData ()
 authSet f = getSession >>= putSession . f
 
 authPassword = authGet _password

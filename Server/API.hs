@@ -25,16 +25,16 @@ data API
     | Default
     deriving (Generic)
 
-route :: API -> MonadAPI API AuthData Response
+route :: API -> APIMonad API AuthData Response
 route url = case url of
     User uid uapi       -> User uid `nestURL` User.route (UserId uid) uapi 
     Channel cid capi    -> Channel cid `nestURL` Channel.route (ChanId cid) capi
     Default             -> helloWorld
 
-api :: Site API (InnerMonadAPI AuthData Response)
-api = setDefault Default $ mkSitePI (runRouteT $ unMonadAPI . route)
+api :: Site API (InnerAPIMonad AuthData Response)
+api = setDefault Default $ mkSitePI (runRouteT $ unAPIMonad . route)
 
-helloWorld :: MonadAPI API AuthData Response
+helloWorld :: APIMonad API AuthData Response
 --helloWorld = ok . toResponse . pack $ "This is the NoC-Server.\n"
 --helloWorld = showURL (User 100 User.Get) >>= ok . toResponse 
 helloWorld = do
