@@ -5,13 +5,13 @@ where
 
 import Data.Text (pack)
 import Web.Routes
-import Web.Routes.TH
 import Web.Routes.Happstack
 import Happstack.Server 
        ( ServerPartT, Response, ok, toResponse
        )
 
 import qualified Model.BaseTypes as BT
+import API.Monad
 
 ok' = ok . toResponse . pack
 
@@ -26,7 +26,7 @@ data API
     | Channels
     deriving (Generic)
 
-route :: BT.UserId -> API -> RouteT API (ServerPartT IO) Response
+route :: BT.UserId -> API -> MonadAPI API Response
 route uid url = case url of
     Login           -> ok' "login\n"
     Get             -> ok' "get\n"

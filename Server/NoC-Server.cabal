@@ -43,10 +43,7 @@ cabal-version:       >=1.8
 
 
 executable NoC-Server
-  -- .hs or .lhs file containing the Main module.
     main-is:            Main.hs            
-  
-  -- Modules included in this executable, other than Main.
     other-modules:        Model.BaseTypes
                         , Model.Channel
                         , Model.Errors
@@ -57,9 +54,7 @@ executable NoC-Server
                         , Model.Permissions
                         , Model.UnsafeOperations
                         , Model.User
-      
-  
-  -- Other library packages from which modules are imported.
+    ghc-options:        -threaded
     build-depends:        base ==4.6.*
                         , text ==1.1.*
                         , safecopy ==0.8.*
@@ -83,7 +78,6 @@ executable NoC-Server-dev
                         , API
                         , API.User
                         , API.Channel
-      
     ghc-options:        -threaded
     build-depends:        base ==4.6.*
                         , text ==1.1.*
@@ -93,6 +87,7 @@ executable NoC-Server-dev
                         , time ==1.4.*
                         , containers ==0.5.*
                         , happstack-server ==7.3.*
+                        , happstack-clientsession ==7.1.*
                         , web-routes ==0.27.*
                         , web-routes-happstack ==0.23.*
                         , web-routes-th ==0.22.*
