@@ -10,7 +10,10 @@ import Data.Time.Clock
 import Control.Lens (makeLenses)
 import Data.SafeCopy (SafeCopy, base, deriveSafeCopy)
 import Happstack.Server.ClientSession 
-        ( ClientSession, emptySession, liftSessionStateT )
+        ( ClientSession, emptySession
+        , getSession, putSession, expireSession 
+        )
+import Control.Lens
 
 import API.Monad
 
@@ -27,5 +30,15 @@ makeLenses ''AuthData
 instance ClientSession AuthData where
     emptySession = AuthData Nothing Nothing Nothing 
 
-authPassword :: MonadAPI url AuthData Text
-authPassword = liftSessionStateT $ view password
+
+authGet :: (AuthData -> a) -> MonadAPI url AuthData a
+authGet f = getSession >>= return . f 
+
+authSet :: (AuthData -> AuthData) -> MonadAPI url AuthData ()
+authSet f = getSession >>= setSession . f
+
+authPassword = authGet _password
+authLogin = authGet _login
+authTimestamp = authGet _timestamp
+
+authLogin
