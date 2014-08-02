@@ -15,14 +15,14 @@ import qualified API.User as User
 import qualified API.Chan as Chan
 
 data API
-    = User UserId User.API
-    | Channel ChanId Chan.API
+    = User Int User.API
+    | Channel Int Chan.API
     | Default
 
 route :: API -> RouteT API (ServerPartT IO) Response
 route url = case url of
-    User uid uapi       -> User uid `nestURL` User.route uid uapi 
-    Channel cid capi    -> Channel cid `nestURL` Chan.route cid capi
+    User uid uapi       -> User uid `nestURL` User.route (UserId uid) uapi 
+    Channel cid capi    -> Channel cid `nestURL` Chan.route (ChanId cid) capi
     Default             -> helloWorld
 
 api :: Site API (ServerPartT IO Response)
