@@ -17,6 +17,7 @@ ok' = ok . toResponse . pack
 
 data API
     = Login
+    | Logout
     | Get
     | Set
     | UploadIcon
