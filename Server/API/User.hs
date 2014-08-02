@@ -7,7 +7,10 @@ where
 import Data.Text (pack, Text)
 import Web.Routes
 import Web.Routes.Happstack
-import Happstack.Server ( ok, toResponse, Response )
+import Happstack.Server 
+        ( Response, ok, method
+        , Method (POST, GET, HEAD)
+        )
 import Data.Aeson
 import Control.Applicative
 
@@ -29,7 +32,7 @@ data API
 
 route :: BT.UserId -> API -> MonadAPI API AuthData Response
 route uid url = case url of
-    Login           -> loginHandler uid 
+    Login           -> method [POST, HEAD] >> loginHandler uid 
     Logout          -> ok' "logout\n"
     Get             -> ok' "get\n"
     Set             -> ok' "set\n"
@@ -54,6 +57,6 @@ loginHandler :: BT.UserId -> MonadAPI API AuthData Response
 loginHandler _ = do
     ld <- decode <$> getBody 
     case ld :: Maybe LoginJSON of
-        Just ld' -> logUserIn (login ld') (password ld') >> ok' "logged in"
+        Just ld' -> logUserIn (login ld') (password ld') >> noContent'
         Nothing -> badRequest' "Could not decode."
 
