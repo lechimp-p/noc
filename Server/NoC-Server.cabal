@@ -82,7 +82,7 @@ executable NoC-Server-dev
                         , Model.User
                         , API
                         , API.User
-                        , API.Chan
+                        , API.Channel
       
     ghc-options:        -threaded
     build-depends:        base ==4.6.*

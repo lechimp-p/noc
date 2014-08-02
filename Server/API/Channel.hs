@@ -1,4 +1,6 @@
-module API.Chan
+{-# LANGUAGE DeriveGeneric #-}
+
+module API.Channel
 where
 
 import Data.Text (pack)
@@ -16,6 +18,7 @@ ok' = ok . toResponse . pack
 data API
     = Get
     | Set
+    deriving (Generic)
 
 route :: ChanId -> API -> RouteT API (ServerPartT IO) Response
 route uid url = case url of

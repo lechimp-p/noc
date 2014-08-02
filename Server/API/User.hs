@@ -1,3 +1,5 @@
+{-# LANGUAGE DeriveGeneric #-}
+
 module API.User 
 where
 
@@ -21,6 +23,7 @@ data API
     | Contacts
     | Subscriptions
     | Channels
+    deriving (Generic)
 
 route :: BT.UserId -> API -> RouteT API (ServerPartT IO) Response
 route uid url = case url of
