@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module API
 where
@@ -10,27 +11,41 @@ import Web.Routes
 import Web.Routes.Happstack
 import Happstack.Server 
         ( ServerPartT, Response, ok
-        , toResponse)
+        , toResponse, Method (..), method
+        )
+import Data.Aeson
+import Data.Aeson.Types
 
-import Model.BaseTypes
+import qualified Model.BaseTypes as BT
 import API.ACIDEvents (ACID)
 import API.Monad
 import API.Auth
+import API.Utils
 import qualified API.User as User
 import qualified API.Channel as Channel
 
 
 data API
-    = User Int User.API
+    = Login 
+    | Logout
+    | User Int User.API
     | Channel Int Channel.API
     | Default
     deriving (Generic)
 
 route :: ACID -> API -> APIMonad API AuthData Response
 route acid url = case url of
-    User uid uapi       -> User uid `nestURL` User.route acid (UserId uid) uapi 
-    Channel cid capi    -> Channel cid `nestURL` Channel.route acid (ChanId cid) capi
+    Login               -> (>>) (method [POST, HEAD])
+                           $ parseBody $ \obj -> do
+                                l <- obj .: "login"
+                                pw <- obj .: "password"
+                                return $ logUserIn acid l pw 
+    Logout              -> method [POST, HEAD] 
+                           >> logUserOut  
+    User uid uapi       -> User uid `nestURL` User.route acid (BT.UserId uid) uapi 
+    Channel cid capi    -> Channel cid `nestURL` Channel.route acid (BT.ChanId cid) capi
     Default             -> helloWorld
+
 
 api :: ACID -> Site API (InnerAPIMonad AuthData Response)
 api acid = setDefault Default $ mkSitePI (runRouteT $ unAPIMonad . route acid)

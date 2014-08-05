@@ -22,6 +22,7 @@ import Data.Acid.Advanced ( query' )
 import API.ACIDEvents
 import API.Monad
 import API.Utils
+import API.Errors
 import Model
 
 data AuthData = AuthData 
@@ -49,15 +50,13 @@ authLogin = authGet _login
 authTimestamp = authGet _timestamp
 
 logUserIn :: ACID -> Text -> Text -> APIMonad url AuthData Response
-logUserIn acid l pw = do
-    res <- query' acid (LoginTA (mkLogin l) (mkPassword pw))
-    case res of 
-        Right _ -> do
-            authSet (set login (Just l)) 
-            authSet (set password (Just pw))
-            noContent'
-        Left _ -> do
-            ok' $ "No authentication."
+logUserIn acid l pw = 
+    let ta = QueryTA $ LoginTA (mkLogin l) (mkPassword pw)  
+    in handleErrors acid ta $ \ _ -> do
+        authSet (set login (Just l)) 
+        authSet (set password (Just pw))
+        noContent'
+
 
 logUserOut :: APIMonad url AuthData Response
 logUserOut = do
