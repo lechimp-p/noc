@@ -101,8 +101,8 @@ rmAdmin uid = Operation $ \ s ->
     let s' = over (noc . admins) (S.delete uid) s
     in Right (s', ())
 
-getOperatorId :: Operation UserId
-getOperatorId = Operation $ \ s -> Right (s, _operator s)
+getOperatorId' :: Operation (Maybe UserId)
+getOperatorId' = Operation $ \ s -> Right (s, _operator s)
 
 infixl 9 @=
 

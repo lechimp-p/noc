@@ -33,4 +33,6 @@ data Error =
     | OnlyOneNoCAdminLeft
     | DuplicateLogin Login
     | CantLogin Login 
+    | AlreadyLoggedIn
+    | NotLoggedIn
     deriving (Show, Eq)

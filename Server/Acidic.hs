@@ -1,10 +1,10 @@
 {-# LANGUAGE TemplateHaskell #-}
 
-module ACID
+module Acidic
 where
 
 import Data.Acid (makeAcidic)
 
-import Model.NoC (NoC)
+import Model
 
 $(makeAcidic ''NoC [])

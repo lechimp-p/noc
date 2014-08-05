@@ -16,7 +16,7 @@ import Model.NoC
 
 data OpContext = OpContext
     { _noc       :: NoC
-    , _operator  :: UserId
+    , _operator  :: Maybe UserId
     }
     deriving (Data, Typeable)
 
@@ -24,7 +24,7 @@ makeLenses ''OpContext
 
 newtype Operation a = Operation { runOperation :: OpContext -> Either Error (OpContext, a) }
 
-runOp' noc oid action = runOperation action $ OpContext noc oid 
+runOp' noc action = runOperation action $ OpContext noc Nothing 
 
 instance Monad Operation where
     return v = Operation $ \ s -> Right (s, v)

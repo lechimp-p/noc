@@ -16,7 +16,7 @@ import qualified Model.Message as M
 
 data Permission a = 
       Permission
-        (UserId -> a -> Operation Bool) -- definition of the permission
+        (UserId -> a -> Operation Bool)                   -- definition of the permission
         (UserId -> a -> Operation PermissionViolation)    -- info about violation
     | Forbidden                                 
 
@@ -31,15 +31,21 @@ instance Monoid (Permission a) where
 -- permission eval
 
 checkAccess :: a -> Permission a -> Operation b -> Operation b
-checkAccess cont (Permission check constr) action = do
-    oid <- US.getOperatorId
-    success <- check oid cont
-    if not success 
-        then do 
-            err <- constr oid cont
-            throw $ InsufficientPermissions err
-        else do
-            action
+checkAccess cont (Permission check constr) action = ifIsLoggedIn' $ \oid -> do
+    success <- check oid cont 
+    if not success
+        then constr oid cont >>= throw . InsufficientPermissions 
+        else action
+
+ifIsLoggedIn' :: (UserId -> Operation b) -> Operation b 
+ifIsLoggedIn' op = do
+    oid <- US.getOperatorId'
+    case oid of
+        Nothing  -> throw NotLoggedIn
+        Just oid -> op oid 
+
+ifIsLoggedIn :: Operation b -> Operation b
+ifIsLoggedIn = ifIsLoggedIn' . const 
 
 -- permissions on noc
 

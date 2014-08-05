@@ -1,8 +1,11 @@
 module Model
     ( module Model.Operations
+    , NoC
     , mkNoC
     , Operation
+    , Login
     , mkLogin
+    , Password
     , mkPassword
     , mkName
     , mkDesc

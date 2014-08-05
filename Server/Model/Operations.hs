@@ -37,8 +37,10 @@ import qualified Data.Set as S
 import qualified Data.IxSet as IX
 import Data.Text hiding (drop, take)
 import Control.Lens
+import Control.Lens.Prism
 import Control.Applicative ((<$>))
 import Data.Time.Clock (UTCTime)
+import Data.Maybe (isJust)
 
 import Model.Errors
 import Model.Permissions
@@ -61,21 +63,27 @@ a @= b = a US.@= b
 -- on noc
 ---------
 
-logUserIn :: NoC -> Login -> Password -> Maybe UserId
-logUserIn noc l pw = do
-    user <- IX.getOne (N._users noc IX.@= l)
-    if checkPassword (U._password user) pw
-        then return (U._id user)
-        else fail "password mismatch" 
+doLogin :: Login -> Password -> Operation ()
+doLogin l pw = do
+    oid <- US.getOperatorId'
+    AlreadyLoggedIn `throwOn` isJust oid
+    Operation $ \s -> 
+        let maybeUserId = do
+                user <- IX.getOne ((s ^. noc . users) IX.@= l)
+                if checkPassword (U._password user) pw
+                    then return (U._id user)
+                    else fail "password mismatch" 
+        in case maybeUserId of
+                Nothing  -> Left $ CantLogin l
+                Just uid -> Right $ (s & operator .~ Just uid, ())  
+
+getOperatorId :: Operation UserId
+getOperatorId = ifIsLoggedIn' return 
 
 runOp :: NoC -> Login -> Password -> Operation a -> Either Error (NoC, a)
-runOp noc l pw op = 
-    case logUserIn noc l pw of
-        Nothing -> Left $ CantLogin l
-        (Just oid) -> 
-            case (runOp' noc oid op) of
-                Left err -> Left err
-                Right (cont, v) -> Right (_noc cont, v)
+runOp noc l pw op = over (_Right . _1) _noc 
+                  . runOp' noc 
+                  $ doLogin l pw >> op
 
 addAdmin :: UserId -> Operation ()
 addAdmin uid = checkAccess () forNoCAdmins $ do
@@ -188,7 +196,7 @@ createUser l pw = checkAccess () forNoCAdmins $ do
 createChannel :: Name -> Desc -> Operation ChanId
 createChannel n d = do
     cid <- US.newChanId
-    oid <- US.getOperatorId
+    oid <- getOperatorId
     user <- US.getUser oid
     US.storeChannel $ Channel cid n d (S.insert oid S.empty) S.empty S.empty S.empty
     US.storeUser $ over U.ownedChannels (S.insert cid) user
@@ -201,7 +209,7 @@ createChannel n d = do
 post :: ChanId -> UTCTime -> Text -> Maybe Image -> Operation MsgId
 post cid ts txt img = checkAccess cid forChanProducers $ do
     mid <- US.newMsgId 
-    oid <- US.getOperatorId
+    oid <- getOperatorId
     chan <- US.getChannel cid
     US.storeChannel $ over C.messages (S.insert mid) chan
     US.storeMessage $ Message mid cid img txt oid ts
