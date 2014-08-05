@@ -12,7 +12,7 @@ import Happstack.Server
        )
 
 import Model.BaseTypes
-import ACID
+import API.ACIDEvents
 import API.Monad
 
 ok' = ok . toResponse . pack
@@ -22,6 +22,6 @@ data API
     | Set
     deriving (Generic)
 
-route :: ACIDNoC -> ChanId -> API -> APIMonad API s Response
+route :: ACID -> ChanId -> API -> APIMonad API s Response
 route acid uid url = case url of
     otherwise -> ok' $ "channel\n"

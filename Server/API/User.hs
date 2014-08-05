@@ -16,8 +16,8 @@ import Data.Aeson
 import Data.Aeson.Types
 import Control.Applicative
 
-import ACID
 import qualified Model.BaseTypes as BT
+import API.ACIDEvents
 import API.Monad
 import API.Utils
 import API.Auth (AuthData, logUserIn)
@@ -33,9 +33,9 @@ data API
     | Channels
     deriving (Generic)
 
-route :: ACIDNoC -> BT.UserId -> API -> APIMonad API AuthData Response
+route :: ACID -> BT.UserId -> API -> APIMonad API AuthData Response
 route acid uid url = case url of
-    Login           -> method [POST, HEAD] >> loginHandler uid 
+    Login           -> method [POST, HEAD] >> loginHandler acid uid 
     Logout          -> ok' "logout\n"
     Get             -> ok' "get\n"
     Set             -> ok' "set\n"
@@ -48,8 +48,8 @@ route acid uid url = case url of
 -- Login
 --------
 
-loginHandler :: BT.UserId -> APIMonad API AuthData Response
-loginHandler _ = parseBody $ \obj -> do
+loginHandler :: ACID -> BT.UserId -> APIMonad API AuthData Response
+loginHandler acid _ = parseBody $ \obj -> do
     l <- obj .: "login"
     pw <- obj .: "password"
-    return $ logUserIn l pw >> noContent'
+    return $ logUserIn acid l pw 

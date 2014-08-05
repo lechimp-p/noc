@@ -10,14 +10,17 @@ import Data.Data (Data, Typeable)
 import Data.Time.Clock
 import Control.Lens (makeLenses)
 import Data.SafeCopy (SafeCopy, base, deriveSafeCopy)
+import Happstack.Server
+        ( Response )
 import Happstack.Server.ClientSession 
         ( ClientSession, emptySession
         , getSession, putSession, expireSession 
         )
 import Control.Lens
 
-import ACID
+import API.ACIDEvents
 import API.Monad
+import API.Utils
 import Model
 
 data AuthData = AuthData 
@@ -44,6 +47,15 @@ authPassword = authGet _password
 authLogin = authGet _login
 authTimestamp = authGet _timestamp
 
-logUserIn l pw = do
+logUserIn :: ACID -> Text -> Text -> APIMonad url AuthData Response
+logUserIn acid l pw = do
     authSet (set login (Just l)) 
     authSet (set password (Just pw))
+    noContent'
+
+logUserOut :: APIMonad url AuthData Response
+logUserOut = do
+    authSet (set login Nothing)
+    authSet (set password Nothing)
+    noContent'
+    

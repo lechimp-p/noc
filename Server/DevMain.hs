@@ -18,8 +18,7 @@ import Data.Acid.Local (createCheckpointAndClose)
 
 import Model
 import API (api)
-import ACID
-import Acidic
+import API.ACIDEvents
 
 bodyPolicy = defaultBodyPolicy "/tmp/NoC-Server-dev"
                                1000 -- file upload
