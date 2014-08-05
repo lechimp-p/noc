@@ -22,10 +22,11 @@ import qualified Web.Routes as WR
 import Web.Routes.Happstack
 import Control.Applicative
 import Control.Monad
+import Control.Monad.IO.Class
 
 type InnerAPIMonad session = (ClientSessionT session (ServerPartT IO))
 newtype APIMonad url session a = APIMonad { unAPIMonad :: RouteT url (InnerAPIMonad session) a }
-                                 deriving (Monad, MonadPlus, Applicative, Functor)
+                                 deriving (Monad, MonadPlus, MonadIO, Applicative, Functor)
 
 instance FilterMonad Response (APIMonad url session) where
     setFilter = APIMonad . setFilter 

@@ -17,6 +17,7 @@ import Happstack.Server.ClientSession
         , getSession, putSession, expireSession 
         )
 import Control.Lens
+import Data.Acid.Advanced ( query' )
 
 import API.ACIDEvents
 import API.Monad
@@ -49,9 +50,14 @@ authTimestamp = authGet _timestamp
 
 logUserIn :: ACID -> Text -> Text -> APIMonad url AuthData Response
 logUserIn acid l pw = do
-    authSet (set login (Just l)) 
-    authSet (set password (Just pw))
-    noContent'
+    res <- query' acid (LoginTA (mkLogin l) (mkPassword pw))
+    if res 
+        then do
+            authSet (set login (Just l)) 
+            authSet (set password (Just pw))
+            noContent'
+        else do
+            ok' $ "No authentication."
 
 logUserOut :: APIMonad url AuthData Response
 logUserOut = do

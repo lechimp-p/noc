@@ -81,6 +81,7 @@ executable NoC-Server-dev
     ghc-options:        -threaded
     build-depends:        base ==4.6.*
                         , text ==1.1.*
+                        , mtl ==2.2.*
                         , safecopy ==0.8.*
                         , ixset ==1.0.*
                         , lens ==4.2.*
@@ -92,7 +93,6 @@ executable NoC-Server-dev
                         , happstack-clientsession ==7.2.*
                         , web-routes ==0.27.*
                         , web-routes-happstack ==0.23.*
-                        , web-routes-th ==0.22.*
                         , aeson ==0.7.*
                         , acid-state ==0.12.*
 
