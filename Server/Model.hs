@@ -1,10 +1,15 @@
 module Model
     ( module Model.Operations
+    , NoC
     , mkNoC
     , Operation
+    , Login
     , mkLogin
+    , Password
     , mkPassword
+    , Name
     , mkName
+    , Desc
     , mkDesc
     )
 where

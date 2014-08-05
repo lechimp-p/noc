@@ -16,7 +16,9 @@ import Happstack.Server.ClientSession
         )
 import Control.Lens
 
+import ACID
 import API.Monad
+import Model
 
 data AuthData = AuthData 
     { _login        :: Maybe Text

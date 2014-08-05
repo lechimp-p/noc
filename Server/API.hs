@@ -13,6 +13,7 @@ import Happstack.Server
         , toResponse)
 
 import Model.BaseTypes
+import ACID
 import API.Monad
 import API.Auth
 import qualified API.User as User
@@ -25,14 +26,14 @@ data API
     | Default
     deriving (Generic)
 
-route :: API -> APIMonad API AuthData Response
-route url = case url of
-    User uid uapi       -> User uid `nestURL` User.route (UserId uid) uapi 
-    Channel cid capi    -> Channel cid `nestURL` Channel.route (ChanId cid) capi
+route :: ACIDNoC -> API -> APIMonad API AuthData Response
+route acid url = case url of
+    User uid uapi       -> User uid `nestURL` User.route acid (UserId uid) uapi 
+    Channel cid capi    -> Channel cid `nestURL` Channel.route acid (ChanId cid) capi
     Default             -> helloWorld
 
-api :: Site API (InnerAPIMonad AuthData Response)
-api = setDefault Default $ mkSitePI (runRouteT $ unAPIMonad . route)
+api :: ACIDNoC -> Site API (InnerAPIMonad AuthData Response)
+api acid = setDefault Default $ mkSitePI (runRouteT $ unAPIMonad . route acid)
 
 helloWorld :: APIMonad API AuthData Response
 --helloWorld = ok . toResponse . pack $ "This is the NoC-Server.\n"
