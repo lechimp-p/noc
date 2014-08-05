@@ -145,7 +145,7 @@ rmChanConsumer = rmChanXX C.consumers
 ----------------------
 
 getFromUser :: SimpleLens User a -> UserId -> Operation a
-getFromUser l uid = do
+getFromUser l uid = ifIsLoggedIn $ do
     user <- US.getUser uid
     return $ user ^. l 
 
@@ -173,7 +173,7 @@ setUserDesc = setToUser U.desc
 setUserIcon = setToUser U.icon
 
 getUserByLogin :: Text -> Operation UserId
-getUserByLogin l = do
+getUserByLogin l = ifIsLoggedIn $ do
     user <- IX.getOne <$> US.getUsers @= (Login l)
     case user of
         (Just user) -> return $ U._id user
@@ -194,7 +194,7 @@ createUser l pw = checkAccess () forNoCAdmins $ do
 -----------------------
 
 createChannel :: Name -> Desc -> Operation ChanId
-createChannel n d = do
+createChannel n d = ifIsLoggedIn $ do
     cid <- US.newChanId
     oid <- getOperatorId
     user <- US.getUser oid
