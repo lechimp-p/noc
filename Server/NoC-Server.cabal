@@ -94,7 +94,7 @@ executable NoC-Server-dev
                         , web-routes-happstack ==0.23.*
                         , web-routes-th ==0.22.*
                         , aeson ==0.7.*
-
+                        , acid-state ==0.12.*
 
 Test-Suite test-NoC-Server
     type:               detailed-0.9
