@@ -37,4 +37,4 @@ main = do
         $ \acid ->
             simpleHTTP nullConf . withClientSessionT sessionConf $ do
                 decodeBody bodyPolicy
-                implSite "http://localhost:8000" "" api 
+                implSite "http://localhost:8000" "" (api acid) 

@@ -16,6 +16,7 @@ import Data.Aeson
 import Data.Aeson.Types
 import Control.Applicative
 
+import ACID
 import qualified Model.BaseTypes as BT
 import API.Monad
 import API.Utils
@@ -32,8 +33,8 @@ data API
     | Channels
     deriving (Generic)
 
-route :: BT.UserId -> API -> APIMonad API AuthData Response
-route uid url = case url of
+route :: ACIDNoC -> BT.UserId -> API -> APIMonad API AuthData Response
+route acid uid url = case url of
     Login           -> method [POST, HEAD] >> loginHandler uid 
     Logout          -> ok' "logout\n"
     Get             -> ok' "get\n"

@@ -7,7 +7,9 @@ module Model
     , mkLogin
     , Password
     , mkPassword
+    , Name
     , mkName
+    , Desc
     , mkDesc
     )
 where
