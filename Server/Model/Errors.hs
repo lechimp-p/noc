@@ -1,8 +1,13 @@
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+
 module Model.Errors
 where
 
+import Data.SafeCopy (SafeCopy, base, deriveSafeCopy)
 import Data.Monoid
 import Data.Text
+import Data.Data (Data, Typeable)
 
 import Model.BaseTypes
 
@@ -16,7 +21,9 @@ data PermissionViolation =
     | NoUserAdmin UserId UserId
     | NoUserSelf UserId UserId
     | PVAnd PermissionViolation PermissionViolation
-    deriving (Show, Eq)
+    deriving (Show, Eq, Data, Typeable)
+
+$(deriveSafeCopy 0 'base ''PermissionViolation) 
 
 instance Monoid PermissionViolation where
     mempty = JustForbidden
@@ -35,4 +42,6 @@ data Error =
     | CantLogin Login 
     | AlreadyLoggedIn
     | NotLoggedIn
-    deriving (Show, Eq)
+    deriving (Show, Eq, Data, Typeable)
+
+$(deriveSafeCopy 0 'base ''Error) 

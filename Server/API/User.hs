@@ -37,19 +37,17 @@ route :: ACID -> BT.UserId -> API -> APIMonad API AuthData Response
 route acid uid url = case url of
     Login           -> method [POST, HEAD] >> loginHandler acid uid 
     Logout          -> ok' "logout\n"
-    Get             -> ok' "get\n"
+    Get             -> method [GET, HEAD] >> getHandler acid uid 
     Set             -> ok' "set\n"
     UploadIcon      -> ok' "uploadIcon\n"
     Contacts        -> ok' "contacts\n"
     Subscriptions   -> ok' "subscriptions\n"
     Channels        -> ok' "channels\n"
 
---------
--- Login
---------
 
-loginHandler :: ACID -> BT.UserId -> APIMonad API AuthData Response
 loginHandler acid _ = parseBody $ \obj -> do
     l <- obj .: "login"
     pw <- obj .: "password"
     return $ logUserIn acid l pw 
+
+getHandler acid uid = error "foo" 

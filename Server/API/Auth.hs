@@ -51,12 +51,12 @@ authTimestamp = authGet _timestamp
 logUserIn :: ACID -> Text -> Text -> APIMonad url AuthData Response
 logUserIn acid l pw = do
     res <- query' acid (LoginTA (mkLogin l) (mkPassword pw))
-    if res 
-        then do
+    case res of 
+        Right _ -> do
             authSet (set login (Just l)) 
             authSet (set password (Just pw))
             noContent'
-        else do
+        Left _ -> do
             ok' $ "No authentication."
 
 logUserOut :: APIMonad url AuthData Response
