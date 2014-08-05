@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
 module API.User 
@@ -12,6 +13,7 @@ import Happstack.Server
         , Method (POST, GET, HEAD)
         )
 import Data.Aeson
+import Data.Aeson.Types
 import Control.Applicative
 
 import qualified Model.BaseTypes as BT
@@ -45,18 +47,8 @@ route uid url = case url of
 -- Login
 --------
 
-data LoginJSON = LoginJson
-    { login :: Text
-    , password :: Text
-    }
-    deriving (Generic)
-
-instance FromJSON LoginJSON
-
 loginHandler :: BT.UserId -> APIMonad API AuthData Response
-loginHandler _ = do
-    ld <- decode <$> getBody 
-    case ld :: Maybe LoginJSON of
-        Just ld' -> logUserIn (login ld') (password ld') >> noContent'
-        Nothing -> badRequest' "Could not decode."
-
+loginHandler _ = parseBody $ \obj -> do
+    l <- obj .: "login"
+    pw <- obj .: "password"
+    return $ logUserIn l pw >> noContent'
