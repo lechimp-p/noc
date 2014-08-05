@@ -24,6 +24,7 @@ import API.Monad
 import API.Utils
 import API.Errors
 import Model
+import Model.Errors
 
 data AuthData = AuthData 
     { _login        :: Maybe Text
@@ -57,10 +58,28 @@ logUserIn acid l pw =
         authSet (set password (Just pw))
         noContent'
 
-
 logUserOut :: APIMonad url AuthData Response
 logUserOut = do
     authSet (set login Nothing)
     authSet (set password Nothing)
     noContent'
-    
+
+withAuth :: (Login -> Password -> Transaction (Either Error a) NoC)
+         -> APIMonad url AuthData (Maybe (Transaction (Either Error a) NoC))
+withAuth tr = do
+    l <- authGet _login
+    pw <- authGet _password
+    case (l, pw) of
+        (Just l', Just pw') -> return . Just $ tr (mkLogin l') (mkPassword pw')
+        otherwise           -> return Nothing 
+
+runHandler :: ACID
+           -> (Login -> Password -> Transaction (Either Error a) NoC)
+           -> (a -> APIMonad url AuthData Response)
+           -> APIMonad url AuthData Response
+runHandler acid tr op = do
+    ta <- withAuth tr
+    case ta of
+        (Just ta')  -> handleErrors acid ta' op 
+        Nothing     -> respondError NotLoggedIn  
+

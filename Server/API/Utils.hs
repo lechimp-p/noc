@@ -1,10 +1,12 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module API.Utils
 where
 
 import qualified Data.ByteString.Lazy.Char8 as L 
+import qualified Data.ByteString.Char8 as B 
 import qualified Data.Text as T
 import Data.Aeson
 import Data.Aeson.Types
@@ -32,3 +34,10 @@ parseBody parser = do
 ok' = ok . toResponse . T.pack
 noContent' = noContent . toResponse . T.pack $ ""
 badRequest' = badRequest . toResponse . T.pack
+
+instance ToMessage Value where
+    toContentType _ = B.pack "application/json"
+    toMessage       = encode
+
+jsonR' :: FilterMonad Response m => Value -> m Response
+jsonR' = ok . toResponse 

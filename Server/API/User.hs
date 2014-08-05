@@ -20,7 +20,7 @@ import qualified Model.BaseTypes as BT
 import API.ACIDEvents
 import API.Monad
 import API.Utils
-import API.Auth (AuthData)
+import API.Auth (AuthData, runHandler)
 
 data API
     = Login
@@ -42,4 +42,10 @@ route acid uid url = case url of
     Subscriptions   -> ok' "subscriptions\n"
     Channels        -> ok' "channels\n"
 
-getHandler acid uid = error "foo" 
+getHandler acid uid = 
+    let ta = \l p -> QueryTA $ GetUserTA uid l p
+    in runHandler acid ta $ \(l, n, d) -> jsonR' $ 
+        object $ [ "login"          .= BT.loginToText l
+                 , "name"           .= BT.nameToText n 
+                 , "description"    .= BT.descToText d 
+                 ]   

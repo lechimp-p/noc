@@ -16,8 +16,10 @@ import Data.Acid.Advanced ( query', update' )
 import Control.Monad.Reader (ask)
 import Control.Monad.State (put, get)
 import Control.Monad.IO.Class
+import Control.Applicative
 
 import Model
+import Model.BaseTypes
 import Model.Errors
 
 type ACID = AcidState NoC
@@ -43,6 +45,15 @@ getResult acid (UpdateTA u) = update' acid u
 loginTA :: Login -> Password -> Query NoC (Either Error Bool) 
 loginTA = mkQuery (return True) 
 
+----------------
+-- Get User Info
+----------------
+
+getUserTA :: UserId -> Login -> Password -> Query NoC (Either Error (Login, Name, Desc))
+getUserTA uid = mkQuery $ (,,) <$> getUserLogin uid 
+                               <*> getUserName uid
+                               <*> getUserDesc uid 
+    
 ----------
 -- Helpers
 ----------
@@ -69,4 +80,6 @@ mkUpdate op l pw = do
 -- Turn it to Acidic Stuff
 --------------------------
 
-$(makeAcidic ''NoC ['loginTA])
+$(makeAcidic ''NoC [ 'loginTA
+                   , 'getUserTA
+                   ])
