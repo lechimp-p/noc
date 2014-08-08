@@ -5,6 +5,7 @@
 module Model.Simple
     ( runOp'
     , runOp
+    , noc
     , Operation
     )
 where

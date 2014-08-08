@@ -1,27 +1,27 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
-module ACID.Query
+module ACID.Update
 where
 
 import Control.Monad.State.Strict
 import Control.Monad.Reader (ask)
 import Control.Monad.Trans.Class
 import Control.Monad.Error.Class hiding (Error)
-import Control.Monad.Reader.Class
 import Control.Monad.State.Class
 import Control.Monad.Trans.Either
 import Control.Applicative
-import Data.Acid ( Query )
+import Data.Acid ( Update )
+import Control.Lens
 
 import Model (NoC, UserId)
 import Model.OpMonad 
-import Model.Simple (runOp')
+import Model.Simple (runOp', noc)
 import Model.Errors
 
-newtype OpQuery a = OpQuery { runOpQuery :: EitherT Error (StateT (Maybe UserId) (Query NoC)) a }
+newtype OpUpdate a = OpUpdate { runOpUpdate :: EitherT Error (StateT (Maybe UserId) (Update NoC)) a }
                         deriving (Functor, Applicative, Monad, MonadError Error)
 
-instance OpMonad OpQuery where
+instance OpMonad OpUpdate where
     throw = throwError
     getChannels = onSimple getChannels 
     storeChannel = error "storeChannels is no query."
@@ -35,13 +35,15 @@ instance OpMonad OpQuery where
     getAdmins = onSimple getAdmins
     addAdmin = error "addAdmin is no query."
     rmAdmin = error "rmAdmin is no query."
-    getOperatorId = OpQuery . lift $ get 
+    getOperatorId = OpUpdate . lift $ get 
     doLogin l p = onSimple $ doLogin l p
     doLogout = onSimple doLogout 
 
-onSimple op = OpQuery $ do
-    noc <- lift . lift $ ask 
+onSimple op = OpUpdate $ do
+    n <- lift . lift $ get 
     oid <- lift $ get 
-    case runOp' noc oid op of
+    case runOp' n oid op of
         Left err -> left err
-        Right (_, v) -> return v
+        Right (s, v) -> do
+            lift . lift . put $ view noc s 
+            return v

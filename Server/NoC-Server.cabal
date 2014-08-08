@@ -77,6 +77,8 @@ executable NoC-Server-dev
                         , API
                         , API.User
                         , API.Channel
+                        , ACID.Query
+                        , ACID.Update
     ghc-options:        -threaded
     build-depends:        base ==4.6.*
                         , text ==1.1.*
