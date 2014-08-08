@@ -18,6 +18,7 @@ import Control.Monad.State (put, get)
 import Control.Monad.IO.Class
 import Control.Applicative
 
+import API.Utils ( ifIsJust )
 import Model
 import Model.BaseTypes
 import Model.Errors
@@ -42,8 +43,8 @@ getResult acid (UpdateTA u) = update' acid u
 -- Auth
 -------
 
-loginTA :: Login -> Password -> Query NoC (Either Error Bool) 
-loginTA = mkQuery (return True) 
+loginTA :: Login -> Password -> Query NoC (Either Error UserId) 
+loginTA = mkQuery getOperatorId 
 
 ----------------
 -- Get User Info
@@ -66,12 +67,6 @@ setUserTA l p n d uid = mkUpdate $ do
     ifIsJust n (setUserName uid)
     ifIsJust d (setUserDesc uid)
      
-
-ifIsJust :: Maybe a -> (a -> Operation ()) -> Operation ()
-ifIsJust v op =
-    case v of
-        Just a -> op a
-        Nothing -> return () 
     
 ----------
 -- Helpers

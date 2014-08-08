@@ -39,7 +39,7 @@ route acid url = case url of
                            $ parseBody $ \obj -> do
                                 l <- obj .: "login"
                                 pw <- obj .: "password"
-                                return $ logUserIn acid l pw 
+                                return $ logUserIn acid (BT.mkLogin l) (BT.mkPassword pw)
     Logout              -> method [POST, HEAD] 
                            >> logUserOut  
     User uid uapi       -> User uid `nestURL` User.route acid (BT.UserId uid) uapi 

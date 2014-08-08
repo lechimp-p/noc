@@ -3,6 +3,7 @@
 
 module Model.Operations
     ( runOp
+    , getOperatorId
     , addAdmin
     , rmAdmin
     , getChanName

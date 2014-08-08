@@ -11,6 +11,9 @@ module Model
     , mkName
     , Desc
     , mkDesc
+    , UserId
+    , ChanId
+    , MsgId
     )
 where
 

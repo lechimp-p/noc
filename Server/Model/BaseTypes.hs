@@ -23,13 +23,13 @@ import Data.Text
 import Data.Data (Data, Typeable) 
 import Data.SafeCopy (SafeCopy, base, deriveSafeCopy)
 
-newtype UserId = UserId { uiToInt :: Int } deriving (Show, Eq, Ord, Data, Typeable, SafeCopy)
-newtype ChanId = ChanId { ciToInt :: Int } deriving (Show, Eq, Ord, Data, Typeable, SafeCopy)
-newtype MsgId = MsgId { miToInt :: Int } deriving (Show, Eq, Ord, Data, Typeable, SafeCopy)
+newtype UserId = UserId { uiToInt :: Int } deriving (Show, Read, Eq, Ord, Data, Typeable, SafeCopy)
+newtype ChanId = ChanId { ciToInt :: Int } deriving (Show, Read, Eq, Ord, Data, Typeable, SafeCopy)
+newtype MsgId = MsgId { miToInt :: Int } deriving (Show, Read, Eq, Ord, Data, Typeable, SafeCopy)
 
-newtype Login = Login { loginToText :: Text } deriving (Show, Eq, Ord, Data, Typeable, SafeCopy)
+newtype Login = Login { loginToText :: Text } deriving (Show, Read, Eq, Ord, Data, Typeable, SafeCopy)
 mkLogin = Login
-newtype Password = Password { pwToString :: Text } deriving (Data, Typeable, SafeCopy)
+newtype Password = Password { pwToString :: Text } deriving (Show, Read, Eq, Ord, Data, Typeable, SafeCopy)
 mkPassword = Password
 newtype Name = Name { nameToText :: Text } deriving (Data, Typeable, SafeCopy)
 mkName = Name

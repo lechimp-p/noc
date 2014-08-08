@@ -20,7 +20,7 @@ import qualified Model.BaseTypes as BT
 import API.ACIDEvents
 import API.Monad
 import API.Utils
-import API.Auth (AuthData, runHandler)
+import API.Auth (AuthData, runHandler, refreshCookie)
 
 data API
     = Login
@@ -56,5 +56,7 @@ setHandler acid uid = parseBody $ \ obj -> do
     n <- fmap (fmap BT.mkName)      $ obj .:? "name"
     d <- fmap (fmap BT.mkDesc)      $ obj .:? "description"
     return $ let ta = \l' p' -> UpdateTA $ SetUserTA l p n d uid l' p'
-             in runHandler acid ta $ const noContent'  
+             in runHandler acid ta $ \ _ -> do
+                    refreshCookie l p
+                    noContent'  
 

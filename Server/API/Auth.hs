@@ -27,8 +27,8 @@ import Model
 import Model.Errors
 
 data AuthData = AuthData 
-    { _login        :: Maybe Text
-    , _password     :: Maybe Text
+    { _login        :: Maybe Login 
+    , _password     :: Maybe Password 
     , _timestamp    :: Maybe UTCTime
     }
     deriving (Eq, Ord, Read, Show, Data, Typeable)
@@ -50,19 +50,22 @@ authPassword = authGet _password
 authLogin = authGet _login
 authTimestamp = authGet _timestamp
 
-logUserIn :: ACID -> Text -> Text -> APIMonad url AuthData Response
+logUserIn :: ACID -> Login -> Password -> APIMonad url AuthData Response
 logUserIn acid l pw = 
-    let ta = QueryTA $ LoginTA (mkLogin l) (mkPassword pw)  
-    in handleErrors acid ta $ \ _ -> do
-        authSet (set login (Just l)) 
-        authSet (set password (Just pw))
-        noContent'
+    let ta = QueryTA $ LoginTA l pw  
+    in handleErrors acid ta $ \ uid -> do 
+            refreshCookie (Just l) (Just pw)
+            noContent'
 
 logUserOut :: APIMonad url AuthData Response
 logUserOut = do
-    authSet (set login Nothing)
-    authSet (set password Nothing)
+    refreshCookie Nothing Nothing
     noContent'
+
+refreshCookie :: Maybe Login -> Maybe Password -> APIMonad url AuthData () 
+refreshCookie l pw = do
+    ifIsJust l $ \ _ -> authSet (set login l)
+    ifIsJust pw $ \ _ -> authSet (set password pw)
 
 withAuth :: (Login -> Password -> Transaction (Either Error a) NoC)
          -> APIMonad url AuthData (Maybe (Transaction (Either Error a) NoC))
@@ -70,7 +73,7 @@ withAuth tr = do
     l <- authGet _login
     pw <- authGet _password
     case (l, pw) of
-        (Just l', Just pw') -> return . Just $ tr (mkLogin l') (mkPassword pw')
+        (Just l', Just pw') -> return . Just $ tr l' pw'
         otherwise           -> return Nothing 
 
 runHandler :: ACID

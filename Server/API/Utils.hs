@@ -41,3 +41,9 @@ instance ToMessage Value where
 
 jsonR' :: FilterMonad Response m => Value -> m Response
 jsonR' = ok . toResponse 
+
+ifIsJust :: (Monad m) => Maybe a -> (a -> m ()) -> m ()
+ifIsJust v op =
+    case v of
+        Just a -> op a
+        Nothing -> return () 
