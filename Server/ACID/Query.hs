@@ -21,6 +21,9 @@ import Model.Errors
 newtype OpQuery a = OpQuery { runOpQuery :: EitherT Error (StateT (Maybe UserId) (Query NoC)) a }
                         deriving (Functor, Applicative, Monad, MonadError Error)
 
+getQuery :: OpQuery a -> Query NoC (Either Error a)
+getQuery = flip evalStateT Nothing . runEitherT . runOpQuery
+
 instance OpMonad OpQuery where
     throw = throwError
     getChannels = onSimple getChannels 

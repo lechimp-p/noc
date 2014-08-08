@@ -21,6 +21,9 @@ import Model.Errors
 newtype OpUpdate a = OpUpdate { runOpUpdate :: EitherT Error (StateT (Maybe UserId) (Update NoC)) a }
                         deriving (Functor, Applicative, Monad, MonadError Error)
 
+getUpdate :: OpUpdate a -> Update NoC (Either Error a)
+getUpdate = flip evalStateT Nothing . runEitherT . runOpUpdate
+
 instance OpMonad OpUpdate where
     throw = throwError
     getChannels = onSimple getChannels 
