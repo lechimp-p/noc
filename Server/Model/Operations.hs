@@ -24,6 +24,7 @@ module Model.Operations
     , getUserSubscriptions
     , getUserContacts
     , setUserLogin
+    , setUserPassword
     , setUserName
     , setUserDesc
     , setUserIcon
@@ -169,6 +170,7 @@ setUserLogin uid l = do
     checkDuplicateLogin l
     setToUser U.login uid l
 setUserName = setToUser U.name
+setUserPassword = setToUser U.password
 setUserDesc = setToUser U.desc
 setUserIcon = setToUser U.icon
 

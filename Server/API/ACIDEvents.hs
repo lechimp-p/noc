@@ -53,6 +53,25 @@ getUserTA :: UserId -> Login -> Password -> Query NoC (Either Error (Login, Name
 getUserTA uid = mkQuery $ (,,) <$> getUserLogin uid 
                                <*> getUserName uid
                                <*> getUserDesc uid 
+
+----------------
+-- Set User Info
+----------------
+
+setUserTA :: Maybe Login -> Maybe Password -> Maybe Name -> Maybe Desc
+          -> UserId -> Login -> Password -> Update NoC (Either Error ()) 
+setUserTA l p n d uid = mkUpdate $ do
+    ifIsJust l (setUserLogin uid)
+    ifIsJust p (setUserPassword uid)
+    ifIsJust n (setUserName uid)
+    ifIsJust d (setUserDesc uid)
+     
+
+ifIsJust :: Maybe a -> (a -> Operation ()) -> Operation ()
+ifIsJust v op =
+    case v of
+        Just a -> op a
+        Nothing -> return () 
     
 ----------
 -- Helpers
@@ -82,4 +101,5 @@ mkUpdate op l pw = do
 
 $(makeAcidic ''NoC [ 'loginTA
                    , 'getUserTA
+                   , 'setUserTA
                    ])
