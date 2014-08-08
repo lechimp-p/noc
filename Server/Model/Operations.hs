@@ -2,10 +2,9 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Model.Operations
-    ( runOp
-    , getOperatorId
-    , addAdmin
-    , rmAdmin
+    ( Model.Operations.getOperatorId
+    , Model.Operations.addAdmin
+    , Model.Operations.rmAdmin
     , getChanName
     , getChanDesc
     , setChanName
@@ -47,8 +46,7 @@ import Data.Maybe (isJust)
 import Model.Errors
 import Model.Permissions
 import Model.BaseTypes
-import Model.OpMonad
-import qualified Model.UnsafeOperations as US
+import Model.OpMonadType
 import Model.NoC
 import qualified Model.NoC as N
 import qualified Model.Channel as C
@@ -59,107 +57,89 @@ import qualified Model.Message as M
 import Model.Message 
 
 type SimpleLens a b = Lens a a b b 
-a @= b = a US.@= b
 
 ---------
 -- on noc
 ---------
 
-doLogin :: Login -> Password -> Operation ()
-doLogin l pw = do
-    oid <- US.getOperatorId'
-    AlreadyLoggedIn `throwOn` isJust oid
-    Operation $ \s -> 
-        let maybeUserId = do
-                user <- IX.getOne ((s ^. noc . users) IX.@= l)
-                if checkPassword (U._password user) pw
-                    then return (U._id user)
-                    else fail "password mismatch" 
-        in case maybeUserId of
-                Nothing  -> Left $ CantLogin l
-                Just uid -> Right $ (s & operator .~ Just uid, ())  
-
-getOperatorId :: Operation UserId
+getOperatorId :: OpMonad m => m UserId
 getOperatorId = ifIsLoggedIn' return 
 
-runOp :: NoC -> Login -> Password -> Operation a -> Either Error (NoC, a)
-runOp noc l pw op = over (_Right . _1) _noc 
-                  . runOp' noc 
-                  $ doLogin l pw >> op
-
-addAdmin :: UserId -> Operation ()
+addAdmin :: OpMonad m => UserId -> m ()
 addAdmin uid = checkAccess () forNoCAdmins $ do
-    US.getUser uid
-    US.addAdmin uid
+    getUser uid
+    Model.OpMonadType.addAdmin uid
 
-rmAdmin :: UserId -> Operation ()
+rmAdmin :: OpMonad m => UserId -> m ()
 rmAdmin uid = checkAccess () forNoCAdmins $ do
-    n <- fmap S.size US.getAdmins
+    n <- fmap S.size getAdmins
     OnlyOneNoCAdminLeft `throwOn` (n == 1) 
-    US.rmAdmin uid
+    Model.OpMonadType.rmAdmin uid
 
 -------------------------
 -- operations on channels
 -------------------------
 
-getFromChan :: SimpleLens Channel a -> ChanId -> Operation a
+getFromChan :: OpMonad m => SimpleLens Channel a -> ChanId -> m a
 getFromChan l cid = checkAccess cid forAllChanPeople $ do
-    chan <- US.getChannel cid
+    chan <- getChannel cid
     return $ chan ^. l
 
-setToChan :: SimpleLens Channel a -> ChanId -> a -> Operation ()
+setToChan :: OpMonad m => SimpleLens Channel a -> ChanId -> a -> m ()
 setToChan l cid v = checkAccess cid forChanOwnersOrAdmins $ do
-    chan <- US.getChannel cid
-    US.storeChannel (set l v chan)  
+    chan <- getChannel cid
+    storeChannel (set l v chan)  
 
-getChanName = getFromChan C.name
-getChanDesc = getFromChan C.desc
+getChanName cid = getFromChan C.name cid
+getChanDesc cid = getFromChan C.desc cid
 
-setChanName = setToChan C.name
-setChanDesc = setToChan C.desc
+setChanName cid v = setToChan C.name cid v
+setChanDesc cid v = setToChan C.desc cid v
 
-addChanXX :: SimpleLens Channel (S.Set UserId)
-          -> ChanId -> UserId -> Operation ()
+addChanXX :: OpMonad m 
+          => SimpleLens Channel (S.Set UserId)
+          -> ChanId -> UserId -> m ()
 addChanXX l cid uid = checkAccess cid forChanOwnersOrAdmins $ do
-    chan <- US.getChannel cid
-    US.storeChannel (over l (S.insert uid) chan)
+    chan <- getChannel cid
+    storeChannel (over l (S.insert uid) chan)
 
-rmChanXX :: SimpleLens Channel (S.Set UserId)
-         -> ChanId -> UserId -> Operation ()
+rmChanXX :: OpMonad m 
+         => SimpleLens Channel (S.Set UserId)
+         -> ChanId -> UserId -> m ()
 rmChanXX l cid uid = checkAccess cid forChanOwnersOrAdmins $ do
-    chan <- US.getChannel cid
-    US.storeChannel (over l (S.delete uid) chan)
+    chan <- getChannel cid
+    storeChannel (over l (S.delete uid) chan)
 
-addChanOwner = addChanXX C.owners
-addChanProducer = addChanXX C.producers
-addChanConsumer = addChanXX C.consumers
+addChanOwner cid uid = addChanXX C.owners cid uid
+addChanProducer cid uid = addChanXX C.producers cid uid
+addChanConsumer cid uid = addChanXX C.consumers cid uid
 
 rmChanOwner cid uid = checkAccess cid forChanOwnersOrAdmins $ do
-    chan <- US.getChannel cid
+    chan <- getChannel cid
     OnlyOneChannelOwnerLeft cid `throwOn` (S.size (chan ^. owners) == 0)
-    US.storeChannel (over C.owners (S.delete uid) chan)
-rmChanProducer = rmChanXX C.producers
-rmChanConsumer = rmChanXX C.consumers
+    storeChannel (over C.owners (S.delete uid) chan)
+rmChanProducer cid uid = rmChanXX C.producers cid uid
+rmChanConsumer cid uid = rmChanXX C.consumers cid uid
 
 
 ----------------------
 -- operations on users
 ----------------------
 
-getFromUser :: SimpleLens User a -> UserId -> Operation a
+getFromUser :: OpMonad m => SimpleLens User a -> UserId -> m a
 getFromUser l uid = ifIsLoggedIn $ do
-    user <- US.getUser uid
+    user <- getUser uid
     return $ user ^. l 
 
-setToUser :: SimpleLens User a -> UserId -> a -> Operation ()
+setToUser :: OpMonad m => SimpleLens User a -> UserId -> a -> m ()
 setToUser l uid v = checkAccess uid forUserSelfOrAdmins $ do
-    user <- US.getUser uid
-    US.storeUser (set l v user) 
+    user <- getUser uid
+    storeUser (set l v user) 
 
-getUserLogin = getFromUser U.login
-getUserName = getFromUser U.name
-getUserDesc = getFromUser U.desc
-getUserIcon = getFromUser U.icon
+getUserLogin uid = getFromUser U.login uid
+getUserName uid = getFromUser U.name uid
+getUserDesc uid = getFromUser U.desc uid
+getUserIcon uid = getFromUser U.icon uid
 getUserOwnedChannels uid = checkAccess uid forUserSelfOrAdmins
     $ getFromUser U.ownedChannels uid
 getUserSubscriptions uid = checkAccess uid forUserSelfOrAdmins
@@ -170,14 +150,14 @@ getUserContacts uid = checkAccess uid forUserSelfOrAdmins
 setUserLogin uid l = do
     checkDuplicateLogin l
     setToUser U.login uid l
-setUserName = setToUser U.name
-setUserPassword = setToUser U.password
-setUserDesc = setToUser U.desc
-setUserIcon = setToUser U.icon
+setUserName uid v = setToUser U.name uid v
+setUserPassword uid v = setToUser U.password uid v
+setUserDesc uid v = setToUser U.desc uid v
+setUserIcon uid v = setToUser U.icon uid v
 
-getUserByLogin :: Text -> Operation UserId
+getUserByLogin :: OpMonad m => Text -> m UserId
 getUserByLogin l = ifIsLoggedIn $ do
-    user <- IX.getOne <$> US.getUsers @= (Login l)
+    user <- IX.getOne <$> getUsers @= (Login l)
     case user of
         (Just user) -> return $ U._id user
         otherwise -> throw $ UnknownLogin l 
@@ -186,36 +166,36 @@ getUserByLogin l = ifIsLoggedIn $ do
 -- creation of users
 --------------------
 
-createUser :: Login -> Password -> Operation UserId
+createUser :: OpMonad m => Login -> Password -> m UserId
 createUser l pw = checkAccess () forNoCAdmins $ do
-    uid <- US.newUserId
-    US.storeUser $ User uid l pw (mkName "") (mkDesc "") Nothing S.empty S.empty S.empty
+    uid <- newUserId
+    storeUser $ User uid l pw (mkName "") (mkDesc "") Nothing S.empty S.empty S.empty
     return uid
 
 -----------------------
 -- creation of channels
 -----------------------
 
-createChannel :: Name -> Desc -> Operation ChanId
+createChannel :: OpMonad m => Name -> Desc -> m ChanId
 createChannel n d = ifIsLoggedIn $ do
-    cid <- US.newChanId
-    oid <- getOperatorId
-    user <- US.getUser oid
-    US.storeChannel $ Channel cid n d (S.insert oid S.empty) S.empty S.empty S.empty
-    US.storeUser $ over U.ownedChannels (S.insert cid) user
+    cid <- newChanId
+    oid <- Model.Operations.getOperatorId
+    user <- getUser oid
+    storeChannel $ Channel cid n d (S.insert oid S.empty) S.empty S.empty S.empty
+    storeUser $ over U.ownedChannels (S.insert cid) user
     return cid
 
 ----------------------
 -- posting of messages
 ----------------------
 
-post :: ChanId -> UTCTime -> Text -> Maybe Image -> Operation MsgId
+post :: OpMonad m => ChanId -> UTCTime -> Text -> Maybe Image -> m MsgId
 post cid ts txt img = checkAccess cid forChanProducers $ do
-    mid <- US.newMsgId 
-    oid <- getOperatorId
-    chan <- US.getChannel cid
-    US.storeChannel $ over C.messages (S.insert mid) chan
-    US.storeMessage $ Message mid cid img txt oid ts
+    mid <- newMsgId 
+    oid <- Model.Operations.getOperatorId
+    chan <- getChannel cid
+    storeChannel $ over C.messages (S.insert mid) chan
+    storeMessage $ Message mid cid img txt oid ts
     return mid
 
 ----------------------
@@ -225,14 +205,14 @@ post cid ts txt img = checkAccess cid forChanProducers $ do
 type Offset = Int
 type Amount = Int
 
-messages :: ChanId -> Offset -> Amount -> Operation [Message]
+messages :: OpMonad m => ChanId -> Offset -> Amount -> m [Message]
 messages cid ofs am = checkAccess cid forConsumersOrOwners $ do
-    take am . drop ofs . IX.toDescList (IX.Proxy :: IX.Proxy UTCTime) <$> US.getMessages @= cid  
+    take am . drop ofs . IX.toDescList (IX.Proxy :: IX.Proxy UTCTime) <$> getMessages @= cid  
     
 ----------
 -- helpers
 ----------
 
 checkDuplicateLogin l = do
-    n <- IX.size <$> US.getUsers @= l 
+    n <- IX.size <$> getUsers @= l 
     DuplicateLogin l `throwOn` (n >= 1) 

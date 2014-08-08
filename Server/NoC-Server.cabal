@@ -106,6 +106,7 @@ Test-Suite test-NoC-Server
                         , Model.Message
                         , Model.NoC 
                         , Model.Operations
+                        , Model.OpMonadType
                         , Model.OpMonad
                         , Model.Permissions
                         , Model.UnsafeOperations

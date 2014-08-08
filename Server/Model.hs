@@ -14,6 +14,7 @@ module Model
     , UserId
     , ChanId
     , MsgId
+    , runOp
     )
 where
 
