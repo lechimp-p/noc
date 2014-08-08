@@ -46,7 +46,7 @@ import Data.Maybe (isJust)
 import Model.Errors
 import Model.Permissions
 import Model.BaseTypes
-import Model.OpMonadType
+import Model.OpMonad
 import Model.NoC
 import qualified Model.NoC as N
 import qualified Model.Channel as C
@@ -68,13 +68,13 @@ getOperatorId = ifIsLoggedIn' return
 addAdmin :: OpMonad m => UserId -> m ()
 addAdmin uid = checkAccess () forNoCAdmins $ do
     getUser uid
-    Model.OpMonadType.addAdmin uid
+    Model.OpMonad.addAdmin uid
 
 rmAdmin :: OpMonad m => UserId -> m ()
 rmAdmin uid = checkAccess () forNoCAdmins $ do
     n <- fmap S.size getAdmins
     OnlyOneNoCAdminLeft `throwOn` (n == 1) 
-    Model.OpMonadType.rmAdmin uid
+    Model.OpMonad.rmAdmin uid
 
 -------------------------
 -- operations on channels

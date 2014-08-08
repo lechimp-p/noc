@@ -20,6 +20,7 @@ import Control.Applicative
 
 import API.Utils ( ifIsJust )
 import Model
+import Model.Simple
 import Model.BaseTypes
 import Model.Errors
 

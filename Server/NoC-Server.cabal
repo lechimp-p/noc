@@ -50,7 +50,7 @@ executable NoC-Server
                         , Model.Message
                         , Model.NoC 
                         , Model.Operations
-                        , Model.OpMonad
+                        , Model.Simple
                         , Model.Permissions
                         , Model.User
     ghc-options:        -threaded
@@ -70,8 +70,8 @@ executable NoC-Server-dev
                         , Model.Message
                         , Model.NoC 
                         , Model.Operations
-                        , Model.OpMonadType
                         , Model.OpMonad
+                        , Model.Simple
                         , Model.Permissions
                         , Model.User
                         , API
@@ -105,8 +105,8 @@ Test-Suite test-NoC-Server
                         , Model.Message
                         , Model.NoC 
                         , Model.Operations
-                        , Model.OpMonadType
                         , Model.OpMonad
+                        , Model.Simple
                         , Model.Permissions
                         , Model.User
     build-depends:        base ==4.6.*

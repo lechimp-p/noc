@@ -8,6 +8,7 @@ import Data.Text hiding (group)
 import qualified Data.Set as S
 
 import Model
+import Model.Simple
 import Model.Errors
 import Model.BaseTypes (UserId (..), ChanId (..), MsgId (..), Login, Password)
 import Model.NoC (NoC)

@@ -5,7 +5,7 @@ import Data.Monoid
 import qualified Data.Set as S
 
 import Model.BaseTypes
-import Model.OpMonadType
+import Model.OpMonad
 import Model.Errors
 import qualified Model.Channel as C
 import qualified Model.User as U
