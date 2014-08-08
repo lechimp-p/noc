@@ -39,7 +39,7 @@ makeLenses ''OpContext
 
 newtype Operation a = Operation { runOperation :: OpContext -> Either Error (OpContext, a) }
 
-runOp' noc action = runOperation action $ OpContext noc Nothing 
+runOp' noc operator action = runOperation action $ OpContext noc operator 
 
 instance Monad Operation where
     return v = Operation $ \ s -> Right (s, v)
@@ -52,9 +52,7 @@ instance Monad Operation where
                 in runOperation n s'
 
 instance Functor Operation where
-    fmap f v = do
-        v' <- v
-        return $ f v'
+    fmap f v = v >>= return . f
 
 instance Applicative Operation where
     pure = return
@@ -65,7 +63,7 @@ instance Applicative Operation where
 
 runOp :: NoC -> Login -> Password -> Operation a -> Either Error (NoC, a)
 runOp noc l pw op = over (_Right . _1) _noc 
-                  . runOp' noc 
+                  . runOp' noc Nothing
                   $ doLogin l pw >> op
 
 

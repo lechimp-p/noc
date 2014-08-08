@@ -42,7 +42,6 @@ data Error =
     | CantLogin Login 
     | AlreadyLoggedIn
     | NotLoggedIn
-    | Custom String
     deriving (Show, Eq, Data, Typeable)
 
 $(deriveSafeCopy 0 'base ''Error) 

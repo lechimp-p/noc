@@ -81,6 +81,7 @@ executable NoC-Server-dev
     build-depends:        base ==4.6.*
                         , text ==1.1.*
                         , mtl ==2.2.*
+                        , either ==4.3.*
                         , safecopy ==0.8.*
                         , ixset ==1.0.*
                         , lens ==4.2.*
@@ -111,6 +112,8 @@ Test-Suite test-NoC-Server
                         , Model.User
     build-depends:        base ==4.6.*
                         , text ==1.1.*
+                        , mtl ==2.2.*
+                        , either ==4.3.*
                         , safecopy ==0.8.*
                         , ixset ==1.0.*
                         , lens ==4.2.*
