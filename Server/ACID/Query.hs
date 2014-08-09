@@ -24,8 +24,8 @@ import Model.Errors
 newtype OpQuery a = OpQuery { runOpQuery :: EitherT Error (StateT (Maybe UserId) (Query NoC)) a }
                         deriving (Functor, Applicative, Monad, MonadError Error)
 
-getQuery :: OpQuery a -> Query NoC (Either Error a)
-getQuery = flip evalStateT Nothing . runEitherT . runOpQuery
+getQuery :: Maybe UserId -> OpQuery a -> Query NoC (Either Error a, Maybe UserId)
+getQuery oid = flip runStateT oid . runEitherT . runOpQuery
 
 instance OpMonad OpQuery where
     throw = throwError
@@ -52,38 +52,38 @@ onSimple op = OpQuery $ do
         Left err -> left err
         Right (_, v) -> return v
 
-getOperatorIdQ :: Query NoC (Either Error UserId) 
-getOperatorIdQ = getQuery O.getOperatorId
+getOperatorIdQ :: Maybe UserId -> Query NoC (Either Error UserId, Maybe UserId) 
+getOperatorIdQ oid = getQuery oid O.getOperatorId
 
-getChanNameQ :: ChanId -> Query NoC (Either Error Name)
-getChanNameQ = getQuery . O.getChanName 
+getChanNameQ :: Maybe UserId -> ChanId -> Query NoC (Either Error Name, Maybe UserId)
+getChanNameQ oid = getQuery oid . O.getChanName 
 
-getChanDescQ :: ChanId -> Query NoC (Either Error Desc) 
-getChanDescQ = getQuery . O.getChanDesc
+getChanDescQ :: Maybe UserId -> ChanId -> Query NoC (Either Error Desc, Maybe UserId) 
+getChanDescQ oid = getQuery oid . O.getChanDesc
 
-getUserLoginQ :: UserId -> Query NoC (Either Error Login)
-getUserLoginQ = getQuery . O.getUserLogin 
+getUserLoginQ :: Maybe UserId -> UserId -> Query NoC (Either Error Login, Maybe UserId)
+getUserLoginQ oid = getQuery oid . O.getUserLogin 
 
-getUserNameQ :: UserId -> Query NoC (Either Error Name)
-getUserNameQ = getQuery . O.getUserName
+getUserNameQ :: Maybe UserId -> UserId -> Query NoC (Either Error Name, Maybe UserId)
+getUserNameQ oid = getQuery oid . O.getUserName
 
-getUserDescQ :: UserId -> Query NoC (Either Error Desc)
-getUserDescQ = getQuery . O.getUserDesc
+getUserDescQ :: Maybe UserId -> UserId -> Query NoC (Either Error Desc, Maybe UserId)
+getUserDescQ oid = getQuery oid . O.getUserDesc
 
-getUserIconQ :: UserId -> Query NoC (Either Error (Maybe Icon))
-getUserIconQ = getQuery . O.getUserIcon
+getUserIconQ :: Maybe UserId -> UserId -> Query NoC (Either Error (Maybe Icon), Maybe UserId)
+getUserIconQ oid = getQuery oid . O.getUserIcon
 
-getUserOwnedChannelsQ :: UserId -> Query NoC (Either Error (Set ChanId))
-getUserOwnedChannelsQ = getQuery . O.getUserOwnedChannels
+getUserOwnedChannelsQ :: Maybe UserId -> UserId -> Query NoC (Either Error (Set ChanId), Maybe UserId)
+getUserOwnedChannelsQ oid = getQuery oid . O.getUserOwnedChannels
 
-getUserSubscriptionsQ :: UserId -> Query NoC (Either Error (Set ChanId))
-getUserSubscriptionsQ = getQuery . O.getUserSubscriptions
+getUserSubscriptionsQ :: Maybe UserId -> UserId -> Query NoC (Either Error (Set ChanId), Maybe UserId)
+getUserSubscriptionsQ oid = getQuery oid . O.getUserSubscriptions
 
-getUserContactsQ :: UserId -> Query NoC (Either Error (Set UserId))
-getUserContactsQ = getQuery . O.getUserContacts
+getUserContactsQ :: Maybe UserId -> UserId -> Query NoC (Either Error (Set UserId), Maybe UserId)
+getUserContactsQ oid = getQuery oid . O.getUserContacts
 
-getUserByLoginQ :: Text -> Query NoC (Either Error UserId)
-getUserByLoginQ = getQuery . O.getUserByLogin
+getUserByLoginQ :: Maybe UserId -> Text -> Query NoC (Either Error UserId, Maybe UserId)
+getUserByLoginQ oid = getQuery oid . O.getUserByLogin
 
-messagesQ :: ChanId -> Offset -> Amount -> Query NoC (Either Error [Message])
-messagesQ c o = getQuery . O.messages c o
+messagesQ :: Maybe UserId -> ChanId -> Offset -> Amount -> Query NoC (Either Error [Message], Maybe UserId)
+messagesQ oid c o = getQuery oid . O.messages c o
