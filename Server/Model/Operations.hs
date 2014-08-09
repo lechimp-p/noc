@@ -31,6 +31,9 @@ module Model.Operations
     , createUser
     , createChannel
     , post
+    , Model.Operations.messages
+    , Offset
+    , Amount
     )
 where
 

@@ -12,8 +12,11 @@ import Control.Monad.State.Class
 import Control.Monad.Trans.Either
 import Control.Applicative
 import Data.Acid ( Query )
+import Data.Text ( Text )
+import Data.Set ( Set )
 
-import Model (NoC, UserId)
+import Model 
+import qualified Model.Operations as O
 import Model.OpMonad 
 import Model.Simple (runOp')
 import Model.Errors
@@ -27,17 +30,17 @@ getQuery = flip evalStateT Nothing . runEitherT . runOpQuery
 instance OpMonad OpQuery where
     throw = throwError
     getChannels = onSimple getChannels 
-    storeChannel = error "storeChannels is no query."
-    newChanId = error "newChanId is no query."
+    storeChannel = const (throwMsg "storeChannels is no query.")
+    newChanId = throwMsg "newChanId is no query."
     getUsers = onSimple getUsers
-    storeUser = error "storeUser is no query."
-    newUserId = error "newUserId is no query."
+    storeUser = const (throwMsg "storeUser is no query.")
+    newUserId = throwMsg "newUserId is no query."
     getMessages = onSimple getMessages 
-    storeMessage = error "storeMessage is no query."
-    newMsgId = error "newMsgId is no query."
+    storeMessage = const (throwMsg "storeMessage is no query.")
+    newMsgId = throwMsg "newMsgId is no query."
     getAdmins = onSimple getAdmins
-    addAdmin = error "addAdmin is no query."
-    rmAdmin = error "rmAdmin is no query."
+    addAdmin = const (throwMsg "addAdmin is no query.")
+    rmAdmin = const (throwMsg "rmAdmin is no query.")
     getOperatorId = OpQuery . lift $ get 
     doLogin l p = onSimple $ doLogin l p
     doLogout = onSimple doLogout 
@@ -48,3 +51,39 @@ onSimple op = OpQuery $ do
     case runOp' noc oid op of
         Left err -> left err
         Right (_, v) -> return v
+
+getOperatorIdQ :: OpQuery UserId 
+getOperatorIdQ = O.getOperatorId
+
+getChanNameQ :: ChanId -> OpQuery Name
+getChanNameQ = O.getChanName 
+
+getChanDescQ :: ChanId -> OpQuery Desc 
+getChanDescQ = O.getChanDesc
+
+getUserLoginQ :: UserId -> OpQuery Login
+getUserLoginQ = O.getUserLogin 
+
+getUserNameQ :: UserId -> OpQuery Name
+getUserNameQ = O.getUserName
+
+getUserDescQ :: UserId -> OpQuery Desc
+getUserDescQ = O.getUserDesc
+
+getUserIconQ :: UserId -> OpQuery (Maybe Icon)
+getUserIconQ = O.getUserIcon
+
+getUserOwnedChannelsQ :: UserId -> OpQuery (Set ChanId)
+getUserOwnedChannelsQ = O.getUserOwnedChannels
+
+getUserSubscriptionsQ :: UserId -> OpQuery (Set ChanId)
+getUserSubscriptionsQ = O.getUserSubscriptions
+
+getUserContactsQ :: UserId -> OpQuery (Set UserId)
+getUserContactsQ = O.getUserContacts
+
+getUserByLoginQ :: Text -> OpQuery UserId
+getUserByLoginQ = O.getUserByLogin
+
+messagesQ :: ChanId -> Offset -> Amount -> OpQuery [Message]
+messagesQ = O.messages

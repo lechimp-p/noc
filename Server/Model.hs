@@ -13,9 +13,12 @@ module Model
     , UserId
     , ChanId
     , MsgId
+    , Icon
+    , Message
     )
 where
 
 import Model.Operations
 import Model.NoC
+import Model.Message
 import Model.BaseTypes
