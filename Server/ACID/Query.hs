@@ -52,38 +52,38 @@ onSimple op = OpQuery $ do
         Left err -> left err
         Right (_, v) -> return v
 
-getOperatorIdQ :: OpQuery UserId 
-getOperatorIdQ = O.getOperatorId
+getOperatorIdQ :: Query NoC (Either Error UserId) 
+getOperatorIdQ = getQuery O.getOperatorId
 
-getChanNameQ :: ChanId -> OpQuery Name
-getChanNameQ = O.getChanName 
+getChanNameQ :: ChanId -> Query NoC (Either Error Name)
+getChanNameQ = getQuery . O.getChanName 
 
-getChanDescQ :: ChanId -> OpQuery Desc 
-getChanDescQ = O.getChanDesc
+getChanDescQ :: ChanId -> Query NoC (Either Error Desc) 
+getChanDescQ = getQuery . O.getChanDesc
 
-getUserLoginQ :: UserId -> OpQuery Login
-getUserLoginQ = O.getUserLogin 
+getUserLoginQ :: UserId -> Query NoC (Either Error Login)
+getUserLoginQ = getQuery . O.getUserLogin 
 
-getUserNameQ :: UserId -> OpQuery Name
-getUserNameQ = O.getUserName
+getUserNameQ :: UserId -> Query NoC (Either Error Name)
+getUserNameQ = getQuery . O.getUserName
 
-getUserDescQ :: UserId -> OpQuery Desc
-getUserDescQ = O.getUserDesc
+getUserDescQ :: UserId -> Query NoC (Either Error Desc)
+getUserDescQ = getQuery . O.getUserDesc
 
-getUserIconQ :: UserId -> OpQuery (Maybe Icon)
-getUserIconQ = O.getUserIcon
+getUserIconQ :: UserId -> Query NoC (Either Error (Maybe Icon))
+getUserIconQ = getQuery . O.getUserIcon
 
-getUserOwnedChannelsQ :: UserId -> OpQuery (Set ChanId)
-getUserOwnedChannelsQ = O.getUserOwnedChannels
+getUserOwnedChannelsQ :: UserId -> Query NoC (Either Error (Set ChanId))
+getUserOwnedChannelsQ = getQuery . O.getUserOwnedChannels
 
-getUserSubscriptionsQ :: UserId -> OpQuery (Set ChanId)
-getUserSubscriptionsQ = O.getUserSubscriptions
+getUserSubscriptionsQ :: UserId -> Query NoC (Either Error (Set ChanId))
+getUserSubscriptionsQ = getQuery . O.getUserSubscriptions
 
-getUserContactsQ :: UserId -> OpQuery (Set UserId)
-getUserContactsQ = O.getUserContacts
+getUserContactsQ :: UserId -> Query NoC (Either Error (Set UserId))
+getUserContactsQ = getQuery . O.getUserContacts
 
-getUserByLoginQ :: Text -> OpQuery UserId
-getUserByLoginQ = O.getUserByLogin
+getUserByLoginQ :: Text -> Query NoC (Either Error UserId)
+getUserByLoginQ = getQuery . O.getUserByLogin
 
-messagesQ :: ChanId -> Offset -> Amount -> OpQuery [Message]
-messagesQ = O.messages
+messagesQ :: ChanId -> Offset -> Amount -> Query NoC (Either Error [Message])
+messagesQ c o = getQuery . O.messages c o
