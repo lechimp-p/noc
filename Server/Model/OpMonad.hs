@@ -7,7 +7,7 @@ import Data.Data (Data, Typeable)
 import Control.Applicative
 import Control.Monad
 
-import Model.Errors ( Error (UnknownUser, UnknownChannel, UnknownMessage ) )
+import Model.Errors ( Error (UnknownUser, UnknownChannel, UnknownMessage, Custom ) )
 import Model.BaseTypes
 import Model.Channel
 import Model.User
@@ -43,6 +43,8 @@ op @= k = fmap (IX.@= k) op
 
 throwOn :: OpMonad m => Error -> Bool -> m ()
 throwOn e c = if c then throw e else return ()
+
+throwMsg = throw . Custom
 
 getChannelMaybe :: OpMonad m => ChanId -> m (Maybe Channel)
 getChannelMaybe cid = do
