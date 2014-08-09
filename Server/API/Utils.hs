@@ -12,18 +12,20 @@ import Data.Aeson
 import Data.Aeson.Types
 import Happstack.Server
 import Happstack.Server.Types
-import Control.Monad.IO.Class (liftIO)
+import Control.Monad.IO.Class (liftIO, MonadIO)
 
 import API.Monad
 
-getBody :: APIMonad url session L.ByteString
+getBody :: (Monad m, FilterMonad Response m, MonadIO m) 
+        => APIMonadT url session m L.ByteString
 getBody = do
-    body <- APIMonad $ askRq >>= liftIO . takeRequestBody
+    body <- APIMonadT $ askRq >>= liftIO . takeRequestBody
     case body of
         Just rqbody -> return . unBody $ rqbody
         Nothing -> return ""
 
-parseBody :: (Object -> Parser (APIMonad url session Response)) -> APIMonad url session Response 
+parseBody :: (Monad m, FilterMonad Response m, MonadIO m) 
+          => (Object -> Parser (APIMonadT url session m Response)) -> APIMonadT url session m Response 
 parseBody parser = do
     body <- getBody
     let maybeAction = decode body >>= parseMaybe parser

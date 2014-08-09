@@ -1,5 +1,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module API.Channel
 where
@@ -9,6 +10,7 @@ import Web.Routes
 import Web.Routes.Happstack
 import Happstack.Server 
        ( ServerPartT, Response, ok, toResponse
+       , FilterMonad
        )
 
 import Model.BaseTypes
@@ -22,6 +24,7 @@ data API
     | Set
     deriving (Generic)
 
-route :: ACID -> ChanId -> API -> APIMonad API s Response
+route :: FilterMonad Response m
+      => ACID -> ChanId -> API -> APIMonadT API s m Response
 route acid uid url = case url of
     otherwise -> ok' $ "channel\n"

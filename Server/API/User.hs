@@ -1,6 +1,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module API.User 
 where
@@ -11,10 +12,12 @@ import Web.Routes.Happstack
 import Happstack.Server 
         ( Response, ok, method
         , Method (POST, GET, HEAD)
+        , FilterMonad
         )
 import Data.Aeson
 import Data.Aeson.Types
 import Control.Applicative
+import Control.Monad.IO.Class
 
 import qualified Model.BaseTypes as BT
 import API.ACIDEvents
@@ -33,7 +36,8 @@ data API
     | Channels
     deriving (Generic)
 
-route :: ACID -> BT.UserId -> API -> APIMonad API AuthData Response
+route :: (MonadIO m, FilterMonad Response m, Functor m)
+      => ACID -> BT.UserId -> API -> APIMonadT API AuthData m Response
 route acid uid url = case url of
     Get             -> method [GET, HEAD] >> getHandler acid uid 
     Set             -> method [POST, HEAD] >> setHandler acid uid

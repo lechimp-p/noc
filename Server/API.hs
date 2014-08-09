@@ -1,5 +1,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module API
 where
@@ -12,9 +13,11 @@ import Web.Routes.Happstack
 import Happstack.Server 
         ( ServerPartT, Response, ok
         , toResponse, Method (..), method
+        , FilterMonad
         )
 import Data.Aeson
 import Data.Aeson.Types
+import Control.Monad.IO.Class
 
 import qualified Model.BaseTypes as BT
 import API.ACIDEvents (ACID)
@@ -33,7 +36,8 @@ data API
     | Default
     deriving (Generic)
 
-route :: ACID -> API -> APIMonad API AuthData Response
+route :: (Functor m, Monad m, MonadIO m, FilterMonad Response m)
+      => ACID -> API -> APIMonadT API AuthData m Response
 route acid url = case url of
     Login               -> (>>) (method [POST, HEAD])
                            $ parseBody $ \obj -> do
@@ -47,10 +51,12 @@ route acid url = case url of
     Default             -> helloWorld
 
 
-api :: ACID -> Site API (InnerAPIMonad AuthData Response)
-api acid = setDefault Default $ mkSitePI (runRouteT $ unAPIMonad . route acid)
+api :: (Functor m, Monad m, MonadIO m, FilterMonad Response m)
+    => ACID -> Site API (InnerAPIMonadT AuthData m Response)
+api acid = setDefault Default $ mkSitePI (runRouteT $ unAPIMonadT . route acid)
 
-helloWorld :: APIMonad API AuthData Response
+helloWorld :: (Functor m, Monad m, MonadIO m, FilterMonad Response m)
+           => APIMonadT API AuthData m Response
 --helloWorld = ok . toResponse . pack $ "This is the NoC-Server.\n"
 --helloWorld = showURL (User 100 User.Get) >>= ok . toResponse 
 helloWorld = do

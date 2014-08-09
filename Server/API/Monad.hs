@@ -1,6 +1,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module API.Monad
 where
@@ -10,12 +11,12 @@ import Happstack.Server
 import Happstack.Server.Monads 
         ( FilterMonad, setFilter, getFilter
         , composeFilter, ServerMonad, askRq
-        , localRq
+        , localRq, mapServerPartT, UnWebT
         )
 import Happstack.Server.ClientSession
         ( ClientSessionT, MonadClientSession 
         , getSession, putSession, expireSession
-        , ClientSession
+        , ClientSession, mapClientSessionT
         ) 
 import Web.Routes (RouteT, liftRouteT)
 import qualified Web.Routes as WR
@@ -24,25 +25,35 @@ import Control.Applicative
 import Control.Monad
 import Control.Monad.IO.Class
 
-type InnerAPIMonad session = (ClientSessionT session (ServerPartT IO))
-newtype APIMonad url session a = APIMonad { unAPIMonad :: RouteT url (InnerAPIMonad session) a }
-                                 deriving (Monad, MonadPlus, MonadIO, Applicative, Functor)
+type InnerAPIMonadT session m = (ClientSessionT session (ServerPartT m))
+newtype APIMonadT url session m a = APIMonadT { unAPIMonadT :: RouteT url (InnerAPIMonadT session m) a }
+                                    deriving (Monad, MonadPlus, MonadIO, Applicative, Functor)
 
-instance FilterMonad Response (APIMonad url session) where
-    setFilter = APIMonad . setFilter 
-    composeFilter = APIMonad . composeFilter
-    getFilter = APIMonad . getFilter . unAPIMonad
+instance FilterMonad Response m => FilterMonad Response (APIMonadT url session m) where
+    setFilter = APIMonadT . setFilter 
+    composeFilter = APIMonadT . composeFilter
+    getFilter = APIMonadT . getFilter . unAPIMonadT
 
-instance (ClientSession session) 
-      => MonadClientSession session (APIMonad url session) 
+instance ( Functor m
+         , MonadIO m
+         , FilterMonad Response m
+         , ClientSession session
+         ) 
+      => MonadClientSession session (APIMonadT url session m) 
     where
-    getSession = APIMonad . liftRouteT $ getSession
-    putSession = APIMonad . liftRouteT . putSession
-    expireSession = APIMonad . liftRouteT $ expireSession
+    getSession = APIMonadT . liftRouteT $ getSession
+    putSession = APIMonadT . liftRouteT . putSession
+    expireSession = APIMonadT . liftRouteT $ expireSession
 
-instance ServerMonad (APIMonad url session) where
-    askRq = APIMonad askRq
-    localRq f = APIMonad . localRq f . unAPIMonad
+instance Monad m => ServerMonad (APIMonadT url session m) where
+    askRq = APIMonadT askRq
+    localRq f = APIMonadT . localRq f . unAPIMonadT
 
-nestURL :: (url1 -> url2) -> APIMonad url1 session a -> APIMonad url2 session a
-nestURL f = APIMonad . WR.nestURL f . unAPIMonad
+nestURL :: (url1 -> url2) -> APIMonadT url1 session a m -> APIMonadT url2 session a m
+nestURL f = APIMonadT . WR.nestURL f . unAPIMonadT
+
+mapAPIMonadT :: (m a -> n a) -> APIMonadT url session m a -> APIMonadT url session n a
+mapAPIMonadT f = APIMonadT . WR.mapRouteT (mapClientSessionT (mapServerPartT unWebFun)) . unAPIMonadT 
+    where
+    unWebFun :: UnWebT m a -> UnWebT n a
+    unWebFun = error "NYI!"
