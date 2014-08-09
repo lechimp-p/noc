@@ -52,6 +52,9 @@ onSimple op = OpQuery $ do
         Left err -> left err
         Right (_, v) -> return v
 
+doLoginQ :: Login -> Password -> Query NoC (Either Error (), Maybe UserId)
+doLoginQ l = getQuery Nothing . doLogin l
+
 getOperatorIdQ :: Maybe UserId -> Query NoC (Either Error UserId, Maybe UserId) 
 getOperatorIdQ oid = getQuery oid O.getOperatorId
 
