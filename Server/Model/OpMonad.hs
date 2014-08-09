@@ -44,6 +44,7 @@ op @= k = fmap (IX.@= k) op
 throwOn :: OpMonad m => Error -> Bool -> m ()
 throwOn e c = if c then throw e else return ()
 
+throwMsg :: OpMonad m => String -> m ()
 throwMsg = throw . Custom
 
 getChannelMaybe :: OpMonad m => ChanId -> m (Maybe Channel)
