@@ -20,7 +20,7 @@ import Data.Aeson.Types
 import Control.Monad.IO.Class
 
 import qualified Model.BaseTypes as BT
-import API.Monad
+import API.APIMonad
 import API.Auth
 import API.Utils
 import qualified API.User as User

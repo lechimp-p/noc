@@ -15,7 +15,7 @@ import Happstack.Server
 import Control.Monad.IO.Class
 
 import Model.BaseTypes
-import API.Monad
+import API.APIMonad
 import API.Utils
 
 data API

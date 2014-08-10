@@ -21,7 +21,7 @@ import Control.Monad.IO.Class (liftIO, MonadIO)
 import Control.Monad.Trans.Class
 
 import Model
-import API.Monad
+import API.APIMonad
 import ACID.QueryMonad
 
 type ACID = AcidState NoC

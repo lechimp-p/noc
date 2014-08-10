@@ -22,7 +22,7 @@ import Model
 import API (api)
 import API.Utils (ACID)
 import API.Auth (AuthData)
-import API.Monad (InnerAPIMonadT)
+import API.APIMonad (InnerAPIMonadT)
 import ACID.Query
 import ACID.Update
 

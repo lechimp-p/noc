@@ -20,7 +20,7 @@ import Control.Applicative
 import Control.Monad.IO.Class
 
 import qualified Model.BaseTypes as BT
-import API.Monad
+import API.APIMonad
 import API.Utils
 import API.Auth (AuthData, runHandler, refreshCookie)
 

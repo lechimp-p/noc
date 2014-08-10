@@ -22,7 +22,7 @@ import Control.Monad.IO.Class
 import Control.Monad.Trans.Class
 import Data.Acid.Advanced ( query' )
 
-import API.Monad
+import API.APIMonad
 import API.Utils
 import API.Errors
 import ACID
@@ -64,7 +64,7 @@ authTimestamp = authGet _timestamp
 
 logUserIn :: (Monad m, MonadIO m, Functor m) 
           => ACID -> Login -> Password -> APIMonadT url AuthData m Response
-logUserIn acid l pw = handleError $ do
+logUserIn acid l pw = handleError $ 
     flip runQueryMonadT acid $ do
         doLoginQ l pw
         lift $ refreshCookie (Just l) (Just pw)

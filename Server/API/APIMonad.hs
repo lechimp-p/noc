@@ -3,7 +3,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
 
-module API.Monad
+module API.APIMonad
 where
 
 import Happstack.Server 
