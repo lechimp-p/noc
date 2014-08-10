@@ -1,8 +1,10 @@
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE KindSignatures #-}
 
 module ACID.QueryMonad
-    ( runQueryMonad
-    , runQueryMonad'
+    ( QueryMonadT
+    , runQueryMonadT
+    , runQueryMonadT'
     , doLoginQ
     , getOperatorIdQ
     , getChanNameQ
@@ -24,46 +26,58 @@ import Data.Acid
         )
 import Data.Acid.Advanced ( query' )
 import Control.Monad.IO.Class
+import Control.Monad.Trans.Class
 
 import Model
 import Model.Errors
 import ACID.Acidic
 
-data QueryMonad acid a where
+data QueryMonadT acid (m :: * -> *) a where
     DoQuery :: ( QueryEvent event
                , EventResult event 
                ~ (Either Error a, Maybe UserId)
                ) 
             => (Maybe UserId -> event) 
-            -> QueryMonad (EventState event) a 
+            -> QueryMonadT (EventState event) m a 
 
-    Return  :: a -> QueryMonad acid a
+    Return  :: a -> QueryMonadT acid m a
 
-    Bind    :: QueryMonad acid a 
-            -> (a -> QueryMonad acid b) 
-            -> QueryMonad acid b
+    Bind    :: QueryMonadT acid m a 
+            -> (a -> QueryMonadT acid m b) 
+            -> QueryMonadT acid m b
+
+    Lift    :: m a
+            -> QueryMonadT acid m a
 
 
-instance Monad (QueryMonad acid) where
+instance Monad m => Monad (QueryMonadT acid m) where
     return = Return 
     (>>=) = Bind 
 
-runOpQueryMonad m acid = runOpQueryMonad m acid Nothing
+instance MonadTrans (QueryMonadT acid) where
+    lift = Lift
 
-runQueryMonad' :: ( MonadIO m ) 
-              => QueryMonad acid a 
+runQueryMonadT :: ( MonadIO m ) 
+              => QueryMonadT acid m a 
               -> AcidState acid 
-              -> Maybe UserId 
-              -> m (Either Error a, Maybe UserId)
-runQueryMonad' m acid uid =
+              -> m (Either Error a)
+runQueryMonadT m acid = runQueryMonadT' m acid Nothing >>= return . fst
+
+runQueryMonadT' :: ( MonadIO m ) 
+               => QueryMonadT acid m a 
+               -> AcidState acid 
+               -> Maybe UserId 
+               -> m (Either Error a, Maybe UserId)
+runQueryMonadT' m acid uid =
     case m of
         DoQuery fun -> query' acid $ fun uid
         Return v -> return (Right v, uid)
+        Lift m -> m >>= \ v -> return (Right v, uid)
         Bind v f -> do
-            v' <- runQueryMonad v acid uid
+            v' <- runQueryMonadT' v acid uid
             case v' of
                 (Left err, uid') -> return (Left err, uid') 
-                (Right res, uid') -> runQueryMonad (f res) acid uid'
+                (Right res, uid') -> runQueryMonadT' (f res) acid uid'
             
 
 doLoginQ l p = DoQuery $ const $ DoLoginQ l p 

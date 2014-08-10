@@ -4,10 +4,10 @@ module API.Errors
 where
 
 import Happstack.Server ( Response, FilterMonad)
+import Control.Monad.IO.Class
 
 import Model.Errors
 import Model
-import API.ACIDEvents
 import API.Utils
 import API.Monad
 
@@ -23,5 +23,14 @@ handleErrors acid ta op = do
         Left err -> respondError err
 --}
 
-respondError :: FilterMonad Response m => Error -> APIMonadT url session m Response
+handleError :: (Monad m, MonadIO m)
+            => APIMonadT url session m (Either Error Response)
+            -> APIMonadT url session m Response
+handleError op = op >>= \res -> 
+    case res of
+        Left err -> respondError err
+        Right res -> return res
+            
+respondError :: (Monad m, MonadIO m)
+             => Error -> APIMonadT url session m Response
 respondError = ok' . show 

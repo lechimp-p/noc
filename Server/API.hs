@@ -20,7 +20,6 @@ import Data.Aeson.Types
 import Control.Monad.IO.Class
 
 import qualified Model.BaseTypes as BT
-import API.ACIDEvents (ACID)
 import API.Monad
 import API.Auth
 import API.Utils
@@ -36,7 +35,7 @@ data API
     | Default
     deriving (Generic)
 
-route :: (Functor m, Monad m, MonadIO m, FilterMonad Response m)
+route :: (Functor m, Monad m, MonadIO m)
       => ACID -> API -> APIMonadT API AuthData m Response
 route acid url = case url of
     Login               -> (>>) (method [POST, HEAD])
@@ -51,19 +50,19 @@ route acid url = case url of
     Default             -> helloWorld
 
 
-api :: (Functor m, Monad m, MonadIO m, FilterMonad Response m)
+api :: (Functor m, Monad m, MonadIO m)
     => ACID -> Site API (InnerAPIMonadT AuthData m Response)
 api acid = setDefault Default $ mkSitePI (runRouteT $ unAPIMonadT . route acid)
 
-helloWorld :: (Functor m, Monad m, MonadIO m, FilterMonad Response m)
+helloWorld :: (Functor m, Monad m, MonadIO m)
            => APIMonadT API AuthData m Response
---helloWorld = ok . toResponse . pack $ "This is the NoC-Server.\n"
+helloWorld = ok . toResponse . pack $ "This is the NoC-Server.\n"
 --helloWorld = showURL (User 100 User.Get) >>= ok . toResponse 
-helloWorld = do
-    lg <- authLogin
-    pw <- authPassword
-    timestamp <- authTimestamp
-    ok . toResponse . pack $ show lg ++ " " ++ show pw ++ " " ++ show timestamp ++ "\n"
+--helloWorld = do
+--    lg <- authLogin
+--    pw <- authPassword
+--    timestamp <- authTimestamp
+--    ok . toResponse . pack $ show lg ++ " " ++ show pw ++ " " ++ show timestamp ++ "\n"
 
 instance PathInfo User.API
 instance PathInfo Channel.API

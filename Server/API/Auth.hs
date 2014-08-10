@@ -21,10 +21,10 @@ import Control.Lens
 import Control.Monad.IO.Class
 import Data.Acid.Advanced ( query' )
 
-import API.ACIDEvents
 import API.Monad
 import API.Utils
 import API.Errors
+import ACID
 import Model
 import Model.Errors
 
@@ -42,47 +42,47 @@ instance ClientSession AuthData where
     emptySession = AuthData Nothing Nothing Nothing 
 
 
-authGet :: (MonadIO m, FilterMonad Response m, Functor m)
+authGet :: (Monad m, MonadIO m, Functor m)
         => (AuthData -> a) -> APIMonadT url AuthData m a
 authGet f = getSession >>= return . f 
 
-authSet :: (MonadIO m, FilterMonad Response m, Functor m)
+authSet :: (Monad m, MonadIO m, Functor m)
         => (AuthData -> AuthData) -> APIMonadT url AuthData m ()
 authSet f = getSession >>= putSession . f
 
-authPassword :: (MonadIO m, FilterMonad Response m, Functor m)
+authPassword :: (Monad m, MonadIO m, Functor m)
              => APIMonadT url AuthData m (Maybe Password)
 authPassword = authGet _password
 
-authLogin :: (MonadIO m, FilterMonad Response m, Functor m)
+authLogin :: (Monad m, MonadIO m, Functor m)
           => APIMonadT url AuthData m (Maybe Login)
 authLogin = authGet _login
 
-authTimestamp :: (MonadIO m, FilterMonad Response m, Functor m)
+authTimestamp :: (Monad m, MonadIO m, Functor m)
               => APIMonadT url AuthData m (Maybe UTCTime)
 authTimestamp = authGet _timestamp
 
-logUserIn :: (MonadIO m, FilterMonad Response m) 
+logUserIn :: (Monad m, MonadIO m, Functor m) 
           => ACID -> Login -> Password -> APIMonadT url AuthData m Response
-logUserIn acid l pw = error "TODO" 
-{--    let ta = QueryTA $ LoginTA l pw  
-    in handleErrors acid ta $ \ uid -> do 
-            refreshCookie (Just l) (Just pw)
-            noContent'
---}
+logUserIn acid l pw = handleError $ do
+    flip runQueryMonadT acid $ do
+        doLoginQ l pw
+        return $ error "TODO"
+        --TODO: noContentQ
 
-logUserOut :: (MonadIO m, FilterMonad Response m, Functor m) 
+logUserOut :: (Monad m, MonadIO m, Functor m) 
            => APIMonadT url AuthData m Response
 logUserOut = do
     refreshCookie Nothing Nothing
     noContent'
 
-refreshCookie :: (MonadIO m, FilterMonad Response m, Functor m) 
+refreshCookie :: (Monad m, MonadIO m, Functor m) 
               => Maybe Login -> Maybe Password -> APIMonadT url AuthData m () 
 refreshCookie l pw = do
     ifIsJust l $ \ _ -> authSet (set login l)
     ifIsJust pw $ \ _ -> authSet (set password pw)
 
+{--
 withAuth :: (MonadIO m, FilterMonad Response m, Functor m)
          => (Login -> Password -> Transaction (Either Error a) NoC)
          -> APIMonadT url AuthData m (Maybe (Transaction (Either Error a) NoC))
@@ -92,13 +92,13 @@ withAuth tr = do
     case (l, pw) of
         (Just l', Just pw') -> return . Just $ tr l' pw'
         otherwise           -> return Nothing 
+--}
 
-runHandler :: (MonadIO m, FilterMonad Response m)
+runHandler :: (Monad m, MonadIO m)
            => ACID
-           -> (Login -> Password -> Transaction (Either Error a) NoC)
            -> (a -> APIMonadT url AuthData m Response)
            -> APIMonadT url AuthData m Response
-runHandler acid tr op = error "TODO" 
+runHandler acid op = error "TODO" 
 {--do
     ta <- withAuth tr
     case ta of

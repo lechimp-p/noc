@@ -1,5 +1,6 @@
 * Think about weather a show instance is a good
   idea for the Password type.
+* Introduce types for channels: conversation | stream
 * UI: Channel owners need a way to edit channel i
   name and description.
 * UI: edit own profile

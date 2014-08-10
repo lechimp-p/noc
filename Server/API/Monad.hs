@@ -29,14 +29,15 @@ type InnerAPIMonadT session m = (ClientSessionT session (ServerPartT m))
 newtype APIMonadT url session m a = APIMonadT { unAPIMonadT :: RouteT url (InnerAPIMonadT session m) a }
                                     deriving (Monad, MonadPlus, MonadIO, Applicative, Functor)
 
-instance FilterMonad Response m => FilterMonad Response (APIMonadT url session m) where
+instance (Monad m)
+      => FilterMonad Response (APIMonadT url session m) 
+    where
     setFilter = APIMonadT . setFilter 
-    composeFilter = APIMonadT . composeFilter
+    composeFilter = APIMonadT . composeFilter 
     getFilter = APIMonadT . getFilter . unAPIMonadT
 
 instance ( Functor m
          , MonadIO m
-         , FilterMonad Response m
          , ClientSession session
          ) 
       => MonadClientSession session (APIMonadT url session m) 

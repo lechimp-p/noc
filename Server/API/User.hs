@@ -20,23 +20,21 @@ import Control.Applicative
 import Control.Monad.IO.Class
 
 import qualified Model.BaseTypes as BT
-import API.ACIDEvents
 import API.Monad
 import API.Utils
 import API.Auth (AuthData, runHandler, refreshCookie)
 
 data API
-    = Login
-    | Logout
-    | Get
+    = Get
     | Set
     | UploadIcon
     | Contacts
     | Subscriptions
     | Channels
+    | Notifications -- when a user in my contact list added me to a channel
     deriving (Generic)
 
-route :: (MonadIO m, FilterMonad Response m, Functor m)
+route :: (Monad m, MonadIO m)
       => ACID -> BT.UserId -> API -> APIMonadT API AuthData m Response
 route acid uid url = case url of
     Get             -> method [GET, HEAD] >> getHandler acid uid 
@@ -46,15 +44,16 @@ route acid uid url = case url of
     Subscriptions   -> ok' "subscriptions\n"
     Channels        -> ok' "channels\n"
 
-getHandler acid uid = 
-    let ta = \l p -> QueryTA $ GetUserTA uid l p
+getHandler acid uid = error "TODO" 
+{--    let ta = \l p -> QueryTA $ GetUserTA uid l p
     in runHandler acid ta $ \ (l, n, d) -> jsonR' $ 
         object $ [ "login"          .= BT.loginToText l
                  , "name"           .= BT.nameToText n 
                  , "description"    .= BT.descToText d 
                  ]   
-
-setHandler acid uid = parseBody $ \ obj -> do
+--}
+setHandler acid uid = error "TODO"
+    {--parseBody $ \ obj -> do
     l <- fmap (fmap BT.mkLogin)     $ obj .:? "login"
     p <- fmap (fmap BT.mkPassword)  $ obj .:? "password"
     n <- fmap (fmap BT.mkName)      $ obj .:? "name"
@@ -63,4 +62,5 @@ setHandler acid uid = parseBody $ \ obj -> do
              in runHandler acid ta $ \ _ -> do
                     refreshCookie l p
                     noContent'  
+    --}
 

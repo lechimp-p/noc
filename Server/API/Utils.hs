@@ -5,6 +5,7 @@
 module API.Utils
 where
 
+import Data.Acid ( AcidState )
 import qualified Data.ByteString.Lazy.Char8 as L 
 import qualified Data.ByteString.Char8 as B 
 import qualified Data.Text as T
@@ -13,10 +14,15 @@ import Data.Aeson.Types
 import Happstack.Server
 import Happstack.Server.Types
 import Control.Monad.IO.Class (liftIO, MonadIO)
+import Control.Monad.Trans.Class
 
+import Model
 import API.Monad
+import ACID.QueryMonad
 
-getBody :: (Monad m, FilterMonad Response m, MonadIO m) 
+type ACID = AcidState NoC
+
+getBody :: (Monad m, MonadIO m) 
         => APIMonadT url session m L.ByteString
 getBody = do
     body <- APIMonadT $ askRq >>= liftIO . takeRequestBody
@@ -24,7 +30,7 @@ getBody = do
         Just rqbody -> return . unBody $ rqbody
         Nothing -> return ""
 
-parseBody :: (Monad m, FilterMonad Response m, MonadIO m) 
+parseBody :: (Monad m, MonadIO m) 
           => (Object -> Parser (APIMonadT url session m Response)) -> APIMonadT url session m Response 
 parseBody parser = do
     body <- getBody
@@ -33,9 +39,31 @@ parseBody parser = do
         Just action -> action
         Nothing -> badRequest' "Could not decode body."
      
+ok' :: (Monad m, MonadIO m)
+    =>  String -> APIMonadT url session m Response
 ok' = ok . toResponse . T.pack
+
+noContent' :: (Monad m, MonadIO m)
+           => APIMonadT url session m Response
 noContent' = noContent . toResponse . T.pack $ ""
+
+badRequest' :: (Monad m, MonadIO m)
+            =>  String -> APIMonadT url session m Response
 badRequest' = badRequest . toResponse . T.pack
+
+{--
+okQ :: (Monad m, FilterMonad Response m)
+    => String -> QueryMonadT acid m Response
+okQ = lift . ok'
+
+noContentQ :: (Monad m, FilterMonad Response m) 
+           => QueryMonadT acid m Response
+noContentQ = lift noContent'
+
+badRequestQ :: (Monad m, FilterMonad Response m) 
+            => String -> QueryMonadT acid m Response
+badRequestQ = lift . badRequest'
+--}
 
 instance ToMessage Value where
     toContentType _ = B.pack "application/json"
