@@ -25,6 +25,8 @@ import Control.Applicative
 import Control.Monad
 import Control.Monad.IO.Class
 
+import ACID
+
 type InnerAPIMonadT session m = (ClientSessionT session (ServerPartT m))
 newtype APIMonadT url session m a = APIMonadT { unAPIMonadT :: RouteT url (InnerAPIMonadT session m) a }
                                     deriving (Monad, MonadPlus, MonadIO, Applicative, Functor)
@@ -53,8 +55,10 @@ instance Monad m => ServerMonad (APIMonadT url session m) where
 nestURL :: (url1 -> url2) -> APIMonadT url1 session a m -> APIMonadT url2 session a m
 nestURL f = APIMonadT . WR.nestURL f . unAPIMonadT
 
+{--
 mapAPIMonadT :: (m a -> n a) -> APIMonadT url session m a -> APIMonadT url session n a
 mapAPIMonadT f = APIMonadT . WR.mapRouteT (mapClientSessionT (mapServerPartT unWebFun)) . unAPIMonadT 
     where
     unWebFun :: UnWebT m a -> UnWebT n a
     unWebFun = error "NYI!"
+--}

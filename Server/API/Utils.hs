@@ -1,6 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 
 module API.Utils
 where
@@ -13,6 +16,7 @@ import Data.Aeson
 import Data.Aeson.Types
 import Happstack.Server
 import Happstack.Server.Types
+import Happstack.Server.ClientSession
 import Control.Monad.IO.Class (liftIO, MonadIO)
 import Control.Monad.Trans.Class
 
@@ -51,19 +55,20 @@ badRequest' :: (Monad m, MonadIO m)
             =>  String -> APIMonadT url session m Response
 badRequest' = badRequest . toResponse . T.pack
 
-{--
-okQ :: (Monad m, FilterMonad Response m)
-    => String -> QueryMonadT acid m Response
+
+type APIQueryMonadT url session m a = QueryMonadT NoC (APIMonadT url session m) a
+
+okQ :: (Monad m, MonadIO m)
+    => String -> APIQueryMonadT url session m Response
 okQ = lift . ok'
 
-noContentQ :: (Monad m, FilterMonad Response m) 
-           => QueryMonadT acid m Response
+noContentQ :: (Monad m, MonadIO m) 
+           => APIQueryMonadT url session m Response
 noContentQ = lift noContent'
 
-badRequestQ :: (Monad m, FilterMonad Response m) 
-            => String -> QueryMonadT acid m Response
+badRequestQ :: (Monad m, MonadIO m) 
+            => String -> APIQueryMonadT url session m Response
 badRequestQ = lift . badRequest'
---}
 
 instance ToMessage Value where
     toContentType _ = B.pack "application/json"

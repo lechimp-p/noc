@@ -19,6 +19,7 @@ import Happstack.Server.ClientSession
         )
 import Control.Lens
 import Control.Monad.IO.Class
+import Control.Monad.Trans.Class
 import Data.Acid.Advanced ( query' )
 
 import API.Monad
@@ -40,7 +41,6 @@ makeLenses ''AuthData
 
 instance ClientSession AuthData where
     emptySession = AuthData Nothing Nothing Nothing 
-
 
 authGet :: (Monad m, MonadIO m, Functor m)
         => (AuthData -> a) -> APIMonadT url AuthData m a
@@ -67,8 +67,8 @@ logUserIn :: (Monad m, MonadIO m, Functor m)
 logUserIn acid l pw = handleError $ do
     flip runQueryMonadT acid $ do
         doLoginQ l pw
-        return $ error "TODO"
-        --TODO: noContentQ
+        lift $ refreshCookie (Just l) (Just pw)
+        noContentQ
 
 logUserOut :: (Monad m, MonadIO m, Functor m) 
            => APIMonadT url AuthData m Response
