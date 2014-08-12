@@ -89,6 +89,7 @@ executable NoC-Server-dev
                         , lens ==4.2.*
                         , time ==1.4.*
                         , containers ==0.5.*
+                        , unordered-containers ==0.2.*
                         , transformers ==0.4.*
                         , bytestring ==0.10.*
                         , happstack-server ==7.3.*

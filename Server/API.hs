@@ -38,11 +38,8 @@ data API
 route :: (Functor m, Monad m, MonadIO m)
       => ACID -> API -> APIMonadT API AuthData m Response
 route acid url = case url of
-    Login               -> (>>) (method [POST, HEAD])
-                           $ parseBody $ \obj -> do
-                                l <- obj .: "login"
-                                pw <- obj .: "password"
-                                return $ logUserIn acid (BT.mkLogin l) (BT.mkPassword pw)
+    Login               -> (method [POST, HEAD])
+                           >> logUserIn acid
     Logout              -> method [POST, HEAD] 
                            >> logUserOut  
     User uid uapi       -> User uid `nestURL` User.route acid (BT.UserId uid) uapi 

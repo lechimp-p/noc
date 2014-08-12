@@ -26,11 +26,6 @@ import API.APIMonad (InnerAPIMonadT)
 import ACID.Query
 import ACID.Update
 
-bodyPolicy = defaultBodyPolicy "/tmp/NoC-Server-dev"
-                               1000 -- file upload
-                               1000 -- no files
-                               1000 -- overhead for multipart/form-data headers
-
 initialNoC = mkNoC (mkLogin "admin") (mkPassword "admin") 
 
 main :: IO ()

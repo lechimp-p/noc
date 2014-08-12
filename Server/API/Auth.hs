@@ -17,13 +17,16 @@ import Happstack.Server.ClientSession
         ( ClientSession, emptySession
         , getSession, putSession, expireSession 
         )
+import Data.Aeson
 import Control.Lens
+import Control.Monad
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Class
 import Data.Acid.Advanced ( query' )
 
 import API.APIMonad
 import API.Utils
+import API.JSONUtils
 import API.Errors
 import ACID
 import Model
@@ -41,6 +44,14 @@ makeLenses ''AuthData
 
 instance ClientSession AuthData where
     emptySession = AuthData Nothing Nothing Nothing 
+
+instance FromJSON Login where
+    parseJSON (String t) = return . mkLogin $ t
+    parseJSON _ = mzero 
+
+instance FromJSON Password where
+    parseJSON (String t) = return . mkPassword $ t
+    parseJSON _ = mzero
 
 authGet :: (Monad m, MonadIO m, Functor m)
         => (AuthData -> a) -> APIMonadT url AuthData m a
@@ -63,12 +74,14 @@ authTimestamp :: (Monad m, MonadIO m, Functor m)
 authTimestamp = authGet _timestamp
 
 logUserIn :: (Monad m, MonadIO m, Functor m) 
-          => ACID -> Login -> Password -> APIMonadT url AuthData m Response
-logUserIn acid l pw = handleError $ 
-    flip runQueryMonadT acid $ do
-        doLoginQ l pw
-        lift $ refreshCookie (Just l) (Just pw)
-        noContentQ
+          => ACID -> APIMonadT url AuthData m Response
+logUserIn acid = handleError $ 
+    queryWithJSONInput acid $ do
+        l <- prop "login"
+        pw <- prop "password"
+        lift $ doLoginQ l pw
+        lift . lift $ refreshCookie (Just l) (Just pw)
+        lift . lift $ noContent' 
 
 logUserOut :: (Monad m, MonadIO m, Functor m) 
            => APIMonadT url AuthData m Response

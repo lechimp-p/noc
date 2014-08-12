@@ -3,12 +3,16 @@
 module API.Errors
 where
 
-import Happstack.Server ( Response, FilterMonad)
+import qualified Data.Text as T
+import Happstack.Server 
+        ( Response, FilterMonad, ok
+        , toResponse
+        )
 import Control.Monad.IO.Class
 
-import Model.Errors
+import qualified Model.Errors as ME
 import Model
-import API.Utils
+import API.JSONUtils 
 import API.APIMonad
 
 {--handleErrors :: 
@@ -23,6 +27,11 @@ handleErrors acid ta op = do
         Left err -> respondError err
 --}
 
+data Error
+    = ModelError ME.Error
+    | JSONError JSONError'
+    deriving (Show)
+
 handleError :: (Monad m, MonadIO m)
             => APIMonadT url session m (Either Error Response)
             -> APIMonadT url session m Response
@@ -33,4 +42,4 @@ handleError op = op >>= \res ->
             
 respondError :: (Monad m, MonadIO m)
              => Error -> APIMonadT url session m Response
-respondError = ok' . show 
+respondError = ok . toResponse . T.pack . show 

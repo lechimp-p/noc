@@ -24,13 +24,15 @@ parseBody parser = do
         Nothing -> badRequest' "Could not decode body."
 --}
 
-data JSONError
+data JSONError'
     = MissingProp Text
+    | CantDecodeObject
+    deriving (Show)
 
 data JSONMonadT m a where
     Get :: (FromJSON a, Monad m) => Text -> JSONMonadT m (Maybe a)
     Set :: (ToJSON a, Monad m) => Text -> a -> JSONMonadT m ()
-    Throw :: Monad m => JSONError -> JSONMonadT m a 
+    Throw :: Monad m => JSONError' -> JSONMonadT m a 
     Return :: Monad m => a -> JSONMonadT m a
     Bind :: Monad m => JSONMonadT m a -> (a -> JSONMonadT m b) -> JSONMonadT m b
     Lift :: Monad m => m a -> JSONMonadT m a
@@ -43,11 +45,11 @@ instance MonadTrans JSONMonadT where
     lift = Lift
 
 runJSONMonadT :: (Monad m) 
-              => JSONMonadT m a -> Object -> m (Either JSONError (a, Value))
+              => JSONMonadT m a -> Object -> m (Either JSONError' (a, Value))
 runJSONMonadT m obj = runJSONMonadT' m obj [] >>= return . over (_Right . _2) object
 
 runJSONMonadT' :: (Monad m)
-               => JSONMonadT m a -> Object -> [Pair] -> m (Either JSONError (a, [Pair]))
+               => JSONMonadT m a -> Object -> [Pair] -> m (Either JSONError' (a, [Pair]))
 runJSONMonadT' m obj ps =
     case m of
         Set prop val    -> return $ Right ((), (prop, toJSON val) : ps)
