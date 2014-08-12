@@ -1,8 +1,18 @@
 {-# LANGUAGE GADTs #-}
 
 module API.JSONUtils
+    ( JSONMonadT
+    , maybeProp
+    , prop
+    , (<:)
+    , (<::) 
+    , JSONError'
+    , runJSONMonadT
+    , runJSONMonadT'
+    )
 where
 
+import Data.ByteString.Lazy
 import Data.Aeson
 import qualified Data.HashMap.Strict as HM
 import Data.Aeson.Types
@@ -12,17 +22,6 @@ import Control.Monad.Trans.Class
 import Control.Monad.IO.Class
 import Control.Lens
 import Control.Lens.Prism
-
-{--
-parseBody :: (Monad m, MonadIO m) 
-          => (Object -> Parser (APIMonadT url session m a)) -> APIMonadT url session m a 
-parseBody parser = do
-    body <- getBody
-    let maybeAction = decode body >>= parseMaybe parser
-    case maybeAction of
-        Just action -> action
-        Nothing -> badRequest' "Could not decode body."
---}
 
 data JSONError'
     = MissingProp Text
@@ -45,8 +44,11 @@ instance MonadTrans JSONMonadT where
     lift = Lift
 
 runJSONMonadT :: (Monad m) 
-              => JSONMonadT m a -> Object -> m (Either JSONError' (a, Value))
-runJSONMonadT m obj = runJSONMonadT' m obj [] >>= return . over (_Right . _2) object
+              => JSONMonadT m a -> ByteString -> m (Either JSONError' (a, Value))
+runJSONMonadT m bs = 
+    case decode bs of
+        Nothing -> return . Left $ CantDecodeObject
+        Just obj -> runJSONMonadT' m obj [] >>= return . over (_Right . _2) object
 
 runJSONMonadT' :: (Monad m)
                => JSONMonadT m a -> Object -> [Pair] -> m (Either JSONError' (a, [Pair]))

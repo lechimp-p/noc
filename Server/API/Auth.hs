@@ -45,14 +45,6 @@ makeLenses ''AuthData
 instance ClientSession AuthData where
     emptySession = AuthData Nothing Nothing Nothing 
 
-instance FromJSON Login where
-    parseJSON (String t) = return . mkLogin $ t
-    parseJSON _ = mzero 
-
-instance FromJSON Password where
-    parseJSON (String t) = return . mkPassword $ t
-    parseJSON _ = mzero
-
 authGet :: (Monad m, MonadIO m, Functor m)
         => (AuthData -> a) -> APIMonadT url AuthData m a
 authGet f = getSession >>= return . f 
@@ -95,27 +87,11 @@ refreshCookie l pw = do
     ifIsJust l $ \ _ -> authSet (set login l)
     ifIsJust pw $ \ _ -> authSet (set password pw)
 
-{--
-withAuth :: (MonadIO m, FilterMonad Response m, Functor m)
-         => (Login -> Password -> Transaction (Either Error a) NoC)
-         -> APIMonadT url AuthData m (Maybe (Transaction (Either Error a) NoC))
-withAuth tr = do
-    l <- authGet _login
-    pw <- authGet _password
-    case (l, pw) of
-        (Just l', Just pw') -> return . Just $ tr l' pw'
-        otherwise           -> return Nothing 
---}
-
-runHandler :: (Monad m, MonadIO m)
-           => ACID
-           -> (a -> APIMonadT url AuthData m Response)
-           -> APIMonadT url AuthData m Response
-runHandler acid op = error "TODO" 
-{--do
-    ta <- withAuth tr
-    case ta of
-        (Just ta')  -> handleErrors acid ta' op 
-        Nothing     -> respondError NotLoggedIn  
---}
-
+trySessionLoginQ :: (Monad m, MonadIO m, Functor m)
+                 => QueryMonadT NoC (APIMonadT url AuthData m) ()
+trySessionLoginQ = do
+    l' <- lift $ authLogin
+    pw' <- lift $ authPassword
+    case (l', pw') of
+        (Just l, Just pw) -> doLoginQ l pw
+        _ -> return ()

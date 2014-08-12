@@ -18,11 +18,16 @@ import Data.Aeson
 import Data.Aeson.Types
 import Control.Applicative
 import Control.Monad.IO.Class
+import Control.Monad.Trans.Class
+import Control.Monad
 
 import qualified Model.BaseTypes as BT
+import ACID.QueryMonad
 import API.APIMonad
 import API.Utils
-import API.Auth (AuthData, runHandler, refreshCookie)
+import API.Errors
+import API.JSONUtils
+import API.Auth 
 
 data API
     = Get
@@ -34,7 +39,7 @@ data API
     | Notifications -- when a user in my contact list added me to a channel
     deriving (Generic)
 
-route :: (Monad m, MonadIO m)
+route :: (Monad m, MonadIO m, Functor m)
       => ACID -> BT.UserId -> API -> APIMonadT API AuthData m Response
 route acid uid url = case url of
     Get             -> method [GET, HEAD] >> getHandler acid uid 
@@ -44,7 +49,12 @@ route acid uid url = case url of
     Subscriptions   -> ok' "subscriptions\n"
     Channels        -> ok' "channels\n"
 
-getHandler acid uid = error "TODO" 
+getHandler acid uid = handleError $
+    queryWithJSONResponse acid $ do
+        lift $ trySessionLoginQ 
+        "login"         <:: lift (getUserLoginQ uid)
+        "name"          <:: lift (getUserNameQ uid)
+        "description"   <:: lift (getUserDescQ uid)
 {--    let ta = \l p -> QueryTA $ GetUserTA uid l p
     in runHandler acid ta $ \ (l, n, d) -> jsonR' $ 
         object $ [ "login"          .= BT.loginToText l

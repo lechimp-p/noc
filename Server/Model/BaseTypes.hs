@@ -29,7 +29,7 @@ newtype MsgId = MsgId { miToInt :: Int } deriving (Show, Read, Eq, Ord, Data, Ty
 
 newtype Login = Login { loginToText :: Text } deriving (Show, Read, Eq, Ord, Data, Typeable, SafeCopy)
 mkLogin = Login
-newtype Password = Password { pwToString :: Text } deriving (Show, Read, Eq, Ord, Data, Typeable, SafeCopy)
+newtype Password = Password { pwToText :: Text } deriving (Show, Read, Eq, Ord, Data, Typeable, SafeCopy)
 mkPassword = Password
 newtype Name = Name { nameToText :: Text } deriving (Data, Typeable, SafeCopy)
 mkName = Name
@@ -40,4 +40,4 @@ newtype Image = Image { imgPath :: String } deriving (Data, Typeable, SafeCopy)
 newtype Icon = Icon { icnPath :: String } deriving (Data, Typeable, SafeCopy)
 
 checkPassword :: Password -> Password -> Bool
-checkPassword pw pw' = pwToString pw == pwToString pw'
+checkPassword pw pw' = pwToText pw == pwToText pw'
