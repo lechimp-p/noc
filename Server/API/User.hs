@@ -20,6 +20,7 @@ import Control.Applicative
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Class
 import Control.Monad
+import qualified Data.Set as S
 
 import qualified Model.BaseTypes as BT
 import ACID
@@ -69,14 +70,17 @@ setHandler acid uid = handleError $
         ifIsJust d $ lift . setUserDescU uid
         lift . lift . refreshCookie l $ p
         lift . lift $ noContent'
-    {--parseBody $ \ obj -> do
-    l <- fmap (fmap BT.mkLogin)     $ obj .:? "login"
-    p <- fmap (fmap BT.mkPassword)  $ obj .:? "password"
-    n <- fmap (fmap BT.mkName)      $ obj .:? "name"
-    d <- fmap (fmap BT.mkDesc)      $ obj .:? "description"
-    return $ let ta = \l' p' -> UpdateTA $ SetUserTA l p n d uid l' p'
-             in runHandler acid ta $ \ _ -> do
-                    refreshCookie l p
-                    noContent'  
-    --}
 
+contactsHandler acid uid = handleError $
+    queryWithJSONResponse acid $ do
+        lift $ trySessionLoginQ
+        uids <- lift $ getUserContactsQ uid
+        infos <- lift . flip mapM (S.toList uids) $ \ uid -> do
+            l <- getUserLoginQ uid
+            d <- getUserDescQ uid
+            i <- getUserIconQ uid
+            return . object $ [ "login"         .= BT.loginToText l
+                              , "description"   .= BT.descToText d
+                              , "icon"          .= fmap BT.icnPath i
+                              ]
+        "contacts" <: infos

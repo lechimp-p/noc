@@ -80,6 +80,8 @@ executable NoC-Server-dev
                         , API.Auth
                         , API.Utils
                         , API.JSONUtils
+                        , API.Errors
+                        , API.APIMonad
                         , ACID.Query
                         , ACID.QueryMonad
                         , ACID.Update
