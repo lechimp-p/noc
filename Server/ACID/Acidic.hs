@@ -43,6 +43,7 @@ $(makeAcidic ''NoC  [ 'doLoginQ
                     , 'getUserDescU 
                     , 'getUserIconU 
                     , 'setUserLoginU
+                    , 'setUserPasswordU
                     , 'setUserNameU
                     , 'setUserDescU
                     , 'setUserIconU

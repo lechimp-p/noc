@@ -28,7 +28,8 @@ import Model.BaseTypes
 import API.Errors
 import API.APIMonad
 import API.JSONUtils
-import ACID.QueryMonad
+import ACID
+import ACID
 
 type ACID = AcidState NoC
 
@@ -131,6 +132,26 @@ queryWithJSON acid json = do
 queryWithJSONInput acid json = queryWithJSON acid json >>= return . over _Right fst
 queryWithJSONResponse acid json = do
     res <- queryWithJSON acid json
+    case res of
+        Left err -> return $ Left err
+        Right (_, v) -> jsonR' v >>= return . Right
+
+
+updateWithJSON :: (Monad m, MonadIO m)
+               => AcidState acid
+               -> JSONMonadT (UpdateMonadT acid (APIMonadT url session m)) a
+               -> APIMonadT url session m (Either Error (a, Value))
+updateWithJSON acid json = do
+    body <- getBody
+    res' <- flip runUpdateMonadT acid . runJSONMonadT json $ body 
+    case res' of
+        Left err -> return . Left . ModelError $ err
+        Right (Left err) -> return . Left . JSONError $ err
+        Right (Right a) -> return . Right $ a
+
+updateWithJSONInput acid json = updateWithJSON acid json >>= return . over _Right fst
+updateWithJSONResponse acid json = do
+    res <- updateWithJSON acid json
     case res of
         Left err -> return $ Left err
         Right (_, v) -> jsonR' v >>= return . Right

@@ -24,6 +24,7 @@ module ACID.UpdateMonad
     , getUserDescU
     , getUserIconU
     , setUserLoginU
+    , setUserPasswordU
     , setUserNameU
     , setUserDescU
     , setUserIconU
@@ -117,6 +118,7 @@ getUserNameU u = DoUpdate $ \ o -> GetUserNameU o u
 getUserDescU u = DoUpdate $ \ o -> GetUserDescU o u
 getUserIconU u = DoUpdate $ \ o -> GetUserIconU o u
 setUserLoginU u l = DoUpdate $ \ o -> SetUserLoginU o u l
+setUserPasswordU u l = DoUpdate $ \ o -> SetUserPasswordU o u l
 setUserNameU u n = DoUpdate $ \ o -> SetUserNameU o u n
 setUserDescU u d = DoUpdate $ \ o -> SetUserDescU o u d
 setUserIconU u i = DoUpdate $ \ o -> SetUserIconU o u i

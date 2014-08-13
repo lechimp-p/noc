@@ -116,6 +116,9 @@ getUserIconU oid = getUpdate oid . O.getUserIcon
 setUserLoginU :: Maybe UserId -> UserId -> Login -> Update NoC (Either Error (), Maybe UserId)
 setUserLoginU oid uid = getUpdate oid . O.setUserLogin uid
 
+setUserPasswordU :: Maybe UserId -> UserId -> Password -> Update NoC (Either Error (), Maybe UserId)
+setUserPasswordU oid uid = getUpdate oid . O.setUserPassword uid
+
 setUserNameU :: Maybe UserId -> UserId -> Name -> Update NoC (Either Error (), Maybe UserId)
 setUserNameU oid uid = getUpdate oid . O.setUserName uid
 

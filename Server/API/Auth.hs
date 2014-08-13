@@ -95,3 +95,12 @@ trySessionLoginQ = do
     case (l', pw') of
         (Just l, Just pw) -> doLoginQ l pw
         _ -> return ()
+
+trySessionLoginU :: (Monad m, MonadIO m, Functor m)
+                 => UpdateMonadT NoC (APIMonadT url AuthData m) ()
+trySessionLoginU = do
+    l' <- lift $ authLogin
+    pw' <- lift $ authPassword
+    case (l', pw') of
+        (Just l, Just pw) -> doLoginU l pw
+        _ -> return ()

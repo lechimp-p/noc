@@ -22,7 +22,7 @@ import Control.Monad.Trans.Class
 import Control.Monad
 
 import qualified Model.BaseTypes as BT
-import ACID.QueryMonad
+import ACID
 import API.APIMonad
 import API.Utils
 import API.Errors
@@ -56,7 +56,19 @@ getHandler acid uid = handleError $
         "name"          <:: lift (getUserNameQ uid)
         "description"   <:: lift (getUserDescQ uid)
 
-setHandler acid uid = error "TODO"
+setHandler acid uid = handleError $
+    updateWithJSONInput acid $ do
+        lift $ trySessionLoginU 
+        l <- maybeProp "login"
+        p <- maybeProp "password" 
+        n <- maybeProp "name"
+        d <- maybeProp "description"
+        ifIsJust l $ lift . setUserLoginU uid
+        ifIsJust p $ lift . setUserPasswordU uid
+        ifIsJust n $ lift . setUserNameU uid
+        ifIsJust d $ lift . setUserDescU uid
+        lift . lift . refreshCookie l $ p
+        lift . lift $ noContent'
     {--parseBody $ \ obj -> do
     l <- fmap (fmap BT.mkLogin)     $ obj .:? "login"
     p <- fmap (fmap BT.mkPassword)  $ obj .:? "password"
