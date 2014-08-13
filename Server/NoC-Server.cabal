@@ -77,8 +77,13 @@ executable NoC-Server-dev
                         , API
                         , API.User
                         , API.Channel
+                        , API.Auth
+                        , API.Utils
+                        , API.JSONUtils
                         , ACID.Query
+                        , ACID.QueryMonad
                         , ACID.Update
+                        , ACID.UpdateMonad
     ghc-options:        -threaded
     build-depends:        base ==4.6.*
                         , text ==1.1.*

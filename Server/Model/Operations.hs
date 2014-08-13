@@ -151,8 +151,13 @@ getUserContacts uid = checkAccess uid forUserSelfOrAdmins
     $ getFromUser U.contacts uid
 
 setUserLogin uid l = do
-    checkDuplicateLogin l
-    setToUser U.login uid l
+    oid <- Model.Operations.getOperatorId
+    l' <- getUserLogin oid
+    if uid == oid && l == l'
+        then return ()
+        else do
+            checkDuplicateLogin l
+            setToUser U.login uid l
 setUserName uid v = setToUser U.name uid v
 setUserPassword uid v = setToUser U.password uid v
 setUserDesc uid v = setToUser U.desc uid v
