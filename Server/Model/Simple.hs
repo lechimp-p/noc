@@ -7,6 +7,7 @@ module Model.Simple
     , runOp
     , noc
     , Operation
+    , OpContext (..)
     )
 where
 

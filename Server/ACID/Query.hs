@@ -18,11 +18,11 @@ import Data.Set ( Set )
 import Model 
 import qualified Model.Operations as O
 import Model.OpMonad 
-import Model.Simple (runOp')
+import Model.Simple (runOp', _operator)
 import Model.Errors
 
 newtype OpQuery a = OpQuery { runOpQuery :: EitherT Error (StateT (Maybe UserId) (Query NoC)) a }
-                        deriving (Functor, Applicative, Monad, MonadError Error)
+                    deriving (Functor, Applicative, Monad, MonadError Error)
 
 getQuery :: Maybe UserId -> OpQuery a -> Query NoC (Either Error a, Maybe UserId)
 getQuery oid = flip runStateT oid . runEitherT . runOpQuery
@@ -50,7 +50,9 @@ onSimple op = OpQuery $ do
     oid <- lift $ get 
     case runOp' noc oid op of
         Left err -> left err
-        Right (_, v) -> return v
+        Right (context, v) -> do
+            lift . put . _operator $ context
+            return v
 
 doLoginQ :: Login -> Password -> Query NoC (Either Error (), Maybe UserId)
 doLoginQ l = getQuery Nothing . doLogin l
