@@ -55,13 +55,7 @@ getHandler acid uid = handleError $
         "login"         <:: lift (getUserLoginQ uid)
         "name"          <:: lift (getUserNameQ uid)
         "description"   <:: lift (getUserDescQ uid)
-{--    let ta = \l p -> QueryTA $ GetUserTA uid l p
-    in runHandler acid ta $ \ (l, n, d) -> jsonR' $ 
-        object $ [ "login"          .= BT.loginToText l
-                 , "name"           .= BT.nameToText n 
-                 , "description"    .= BT.descToText d 
-                 ]   
---}
+
 setHandler acid uid = error "TODO"
     {--parseBody $ \ obj -> do
     l <- fmap (fmap BT.mkLogin)     $ obj .:? "login"

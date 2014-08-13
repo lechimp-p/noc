@@ -17,6 +17,7 @@ module ACID.QueryMonad
     , getUserSubscriptionsQ
     , getUserContactsQ
     , getUserByLoginQ
+    , messagesQ
     )
 where
 
@@ -92,4 +93,5 @@ getUserOwnedChannelsQ u = DoQuery $ \ o -> GetUserOwnedChannelsQ o u
 getUserSubscriptionsQ u = DoQuery $ \ o -> GetUserSubscriptionsQ o u
 getUserContactsQ u = DoQuery $ \ o -> GetUserContactsQ o u 
 getUserByLoginQ u = DoQuery $ \ o -> GetUserByLoginQ o u
+messagesQ c o a = DoQuery $ \ u -> MessagesQ u c o a
 

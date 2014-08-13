@@ -8,6 +8,7 @@ where
 import Data.Acid ( makeAcidic )
 
 import ACID.Query
+import ACID.Update
 import Model
 
 $(makeAcidic ''NoC  [ 'doLoginQ
@@ -23,4 +24,34 @@ $(makeAcidic ''NoC  [ 'doLoginQ
                     , 'getUserContactsQ
                     , 'getUserByLoginQ
                     , 'messagesQ
+                    , 'doLoginU
+                    , 'getOperatorIdU
+                    , 'addAdminU
+                    , 'rmAdminU
+                    , 'getChanNameU 
+                    , 'getChanDescU 
+                    , 'setChanNameU
+                    , 'setChanDescU
+                    , 'addChanOwnerU
+                    , 'addChanProducerU
+                    , 'addChanConsumerU
+                    , 'rmChanOwnerU
+                    , 'rmChanProducerU
+                    , 'rmChanConsumerU
+                    , 'getUserLoginU 
+                    , 'getUserNameU 
+                    , 'getUserDescU 
+                    , 'getUserIconU 
+                    , 'setUserLoginU
+                    , 'setUserNameU
+                    , 'setUserDescU
+                    , 'setUserIconU
+                    , 'getUserOwnedChannelsU 
+                    , 'getUserSubscriptionsU 
+                    , 'getUserContactsU 
+                    , 'getUserByLoginU 
+                    , 'createUserU
+                    , 'createChannelU
+                    , 'postU
+                    , 'messagesU 
                     ])

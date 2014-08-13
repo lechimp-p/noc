@@ -15,6 +15,7 @@ module Model
     , MsgId
     , Icon
     , Message
+    , Image
     )
 where
 
