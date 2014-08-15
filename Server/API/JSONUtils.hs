@@ -1,7 +1,11 @@
 {-# LANGUAGE GADTs #-}
 
 module API.JSONUtils
-    ( JSONMonadT
+    ( MonadJSONError
+    , throwJSONError
+    , MonadJSON 
+    , readProp
+    , writeProp
     , maybeProp
     , prop
     , (<:)
@@ -9,6 +13,7 @@ module API.JSONUtils
     , (.:>)
     , (?:>)
     , JSONError
+    , JSONMonadT
     , runJSONMonadT
     , runJSONMonadT'
     )

@@ -8,10 +8,10 @@
 module API.Utils
 where
 
+import Data.Text
 import Data.Acid ( AcidState )
 import qualified Data.ByteString.Lazy.Char8 as L 
 import qualified Data.ByteString.Char8 as B 
-import qualified Data.Text as T
 import Data.Aeson
 import Data.Aeson.Types
 import Control.Lens
@@ -67,42 +67,30 @@ bodyPolicy = defaultBodyPolicy "/tmp/NoC-Server-dev"
                                1000 -- no files
                                1000 -- overhead for multipart/form-data headers
 
-getBody :: (Monad m, MonadIO m) 
-        => APIMonadT url session m L.ByteString
+getBody :: ( ServerMonad m, MonadPlus m, MonadIO m
+           , FilterMonad Response m, WebMonad Response m) 
+        => m L.ByteString
 getBody = do
-    body <- APIMonadT $ do
-        decodeBody bodyPolicy
-        askRq >>= liftIO . takeRequestBody
+    decodeBody bodyPolicy
+    body <- askRq >>= liftIO . takeRequestBody
     case body of
         Just rqbody -> return . unBody $ rqbody
         Nothing -> return ""
      
-ok' :: (Monad m, MonadIO m)
-    =>  String -> APIMonadT url session m Response
-ok' = ok . toResponse . T.pack
+ok' :: (Monad m, MonadIO m, FilterMonad Response m)
+    =>  Text -> m Response
+ok' = ok . toResponse 
 
-noContent' :: (Monad m, MonadIO m)
-           => APIMonadT url session m Response
-noContent' = noContent . toResponse . T.pack $ ""
+noContent' :: (Monad m, MonadIO m, FilterMonad Response m)
+           => m Response
+noContent' = noContent . toResponse $ ("" :: Text)
 
-badRequest' :: (Monad m, MonadIO m)
-            =>  String -> APIMonadT url session m Response
-badRequest' = badRequest . toResponse . T.pack
+badRequest' :: (Monad m, MonadIO m, FilterMonad Response m)
+            =>  Text -> m Response
+badRequest' = badRequest . toResponse 
 
 
 type APIQueryMonadT url session m a = QueryMonadT NoC (APIMonadT url session m) a
-
-okQ :: (Monad m, MonadIO m)
-    => String -> APIQueryMonadT url session m Response
-okQ = lift . ok'
-
-noContentQ :: (Monad m, MonadIO m) 
-           => APIQueryMonadT url session m Response
-noContentQ = lift noContent'
-
-badRequestQ :: (Monad m, MonadIO m) 
-            => String -> APIQueryMonadT url session m Response
-badRequestQ = lift . badRequest'
 
 instance ToMessage Value where
     toContentType _ = B.pack "application/json"
@@ -116,7 +104,7 @@ ifIsJust v op =
     case v of
         Just a -> op a
         Nothing -> return () 
-
+{--
 queryWithJSON :: (Monad m, MonadIO m)
               => AcidState acid
               -> JSONMonadT (QueryMonadT acid (APIMonadT url session m)) a
@@ -125,8 +113,8 @@ queryWithJSON acid json = do
     body <- getBody
     res' <- flip runQueryMonadT acid . runJSONMonadT json $ body 
     case res' of
-        Left err -> return . Left . ModelError $ err
-        Right (Left err) -> return . Left . JSONError $ err
+        Left err -> return . Left . ModelError' $ err
+        Right (Left err) -> return . Left . JSONError' $ err
         Right (Right a) -> return . Right $ a
 
 queryWithJSONInput acid json = queryWithJSON acid json >>= return . over _Right fst
@@ -155,3 +143,4 @@ updateWithJSONResponse acid json = do
     case res of
         Left err -> return $ Left err
         Right (_, v) -> jsonR' v >>= return . Right
+--}
