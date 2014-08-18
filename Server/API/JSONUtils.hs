@@ -16,6 +16,9 @@ module API.JSONUtils
     , JSONMonadT
     , runJSONMonadT
     , runJSONMonadT'
+    , getObject
+    , getPairs
+    , setPairs
     )
 where
 
@@ -25,6 +28,7 @@ import qualified Data.HashMap.Strict as HM
 import Data.Aeson.Types
 import Data.Text
 import Control.Monad
+import Control.Applicative
 import Control.Monad.Trans.Class
 import Control.Monad.IO.Class
 import Control.Lens
@@ -38,7 +42,7 @@ data JSONError
 class Monad m => MonadJSONError m where
     throwJSONError :: JSONError -> m a
 
-class MonadJSONError m => MonadJSON m where
+class Monad m => MonadJSON m where
     readProp  :: FromJSON a => Text -> m (Maybe a)
     writeProp :: ToJSON a => Text -> a -> m () 
 
@@ -55,7 +59,7 @@ n <:. m = do
     val <- m
     n <: val
 
-(.:>) :: (FromJSON a, MonadJSON m) => Text -> (a -> m b) -> m b
+(.:>) :: (FromJSON a, MonadJSON m, MonadJSONError m) => Text -> (a -> m b) -> m b
 n .:> m = do
     p <- prop n
     m p
@@ -72,14 +76,19 @@ n ?:> m = do
 maybeProp :: (FromJSON a, MonadJSON m) => Text -> m (Maybe a)
 maybeProp = readProp 
 
-prop :: (FromJSON a, MonadJSON m) => Text -> m a
+prop :: (FromJSON a, MonadJSON m, MonadJSONError m) => Text -> m a
 prop n = do 
     p <- maybeProp n
     case p of
         Nothing -> throwJSONError $ MissingProp n
         Just p' -> return p'
 
-
+getObject :: Monad m => JSONMonadT m Object
+getObject = GetObject
+getPairs :: Monad m => JSONMonadT m [Pair] 
+getPairs = GetPairs
+setPairs :: Monad m => [Pair] -> JSONMonadT m ()
+setPairs = SetPairs
 
 data JSONMonadT m a where
     ReadProp :: (FromJSON a, Monad m) => Text -> JSONMonadT m (Maybe a)
@@ -87,6 +96,10 @@ data JSONMonadT m a where
     Return :: Monad m => a -> JSONMonadT m a
     Bind :: Monad m => JSONMonadT m a -> (a -> JSONMonadT m b) -> JSONMonadT m b
     Lift :: Monad m => m a -> JSONMonadT m a
+    Plus :: MonadPlus m => JSONMonadT m a -> JSONMonadT m a -> JSONMonadT m a
+    GetObject :: Monad m => JSONMonadT m Object
+    GetPairs :: Monad m => JSONMonadT m [Pair]
+    SetPairs :: Monad m => [Pair] -> JSONMonadT m ()
 
 instance Monad m => Monad (JSONMonadT m) where
     return = Return
@@ -98,11 +111,25 @@ instance MonadTrans JSONMonadT where
 instance MonadJSONError m => MonadJSONError (JSONMonadT m) where
     throwJSONError = lift . throwJSONError
 
-instance MonadJSONError m => MonadJSON (JSONMonadT m) where
+instance Monad m => MonadJSON (JSONMonadT m) where
     readProp = ReadProp
     writeProp = WriteProp
 
-runJSONMonadT :: (MonadJSONError m) 
+instance MonadIO m => MonadIO (JSONMonadT m) where
+    liftIO = lift . liftIO
+
+instance Monad m => Functor (JSONMonadT m) where
+    fmap f m = m >>= return . f 
+
+instance Monad m => Applicative (JSONMonadT m) where
+    pure = return
+    m <*> m' = m >>= \f -> m' >>= return . f
+
+instance MonadPlus m => MonadPlus (JSONMonadT m) where
+    mzero = lift mzero
+    mplus = Plus
+ 
+runJSONMonadT :: MonadJSONError m 
               => JSONMonadT m a -> ByteString -> m (a, Value)
 runJSONMonadT m bs = 
     case decode bs of
@@ -123,3 +150,7 @@ runJSONMonadT' m obj ps =
         Bind v f        -> do
             (v, ps') <- runJSONMonadT' v obj ps 
             runJSONMonadT' (f v) obj (ps' ++ ps)
+        Plus l r        -> (runJSONMonadT' l obj ps) `mplus` (runJSONMonadT' r obj ps)
+        GetObject       -> return (obj, ps)
+        GetPairs        -> return (ps, ps)
+        SetPairs ps'    -> return ((), ps')

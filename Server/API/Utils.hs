@@ -4,6 +4,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module API.Utils
 where
@@ -22,13 +23,14 @@ import Happstack.Server.ClientSession
 import Control.Monad
 import Control.Monad.IO.Class (liftIO, MonadIO)
 import Control.Monad.Trans.Class
+import Control.Monad.Trans.Either
 
 import Model
 import Model.BaseTypes
 import API.Errors
 import API.APIMonad
+import API.JSONQueryMonad
 import API.JSONUtils
-import ACID
 import ACID
 
 type ACID = AcidState NoC
@@ -62,6 +64,10 @@ instance ToJSON Name where
 instance ToJSON Desc where
     toJSON = String . descToText
 
+instance ToMessage Value where
+    toContentType _ = B.pack "application/json"
+    toMessage       = encode
+
 bodyPolicy = defaultBodyPolicy "/tmp/NoC-Server-dev"
                                1000 -- file upload
                                1000 -- no files
@@ -89,13 +95,6 @@ badRequest' :: (Monad m, MonadIO m, FilterMonad Response m)
             =>  Text -> m Response
 badRequest' = badRequest . toResponse 
 
-
-type APIQueryMonadT url session m a = QueryMonadT NoC (APIMonadT url session m) a
-
-instance ToMessage Value where
-    toContentType _ = B.pack "application/json"
-    toMessage       = encode
-
 jsonR' :: FilterMonad Response m => Value -> m Response
 jsonR' = ok . toResponse 
 
@@ -104,27 +103,62 @@ ifIsJust v op =
     case v of
         Just a -> op a
         Nothing -> return () 
-{--
+
+instance (Monad m, MonadIO m)
+     => FilterMonad Response (JSONQueryMonadT acid url session m) where
+    setFilter = JSONQueryMonadT . lift . lift . lift . setFilter
+    composeFilter = JSONQueryMonadT . lift . lift . lift . composeFilter
+    -- getFilter :: m b -> m (b, a -> a)
+    getFilter m = do
+        obj <- JSONQueryMonadT $ getObject
+        ps <- JSONQueryMonadT $ getPairs   
+        uid <- JSONQueryMonadT . lift $ maybeOperatorId
+        acid <- JSONQueryMonadT . lift $ getAcid
+        (((a', ps'), uid'), res) <- JSONQueryMonadT . lift . lift 
+                . getFilter . queryWithJSON' acid uid obj ps $ m
+        JSONQueryMonadT $ setPairs ps'
+        JSONQueryMonadT . lift $ setOperatorId uid'
+        return (a', res)
+
+instance ( Monad m, MonadIO m, Functor m
+         , ClientSession session )
+      => MonadClientSession session (JSONQueryMonadT acid url session m)
+    where 
+    getSession = JSONQueryMonadT . lift . lift . lift $ getSession
+    putSession = JSONQueryMonadT . lift . lift . lift . putSession
+    expireSession = JSONQueryMonadT . lift . lift . lift $ expireSession
+
+queryWithJSON' :: (Monad m, MonadIO m)
+               => AcidState acid
+               -> Maybe UserId
+               -> Object
+               -> [Pair]
+               -> JSONQueryMonadT acid url session m a
+               -> EitherT Error (APIMonadT url session m) ((a, [Pair]), Maybe UserId)
+queryWithJSON' acid uid obj ps json = do
+    body <- getBody
+    (\ m -> runQueryMonadT' m acid uid) 
+        . (\ m -> runJSONMonadT' m obj ps) 
+        . runJSONQueryMonadT 
+        $ json 
+
 queryWithJSON :: (Monad m, MonadIO m)
               => AcidState acid
-              -> JSONMonadT (QueryMonadT acid (APIMonadT url session m)) a
-              -> APIMonadT url session m (Either Error (a, Value))
+              -> JSONQueryMonadT acid url session m a
+              -> EitherT Error (APIMonadT url session m) (a, Value)
 queryWithJSON acid json = do
     body <- getBody
-    res' <- flip runQueryMonadT acid . runJSONMonadT json $ body 
-    case res' of
-        Left err -> return . Left . ModelError' $ err
-        Right (Left err) -> return . Left . JSONError' $ err
-        Right (Right a) -> return . Right $ a
+    flip runQueryMonadT acid 
+        . flip runJSONMonadT body 
+        . runJSONQueryMonadT 
+        $ json 
 
-queryWithJSONInput acid json = queryWithJSON acid json >>= return . over _Right fst
+queryWithJSONInput acid json = queryWithJSON acid json >>= return . fst 
 queryWithJSONResponse acid json = do
-    res <- queryWithJSON acid json
-    case res of
-        Left err -> return $ Left err
-        Right (_, v) -> jsonR' v >>= return . Right
+    (_, res) <- queryWithJSON acid json
+    jsonR' res
 
-
+{--
 updateWithJSON :: (Monad m, MonadIO m)
                => AcidState acid
                -> JSONMonadT (UpdateMonadT acid (APIMonadT url session m)) a
@@ -133,8 +167,8 @@ updateWithJSON acid json = do
     body <- getBody
     res' <- flip runUpdateMonadT acid . runJSONMonadT json $ body 
     case res' of
-        Left err -> return . Left . ModelError $ err
-        Right (Left err) -> return . Left . JSONError $ err
+        Left err -> return . Left . ModelError' $ err
+        Right (Left err) -> return . Left . JSONError' $ err
         Right (Right a) -> return . Right $ a
 
 updateWithJSONInput acid json = updateWithJSON acid json >>= return . over _Right fst

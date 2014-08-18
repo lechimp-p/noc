@@ -18,14 +18,15 @@ import Happstack.Server.ClientSession
         , getSession, putSession, expireSession
         , ClientSession, mapClientSessionT
         ) 
+import Happstack.Server.Internal.Monads
 import Web.Routes (RouteT, liftRouteT)
 import qualified Web.Routes as WR
 import Web.Routes.Happstack
 import Control.Applicative
 import Control.Monad
 import Control.Monad.IO.Class
-
-import ACID
+import Control.Monad.Trans.Class
+import Control.Monad.Trans.Either
 
 type InnerAPIMonadT session m = (ClientSessionT session (ServerPartT m))
 newtype APIMonadT url session m a = APIMonadT { unAPIMonadT :: RouteT url (InnerAPIMonadT session m) a }
@@ -37,6 +38,9 @@ instance (Monad m)
     setFilter = APIMonadT . setFilter 
     composeFilter = APIMonadT . composeFilter 
     getFilter = APIMonadT . getFilter . unAPIMonadT
+
+--instance MonadTrans (APIMonadT url session) where
+--    lift = APIMonadT
 
 instance ( Functor m
          , MonadIO m
@@ -52,6 +56,10 @@ instance Monad m => ServerMonad (APIMonadT url session m) where
     askRq = APIMonadT askRq
     localRq f = APIMonadT . localRq f . unAPIMonadT
 
+instance Monad m => WebMonad Response (APIMonadT url session m) where
+    finishWith = APIMonadT . finishWith
+
+
 nestURL :: (url1 -> url2) -> APIMonadT url1 session a m -> APIMonadT url2 session a m
 nestURL f = APIMonadT . WR.nestURL f . unAPIMonadT
 
@@ -62,3 +70,4 @@ mapAPIMonadT f = APIMonadT . WR.mapRouteT (mapClientSessionT (mapServerPartT unW
     unWebFun :: UnWebT m a -> UnWebT n a
     unWebFun = error "NYI!"
 --}
+

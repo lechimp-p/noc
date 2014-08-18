@@ -2,6 +2,8 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 
 module API.Auth
 where
@@ -16,6 +18,7 @@ import Happstack.Server
 import Happstack.Server.ClientSession 
         ( ClientSession, emptySession
         , getSession, putSession, expireSession 
+        , MonadClientSession
         )
 import Data.Aeson
 import Control.Lens
@@ -25,6 +28,7 @@ import Control.Monad.Trans.Class
 import Data.Acid.Advanced ( query' )
 
 import API.APIMonad
+import API.JSONQueryMonad
 import API.Utils
 import API.JSONUtils
 import API.Errors
@@ -45,57 +49,62 @@ makeLenses ''AuthData
 instance ClientSession AuthData where
     emptySession = AuthData Nothing Nothing Nothing 
 
-authGet :: (Monad m, MonadIO m, Functor m)
-        => (AuthData -> a) -> APIMonadT url AuthData m a
+authGet :: (Monad m, MonadIO m, Functor m, MonadClientSession AuthData m)
+        => (AuthData -> a) -> m a
 authGet f = getSession >>= return . f 
 
-authSet :: (Monad m, MonadIO m, Functor m)
-        => (AuthData -> AuthData) -> APIMonadT url AuthData m ()
+authSet :: (Monad m, MonadIO m, Functor m, MonadClientSession AuthData m)
+        => (AuthData -> AuthData) -> m ()
 authSet f = getSession >>= putSession . f
 
-authPassword :: (Monad m, MonadIO m, Functor m)
-             => APIMonadT url AuthData m (Maybe Password)
+authPassword :: (Monad m, MonadIO m, Functor m, MonadClientSession AuthData m)
+             => m (Maybe Password)
 authPassword = authGet _password
 
-authLogin :: (Monad m, MonadIO m, Functor m)
-          => APIMonadT url AuthData m (Maybe Login)
+authLogin :: (Monad m, MonadIO m, Functor m, MonadClientSession AuthData m)
+          => m (Maybe Login)
 authLogin = authGet _login
 
-authTimestamp :: (Monad m, MonadIO m, Functor m)
-              => APIMonadT url AuthData m (Maybe UTCTime)
+authTimestamp :: (Monad m, MonadIO m, Functor m, MonadClientSession AuthData m)
+              => m (Maybe UTCTime)
 authTimestamp = authGet _timestamp
 
-logUserIn :: (Monad m, MonadIO m, Functor m) 
+logUserIn :: ( Monad m, MonadIO m, Functor m ) 
           => ACID -> APIMonadT url AuthData m Response
 logUserIn acid = handleError $ 
     queryWithJSONInput acid $ do
         l <- prop "login"
         pw <- prop "password"
-        lift $ doLoginQ l pw
-        lift . lift $ refreshCookie (Just l) (Just pw)
-        lift . lift $ noContent' 
+        doLoginQ l pw
+        refreshCookie (Just l) (Just pw)
+        noContent' 
 
-logUserOut :: (Monad m, MonadIO m, Functor m) 
-           => APIMonadT url AuthData m Response
+logUserOut :: ( Monad m, MonadIO m, Functor m
+              , MonadClientSession AuthData m
+              , FilterMonad Response m
+              ) 
+           => m Response
 logUserOut = do
     refreshCookie Nothing Nothing
     noContent'
 
-refreshCookie :: (Monad m, MonadIO m, Functor m) 
-              => Maybe Login -> Maybe Password -> APIMonadT url AuthData m () 
+refreshCookie :: (Monad m, MonadIO m, Functor m, MonadClientSession AuthData m) 
+              => Maybe Login -> Maybe Password -> m () 
 refreshCookie l pw = do
     ifIsJust l $ \ _ -> authSet (set login l)
     ifIsJust pw $ \ _ -> authSet (set password pw)
 
-trySessionLoginQ :: (Monad m, MonadIO m, Functor m)
-                 => QueryMonadT NoC (APIMonadT url AuthData m) ()
+trySessionLoginQ :: ( Monad m, MonadIO m, Functor m
+                    , MonadClientSession AuthData m
+                    , MonadQuery m)
+                 => m ()
 trySessionLoginQ = do
-    l' <- lift $ authLogin
-    pw' <- lift $ authPassword
+    l' <- authLogin
+    pw' <- authPassword
     case (l', pw') of
         (Just l, Just pw) -> doLoginQ l pw
         _ -> return ()
-
+{--
 trySessionLoginU :: (Monad m, MonadIO m, Functor m)
                  => UpdateMonadT NoC (APIMonadT url AuthData m) ()
 trySessionLoginU = do
@@ -104,3 +113,4 @@ trySessionLoginU = do
     case (l', pw') of
         (Just l, Just pw) -> doLoginU l pw
         _ -> return ()
+--}

@@ -52,11 +52,13 @@ route acid uid url = case url of
 
 getHandler acid uid = handleError $
     queryWithJSONResponse acid $ do
-        lift $ trySessionLoginQ 
-        "login"         <:: lift (getUserLoginQ uid)
-        "name"          <:: lift (getUserNameQ uid)
-        "description"   <:: lift (getUserDescQ uid)
+        trySessionLoginQ 
+        "login"         <:. getUserLoginQ uid
+        "name"          <:. getUserNameQ uid
+        "description"   <:. getUserDescQ uid
 
+setHandler acid uid = error "setHandler" 
+{--
 setHandler acid uid = handleError $
     updateWithJSONInput acid $ do
         lift $ trySessionLoginU 
@@ -70,7 +72,9 @@ setHandler acid uid = handleError $
         ifIsJust d $ lift . setUserDescU uid
         lift . lift . refreshCookie l $ p
         lift . lift $ noContent'
-
+--}
+contactsHandler acid uid = error "contactsHandler" 
+{--
 contactsHandler acid uid = handleError $
     queryWithJSONResponse acid $ do
         lift $ trySessionLoginQ
@@ -84,3 +88,4 @@ contactsHandler acid uid = handleError $
                               , "icon"          .= fmap BT.icnPath i
                               ]
         "contacts" <: infos
+--}

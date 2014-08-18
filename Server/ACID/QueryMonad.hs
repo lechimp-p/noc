@@ -3,9 +3,9 @@
 {-# LANGUAGE FlexibleInstances #-}
 
 module ACID.QueryMonad
-    ( QueryMonadT
-    , runQueryMonadT
-    , runQueryMonadT'
+    ( MonadQueryError
+    , throwQueryError
+    , MonadQuery 
     , doLoginQ
     , getOperatorIdQ
     , getChanNameQ
@@ -19,6 +19,12 @@ module ACID.QueryMonad
     , getUserContactsQ
     , getUserByLoginQ
     , messagesQ
+    , QueryMonadT
+    , runQueryMonadT
+    , runQueryMonadT'
+    , setOperatorId
+    , getAcid
+    , maybeOperatorId
     )
 where
 
@@ -28,6 +34,7 @@ import Data.Acid
         , EventState, AcidState
         )
 import Data.Acid.Advanced ( query' )
+import Control.Monad
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Class
 import qualified Data.Set as S
@@ -73,6 +80,23 @@ data QueryMonadT acid (m :: * -> *) a where
     Lift    :: m a
             -> QueryMonadT acid m a
 
+    Plus    :: (MonadPlus m)
+            => QueryMonadT acid m a
+            -> QueryMonadT acid m a
+            -> QueryMonadT acid m a
+
+    -- i don't like these, but seems they are necessary to
+    -- implement FilterMonad over this
+    SetOperatorId :: Monad m
+            => Maybe UserId
+            -> QueryMonadT acid m () 
+
+    GetAcid :: Monad m
+            => QueryMonadT acid m (AcidState acid) 
+
+    MaybeOperatorId :: Monad m
+            => QueryMonadT acid m (Maybe UserId)
+
 
 instance Monad m => Monad (QueryMonadT acid m) where
     return = Return 
@@ -80,6 +104,13 @@ instance Monad m => Monad (QueryMonadT acid m) where
 
 instance MonadTrans (QueryMonadT acid) where
     lift = Lift
+
+instance MonadIO m => MonadIO (QueryMonadT acid m) where
+    liftIO = lift . liftIO 
+
+instance MonadPlus m => MonadPlus (QueryMonadT acid m) where
+    mzero = lift mzero
+    mplus = Plus
     
 instance MonadQueryError m => MonadQueryError (QueryMonadT acid m) where
     throwQueryError = lift . throwQueryError
@@ -98,6 +129,13 @@ instance MonadQueryError m => MonadQuery (QueryMonadT NoC m) where
     getUserContactsQ u = DoQuery $ \ o -> GetUserContactsQ o u 
     getUserByLoginQ u = DoQuery $ \ o -> GetUserByLoginQ o u
     messagesQ c o a = DoQuery $ \ u -> MessagesQ u c o a
+
+setOperatorId :: Monad m => Maybe UserId -> QueryMonadT acid m ()
+setOperatorId = SetOperatorId
+getAcid :: Monad m => QueryMonadT acid m (AcidState acid)
+getAcid = GetAcid
+maybeOperatorId :: Monad m => QueryMonadT acid m (Maybe UserId)
+maybeOperatorId = MaybeOperatorId
 
 
 runQueryMonadT :: (MonadQueryError m, MonadIO m ) 
@@ -123,4 +161,8 @@ runQueryMonadT' m acid uid =
         Bind v f -> do
             (v, uid') <- runQueryMonadT' v acid uid
             runQueryMonadT' (f v) acid uid'
+        Plus l r -> (runQueryMonadT' l acid uid) `mplus` (runQueryMonadT' r acid uid)
+        SetOperatorId uid -> return ((), uid)
+        GetAcid -> return (acid, uid)
+        MaybeOperatorId -> return (uid, uid)
         
