@@ -65,6 +65,9 @@ instance ToJSON Name where
 instance ToJSON Desc where
     toJSON = String . descToText
 
+instance ToJSON Icon where
+    toJSON = String . icnPath 
+
 instance ToMessage Value where
     toContentType _ = B.pack "application/json"
     toMessage       = encode

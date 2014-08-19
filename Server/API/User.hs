@@ -43,12 +43,13 @@ data API
 route :: (Monad m, MonadIO m, Functor m)
       => ACID -> BT.UserId -> API -> APIMonadT API AuthData m Response
 route acid uid url = case url of
-    Get             -> method [GET, HEAD] >> getHandler acid uid 
-    Set             -> method [POST, HEAD] >> setHandler acid uid
+    Get             -> method [GET, HEAD]   >> getHandler acid uid 
+    Set             -> method [POST, HEAD]  >> setHandler acid uid
     UploadIcon      -> ok' "uploadIcon\n"
-    Contacts        -> ok' "contacts\n"
-    Subscriptions   -> ok' "subscriptions\n"
-    Channels        -> ok' "channels\n"
+    Contacts        -> method [GET, HEAD]   >> contactsHandler acid uid
+    Subscriptions   -> method [GET, HEAD]   >> subscriptionsHandler acid uid
+    Channels        -> method [GET, HEAD]   >> channelsHandler acid uid
+    Notifications   -> ok' "notifications"
 
 getHandler acid uid = handleError $
     queryWithJSONResponse acid $ do
@@ -69,9 +70,26 @@ setHandler acid uid = handleError $
 
 contactsHandler acid uid = handleError $
     queryWithJSONResponse acid $ do
-        lift $ trySessionLoginQ
-        uids <- lift $ getUserContactsQ uid
+        trySessionLoginQ
+        uids <- getUserContactsQ uid
         "contacts" <:: flip fmap (S.toList uids) .$ \ uid -> do
-            "login"         <:. fmap BT.loginToText .$ getUserLoginQ uid
-            "description"   <:. fmap BT.descToText .$ getUserDescQ uid
-            "icon"          <:. fmap (fmap BT.icnPath) .$ getUserIconQ uid
+            "login"         <:. getUserLoginQ uid
+            "description"   <:. getUserDescQ uid
+            "icon"          <:. getUserIconQ uid
+
+subscriptionsHandler acid uid = handleError $
+    queryWithJSONResponse acid $ do
+        trySessionLoginQ
+        cids <- getUserSubscriptionsQ uid
+        showChannels cids
+
+channelsHandler acid uid = handleError $
+    queryWithJSONResponse acid $ do
+        trySessionLoginQ
+        cids <- getUserOwnedChannelsQ uid
+        showChannels cids
+
+showChannels cids = do         
+    "subscriptions" <:: flip fmap (S.toList cids) .$ \ cid -> do
+        "name"          <:. getChanNameQ cid
+        "description"   <:. getChanDescQ cid

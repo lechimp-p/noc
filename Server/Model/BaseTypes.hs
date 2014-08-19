@@ -36,8 +36,8 @@ mkName = Name
 newtype Desc = Desc { descToText :: Text } deriving (Data, Typeable, SafeCopy)
 mkDesc = Desc
 
-newtype Image = Image { imgPath :: String } deriving (Data, Typeable, SafeCopy)
-newtype Icon = Icon { icnPath :: String } deriving (Data, Typeable, SafeCopy)
+newtype Image = Image { imgPath :: Text } deriving (Data, Typeable, SafeCopy)
+newtype Icon = Icon { icnPath :: Text } deriving (Data, Typeable, SafeCopy)
 
 checkPassword :: Password -> Password -> Bool
 checkPassword pw pw' = pwToText pw == pwToText pw'
