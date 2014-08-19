@@ -59,6 +59,9 @@ instance Monad m => MonadJSONError (EitherT Error m) where
 instance Monad m => MonadQueryError (EitherT Error m) where
     throwQueryError = left . ModelError'
 
+instance Monad m => MonadUpdateError (EitherT Error m) where
+    throwUpdateError = left . ModelError'
+
 instance FilterMonad Response m 
       => FilterMonad Response (EitherT Error m) 
     where

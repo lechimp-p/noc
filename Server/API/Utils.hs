@@ -30,6 +30,7 @@ import Model.BaseTypes
 import API.Errors
 import API.APIMonad
 import API.JSONQueryMonad
+import API.JSONUpdateMonad
 import API.JSONUtils
 import ACID
 
@@ -104,6 +105,8 @@ ifIsJust v op =
         Just a -> op a
         Nothing -> return () 
 
+ifIsJust' = flip ifIsJust
+
 instance (Monad m, MonadIO m)
      => FilterMonad Response (JSONQueryMonadT acid url session m) where
     setFilter = JSONQueryMonadT . lift . lift . lift . setFilter
@@ -112,12 +115,12 @@ instance (Monad m, MonadIO m)
     getFilter m = do
         obj <- JSONQueryMonadT $ getObject
         ps <- JSONQueryMonadT $ getPairs   
-        uid <- JSONQueryMonadT . lift $ maybeOperatorId
-        acid <- JSONQueryMonadT . lift $ getAcid
+        uid <- JSONQueryMonadT . lift $ maybeOperatorIdQ
+        acid <- JSONQueryMonadT . lift $ getAcidQ
         (((a', ps'), uid'), res) <- JSONQueryMonadT . lift . lift 
                 . getFilter . queryWithJSON' acid uid obj ps $ m
         JSONQueryMonadT $ setPairs ps'
-        JSONQueryMonadT . lift $ setOperatorId uid'
+        JSONQueryMonadT . lift $ setOperatorIdQ uid'
         return (a', res)
 
 instance ( Monad m, MonadIO m, Functor m
@@ -157,6 +160,63 @@ queryWithJSONInput acid json = queryWithJSON acid json >>= return . fst
 queryWithJSONResponse acid json = do
     (_, res) <- queryWithJSON acid json
     jsonR' res
+
+
+
+instance (Monad m, MonadIO m)
+     => FilterMonad Response (JSONUpdateMonadT acid url session m) where
+    setFilter = JSONUpdateMonadT . lift . lift . lift . setFilter
+    composeFilter = JSONUpdateMonadT . lift . lift . lift . composeFilter
+    -- getFilter :: m b -> m (b, a -> a)
+    getFilter m = do
+        obj <- JSONUpdateMonadT $ getObject
+        ps <- JSONUpdateMonadT $ getPairs   
+        uid <- JSONUpdateMonadT . lift $ maybeOperatorIdU
+        acid <- JSONUpdateMonadT . lift $ getAcidU
+        (((a', ps'), uid'), res) <- JSONUpdateMonadT . lift . lift 
+                . getFilter . updateWithJSON' acid uid obj ps $ m
+        JSONUpdateMonadT $ setPairs ps'
+        JSONUpdateMonadT . lift $ setOperatorIdU uid'
+        return (a', res)
+
+instance ( Monad m, MonadIO m, Functor m
+         , ClientSession session )
+      => MonadClientSession session (JSONUpdateMonadT acid url session m)
+    where 
+    getSession = JSONUpdateMonadT . lift . lift . lift $ getSession
+    putSession = JSONUpdateMonadT . lift . lift . lift . putSession
+    expireSession = JSONUpdateMonadT . lift . lift . lift $ expireSession
+
+updateWithJSON' :: (Monad m, MonadIO m)
+               => AcidState acid
+               -> Maybe UserId
+               -> Object
+               -> [Pair]
+               -> JSONUpdateMonadT acid url session m a
+               -> EitherT Error (APIMonadT url session m) ((a, [Pair]), Maybe UserId)
+updateWithJSON' acid uid obj ps json = do
+    body <- getBody
+    (\ m -> runUpdateMonadT' m acid uid) 
+        . (\ m -> runJSONMonadT' m obj ps) 
+        . runJSONUpdateMonadT 
+        $ json 
+
+updateWithJSON :: (Monad m, MonadIO m)
+              => AcidState acid
+              -> JSONUpdateMonadT acid url session m a
+              -> EitherT Error (APIMonadT url session m) (a, Value)
+updateWithJSON acid json = do
+    body <- getBody
+    flip runUpdateMonadT acid 
+        . flip runJSONMonadT body 
+        . runJSONUpdateMonadT 
+        $ json 
+
+updateWithJSONInput acid json = updateWithJSON acid json >>= return . fst 
+updateWithJSONResponse acid json = do
+    (_, res) <- updateWithJSON acid json
+    jsonR' res
+
 
 {--
 updateWithJSON :: (Monad m, MonadIO m)

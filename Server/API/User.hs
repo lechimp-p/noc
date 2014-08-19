@@ -57,35 +57,21 @@ getHandler acid uid = handleError $
         "name"          <:. getUserNameQ uid
         "description"   <:. getUserDescQ uid
 
-setHandler acid uid = error "setHandler" 
-{--
 setHandler acid uid = handleError $
     updateWithJSONInput acid $ do
-        lift $ trySessionLoginU 
-        l <- maybeProp "login"
-        p <- maybeProp "password" 
-        n <- maybeProp "name"
-        d <- maybeProp "description"
-        ifIsJust l $ lift . setUserLoginU uid
-        ifIsJust p $ lift . setUserPasswordU uid
-        ifIsJust n $ lift . setUserNameU uid
-        ifIsJust d $ lift . setUserDescU uid
-        lift . lift . refreshCookie l $ p
-        lift . lift $ noContent'
---}
-contactsHandler acid uid = error "contactsHandler" 
-{--
+        trySessionLoginU 
+        l <- "login"    ?:> \ l -> setUserLoginU uid l >> return l
+        p <- "password" ?:> \ p -> setUserPasswordU uid p >> return p
+        "name"          ?:> setUserNameU uid
+        "description"   ?:> setUserDescU uid
+        refreshCookie l $ p
+        noContent'
+
 contactsHandler acid uid = handleError $
     queryWithJSONResponse acid $ do
         lift $ trySessionLoginQ
         uids <- lift $ getUserContactsQ uid
-        infos <- lift . flip mapM (S.toList uids) $ \ uid -> do
-            l <- getUserLoginQ uid
-            d <- getUserDescQ uid
-            i <- getUserIconQ uid
-            return . object $ [ "login"         .= BT.loginToText l
-                              , "description"   .= BT.descToText d
-                              , "icon"          .= fmap BT.icnPath i
-                              ]
-        "contacts" <: infos
---}
+        "contacts" <:: flip fmap (S.toList uids) .$ \ uid -> do
+            "login"         <:. fmap BT.loginToText .$ getUserLoginQ uid
+            "description"   <:. fmap BT.descToText .$ getUserDescQ uid
+            "icon"          <:. fmap (fmap BT.icnPath) .$ getUserIconQ uid

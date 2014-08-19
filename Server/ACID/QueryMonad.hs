@@ -22,9 +22,9 @@ module ACID.QueryMonad
     , QueryMonadT
     , runQueryMonadT
     , runQueryMonadT'
-    , setOperatorId
-    , getAcid
-    , maybeOperatorId
+    , setOperatorIdQ
+    , getAcidQ
+    , maybeOperatorIdQ
     )
 where
 
@@ -130,12 +130,12 @@ instance MonadQueryError m => MonadQuery (QueryMonadT NoC m) where
     getUserByLoginQ u = DoQuery $ \ o -> GetUserByLoginQ o u
     messagesQ c o a = DoQuery $ \ u -> MessagesQ u c o a
 
-setOperatorId :: Monad m => Maybe UserId -> QueryMonadT acid m ()
-setOperatorId = SetOperatorId
-getAcid :: Monad m => QueryMonadT acid m (AcidState acid)
-getAcid = GetAcid
-maybeOperatorId :: Monad m => QueryMonadT acid m (Maybe UserId)
-maybeOperatorId = MaybeOperatorId
+setOperatorIdQ :: Monad m => Maybe UserId -> QueryMonadT acid m ()
+setOperatorIdQ = SetOperatorId
+getAcidQ :: Monad m => QueryMonadT acid m (AcidState acid)
+getAcidQ = GetAcid
+maybeOperatorIdQ :: Monad m => QueryMonadT acid m (Maybe UserId)
+maybeOperatorIdQ = MaybeOperatorId
 
 
 runQueryMonadT :: (MonadQueryError m, MonadIO m ) 
@@ -159,8 +159,8 @@ runQueryMonadT' m acid uid =
         Return v -> return (v, uid)
         Lift m -> m >>= \ v -> return (v, uid)
         Bind v f -> do
-            (v, uid') <- runQueryMonadT' v acid uid
-            runQueryMonadT' (f v) acid uid'
+            (v', uid') <- runQueryMonadT' v acid uid
+            runQueryMonadT' (f v') acid uid'
         Plus l r -> (runQueryMonadT' l acid uid) `mplus` (runQueryMonadT' r acid uid)
         SetOperatorId uid -> return ((), uid)
         GetAcid -> return (acid, uid)

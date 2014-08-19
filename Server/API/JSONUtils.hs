@@ -6,10 +6,13 @@ module API.JSONUtils
     , MonadJSON 
     , readProp
     , writeProp
+    , writeListProp
     , maybeProp
     , prop
+    , (.$)
     , (<:)
     , (<:.) 
+    , (<::) 
     , (.:>)
     , (?:>)
     , JSONError
@@ -22,7 +25,7 @@ module API.JSONUtils
     )
 where
 
-import Data.ByteString.Lazy
+import Data.ByteString.Lazy hiding (unzip)
 import Data.Aeson
 import qualified Data.HashMap.Strict as HM
 import Data.Aeson.Types
@@ -43,13 +46,18 @@ class Monad m => MonadJSONError m where
     throwJSONError :: JSONError -> m a
 
 class Monad m => MonadJSON m where
-    readProp  :: FromJSON a => Text -> m (Maybe a)
-    writeProp :: ToJSON a => Text -> a -> m () 
+    readProp        :: FromJSON a => Text -> m (Maybe a)
+    writeProp       :: ToJSON a => Text -> a -> m () 
+    writeListProp   :: Text -> [m a] -> m [a] 
 
-infixl 9 <:
-infixl 9 <:.
-infixl 9 .:>
-infixl 9 ?:> 
+infixl 0 <:
+infixl 0 <:.
+infixl 0 <::
+infixl 0 .:>
+infixl 0 ?:> 
+infixr 1 .$
+
+(.$) = ($)
 
 (<:) :: (ToJSON a, MonadJSON m) => Text -> a -> m a 
 s <: a = writeProp s a >> return a
@@ -64,6 +72,9 @@ n .:> m = do
     p <- prop n
     m p
 
+(<::) :: (MonadJSON m, MonadJSONError m) => Text -> [m a] -> m [a]
+(<::) = writeListProp
+
 (?:>) :: (FromJSON a, MonadJSON m) => Text -> (a -> m b) -> m (Maybe b)
 n ?:> m = do
     p' <- maybeProp n
@@ -72,6 +83,7 @@ n ?:> m = do
         Just p  -> do
             res <- m p
             return (Just res) 
+
 
 maybeProp :: (FromJSON a, MonadJSON m) => Text -> m (Maybe a)
 maybeProp = readProp 
@@ -93,6 +105,7 @@ setPairs = SetPairs
 data JSONMonadT m a where
     ReadProp :: (FromJSON a, Monad m) => Text -> JSONMonadT m (Maybe a)
     WriteProp :: (ToJSON a, Monad m) => Text -> a -> JSONMonadT m ()
+    WriteListProp :: Text -> [JSONMonadT m a] -> JSONMonadT m [a]
     Return :: Monad m => a -> JSONMonadT m a
     Bind :: Monad m => JSONMonadT m a -> (a -> JSONMonadT m b) -> JSONMonadT m b
     Lift :: Monad m => m a -> JSONMonadT m a
@@ -114,6 +127,7 @@ instance MonadJSONError m => MonadJSONError (JSONMonadT m) where
 instance Monad m => MonadJSON (JSONMonadT m) where
     readProp = ReadProp
     writeProp = WriteProp
+    writeListProp = WriteListProp
 
 instance MonadIO m => MonadIO (JSONMonadT m) where
     liftIO = lift . liftIO
@@ -141,6 +155,11 @@ runJSONMonadT' :: (MonadJSONError m)
 runJSONMonadT' m obj ps =
     case m of
         WriteProp p v   -> return ((), (p, toJSON v) : ps)
+        WriteListProp p vs -> do
+            vals <- sequence . fmap (\m -> runJSONMonadT' m obj []) $ vs
+            let (res,vals') = unzip vals
+                vals'' = fmap object vals'
+            return (res, (p, toJSON vals'') : ps) 
         Return val      -> return (val, ps)
         Lift m          -> m >>= \ v -> return (v, ps)
         ReadProp prop   -> 
