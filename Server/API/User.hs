@@ -6,7 +6,6 @@
 module API.User 
 where
 
-import Data.Text (pack, Text)
 import Web.Routes
 import Web.Routes.Happstack
 import Happstack.Server 
@@ -14,15 +13,15 @@ import Happstack.Server
         , Method (POST, GET, HEAD)
         , FilterMonad
         )
-import Data.Aeson
-import Data.Aeson.Types
-import Control.Applicative
+--import Data.Aeson
+--import Data.Aeson.Types
+--import Control.Applicative
 import Control.Monad.IO.Class
-import Control.Monad.Trans.Class
+--import Control.Monad.Trans.Class
 import Control.Monad
 import qualified Data.Set as S
 
-import qualified Model.BaseTypes as BT
+import Model
 import ACID
 import API.APIMonad
 import API.Utils
@@ -41,7 +40,7 @@ data API
     deriving (Generic)
 
 route :: (Monad m, MonadIO m, Functor m)
-      => ACID -> BT.UserId -> API -> APIMonadT API AuthData m Response
+      => ACID -> UserId -> API -> APIMonadT API AuthData m Response
 route acid uid url = case url of
     Get             -> method [GET, HEAD]   >> getHandler acid uid 
     Set             -> method [POST, HEAD]  >> setHandler acid uid

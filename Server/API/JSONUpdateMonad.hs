@@ -51,6 +51,7 @@ instance Monad m => MonadJSON (JSONUpdateMonadT acid url session m) where
     readProp = JSONUpdateMonadT . readProp
     writeProp n = JSONUpdateMonadT . writeProp n
     writeListProp n = JSONUpdateMonadT . writeListProp n . fmap runJSONUpdateMonadT 
+    writeObjectProp n = JSONUpdateMonadT . writeObjectProp n . runJSONUpdateMonadT 
 
 instance Monad m => MonadUpdate (JSONUpdateMonadT NoC url session m) where
     doLoginU l = JSONUpdateMonadT . lift . doLoginU l

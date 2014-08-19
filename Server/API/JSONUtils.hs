@@ -7,11 +7,13 @@ module API.JSONUtils
     , readProp
     , writeProp
     , writeListProp
+    , writeObjectProp
     , maybeProp
     , prop
     , (.$)
     , (<:)
     , (<:.) 
+    , (<:..) 
     , (<::) 
     , (.:>)
     , (?:>)
@@ -48,6 +50,7 @@ class Monad m => MonadJSONError m where
 class Monad m => MonadJSON m where
     readProp        :: FromJSON a => Text -> m (Maybe a)
     writeProp       :: ToJSON a => Text -> a -> m () 
+    writeObjectProp :: Text -> m a -> m a
     writeListProp   :: Text -> [m a] -> m [a] 
 
 infixl 0 <:
@@ -74,6 +77,9 @@ n .:> m = do
 
 (<::) :: (MonadJSON m, MonadJSONError m) => Text -> [m a] -> m [a]
 (<::) = writeListProp
+
+(<:..) :: (MonadJSON m, MonadJSONError m) => Text -> m a -> m a
+(<:..) = writeObjectProp
 
 (?:>) :: (FromJSON a, MonadJSON m) => Text -> (a -> m b) -> m (Maybe b)
 n ?:> m = do
@@ -106,6 +112,7 @@ data JSONMonadT m a where
     ReadProp :: (FromJSON a, Monad m) => Text -> JSONMonadT m (Maybe a)
     WriteProp :: (ToJSON a, Monad m) => Text -> a -> JSONMonadT m ()
     WriteListProp :: Text -> [JSONMonadT m a] -> JSONMonadT m [a]
+    WriteObjectProp :: Text -> JSONMonadT m a -> JSONMonadT m a
     Return :: Monad m => a -> JSONMonadT m a
     Bind :: Monad m => JSONMonadT m a -> (a -> JSONMonadT m b) -> JSONMonadT m b
     Lift :: Monad m => m a -> JSONMonadT m a
@@ -128,6 +135,7 @@ instance Monad m => MonadJSON (JSONMonadT m) where
     readProp = ReadProp
     writeProp = WriteProp
     writeListProp = WriteListProp
+    writeObjectProp = WriteObjectProp
 
 instance MonadIO m => MonadIO (JSONMonadT m) where
     liftIO = lift . liftIO
@@ -160,6 +168,9 @@ runJSONMonadT' m obj ps =
             let (res,vals') = unzip vals
                 vals'' = fmap object vals'
             return (res, (p, toJSON vals'') : ps) 
+        WriteObjectProp p v -> do
+            (res, val) <- runJSONMonadT' v obj []
+            return (res, (p, toJSON . object $ val) : ps)  
         Return val      -> return (val, ps)
         Lift m          -> m >>= \ v -> return (v, ps)
         ReadProp prop   -> 

@@ -53,6 +53,12 @@ instance FromJSON Desc where
     parseJSON (String t) = return . mkDesc $ t
     parseJSON _ = mzero 
 
+instance ToJSON UserId where
+    toJSON = toJSON . uiToInt 
+
+instance ToJSON MsgId where
+    toJSON = toJSON . miToInt 
+
 instance ToJSON Login where
     toJSON = String . loginToText
 
@@ -67,6 +73,9 @@ instance ToJSON Desc where
 
 instance ToJSON Icon where
     toJSON = String . icnPath 
+
+instance ToJSON Image where
+    toJSON = String . imgPath 
 
 instance ToMessage Value where
     toContentType _ = B.pack "application/json"

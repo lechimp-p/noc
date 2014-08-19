@@ -51,6 +51,7 @@ instance Monad m => MonadJSON (JSONQueryMonadT acid url session m) where
     readProp = JSONQueryMonadT . readProp
     writeProp n = JSONQueryMonadT . writeProp n
     writeListProp n = JSONQueryMonadT . writeListProp n . fmap runJSONQueryMonadT 
+    writeObjectProp n = JSONQueryMonadT . writeObjectProp n . runJSONQueryMonadT 
 
 instance Monad m => MonadQuery (JSONQueryMonadT NoC url session m) where
     doLoginQ l = JSONQueryMonadT . lift . doLoginQ l
