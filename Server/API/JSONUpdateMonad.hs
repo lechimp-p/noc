@@ -56,6 +56,7 @@ instance Monad m => MonadJSON (JSONUpdateMonadT acid url session m) where
     writeProp n = JSONUpdateMonadT . writeProp n
     writeListProp n = JSONUpdateMonadT . writeListProp n . fmap runJSONUpdateMonadT 
     writeObjectProp n = JSONUpdateMonadT . writeObjectProp n . runJSONUpdateMonadT 
+    withObject o = JSONUpdateMonadT . withObject o . runJSONUpdateMonadT
 
 instance Monad m => MonadUpdate (JSONUpdateMonadT NoC url session m) where
     doLoginU l = JSONUpdateMonadT . lift . doLoginU l
@@ -72,6 +73,8 @@ instance Monad m => MonadUpdate (JSONUpdateMonadT NoC url session m) where
     rmChanOwnerU c = JSONUpdateMonadT . lift . rmChanOwnerU c
     rmChanProducerU c = JSONUpdateMonadT . lift . rmChanProducerU c
     rmChanConsumerU c = JSONUpdateMonadT . lift . rmChanConsumerU c
+    amountOfDistinctUsersU = JSONUpdateMonadT . lift . amountOfDistinctUsersU
+    lastPostTimestampU = JSONUpdateMonadT . lift . lastPostTimestampU 
     subscribeToChanU u = JSONUpdateMonadT . lift . subscribeToChanU u
     unsubscribeFromChanU u = JSONUpdateMonadT . lift . unsubscribeFromChanU u
     getUserLoginU = JSONUpdateMonadT . lift . getUserLoginU

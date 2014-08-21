@@ -14,6 +14,7 @@ import Control.Applicative
 import Data.Acid ( Query )
 import Data.Text ( Text )
 import Data.Set ( Set )
+import Data.Time.Clock (UTCTime)
 
 import Model 
 import qualified Model.Operations as O
@@ -65,6 +66,12 @@ getChanNameQ oid = getQuery oid . O.getChanName
 
 getChanDescQ :: Maybe UserId -> ChanId -> Query NoC (Either Error Desc, Maybe UserId) 
 getChanDescQ oid = getQuery oid . O.getChanDesc
+
+amountOfDistinctUsersQ :: Maybe UserId -> ChanId -> Query NoC (Either Error Int, Maybe UserId)
+amountOfDistinctUsersQ oid = getQuery oid . O.amountOfDistinctUsers
+
+lastPostTimestampQ :: Maybe UserId -> ChanId -> Query NoC (Either Error (Maybe UTCTime), Maybe UserId)
+lastPostTimestampQ oid = getQuery oid . O.lastPostTimestamp
 
 getUserLoginQ :: Maybe UserId -> UserId -> Query NoC (Either Error Login, Maybe UserId)
 getUserLoginQ oid = getQuery oid . O.getUserLogin 

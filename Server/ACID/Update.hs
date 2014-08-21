@@ -100,6 +100,12 @@ rmChanProducerU oid cid = getUpdate oid . O.rmChanProducer cid
 rmChanConsumerU :: Maybe UserId -> ChanId -> UserId -> Update NoC (Either Error (), Maybe UserId)
 rmChanConsumerU oid cid = getUpdate oid . O.rmChanConsumer cid
 
+amountOfDistinctUsersU :: Maybe UserId -> ChanId -> Update NoC (Either Error Int, Maybe UserId)
+amountOfDistinctUsersU oid = getUpdate oid . O.amountOfDistinctUsers
+
+lastPostTimestampU :: Maybe UserId -> ChanId -> Update NoC (Either Error (Maybe UTCTime), Maybe UserId)
+lastPostTimestampU oid = getUpdate oid . O.lastPostTimestamp
+
 subscribeToChanU :: Maybe UserId -> UserId -> ChanId -> Update NoC (Either Error (), Maybe UserId)
 subscribeToChanU oid uid = getUpdate oid . O.subscribeToChan uid 
 

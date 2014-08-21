@@ -52,12 +52,15 @@ instance Monad m => MonadJSON (JSONQueryMonadT acid url session m) where
     writeProp n = JSONQueryMonadT . writeProp n
     writeListProp n = JSONQueryMonadT . writeListProp n . fmap runJSONQueryMonadT 
     writeObjectProp n = JSONQueryMonadT . writeObjectProp n . runJSONQueryMonadT 
+    withObject o = JSONQueryMonadT . withObject o . runJSONQueryMonadT
 
 instance Monad m => MonadQuery (JSONQueryMonadT NoC url session m) where
     doLoginQ l = JSONQueryMonadT . lift . doLoginQ l
     getOperatorIdQ = JSONQueryMonadT . lift $ getOperatorIdQ 
     getChanNameQ = JSONQueryMonadT . lift . getChanNameQ
     getChanDescQ = JSONQueryMonadT . lift . getChanDescQ
+    amountOfDistinctUsersQ = JSONQueryMonadT . lift . amountOfDistinctUsersQ
+    lastPostTimestampQ = JSONQueryMonadT . lift . lastPostTimestampQ 
     getUserLoginQ = JSONQueryMonadT . lift . getUserLoginQ
     getUserNameQ = JSONQueryMonadT . lift . getUserNameQ
     getUserDescQ = JSONQueryMonadT . lift . getUserDescQ 

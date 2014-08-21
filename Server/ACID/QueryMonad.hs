@@ -10,6 +10,8 @@ module ACID.QueryMonad
     , getOperatorIdQ
     , getChanNameQ
     , getChanDescQ
+    , amountOfDistinctUsersQ
+    , lastPostTimestampQ
     , getUserLoginQ
     , getUserNameQ
     , getUserDescQ
@@ -38,6 +40,7 @@ import Control.Monad
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Class
 import qualified Data.Set as S
+import Data.Time.Clock (UTCTime)
 
 import Model
 import Model.Errors
@@ -51,6 +54,8 @@ class MonadQueryError m => MonadQuery m where
     getOperatorIdQ          :: m UserId
     getChanNameQ            :: ChanId -> m Name
     getChanDescQ            :: ChanId -> m Desc
+    amountOfDistinctUsersQ  :: ChanId -> m Int
+    lastPostTimestampQ      :: ChanId -> m (Maybe UTCTime)
     getUserLoginQ           :: UserId -> m Login 
     getUserNameQ            :: UserId -> m Name
     getUserDescQ            :: UserId -> m Desc
@@ -120,6 +125,8 @@ instance MonadQueryError m => MonadQuery (QueryMonadT NoC m) where
     getOperatorIdQ = DoQuery GetOperatorIdQ
     getChanNameQ c = DoQuery $ \ o -> GetChanNameQ o c
     getChanDescQ c = DoQuery $ \ o -> GetChanDescQ o c
+    amountOfDistinctUsersQ c = DoQuery $ \ o -> AmountOfDistinctUsersQ o c
+    lastPostTimestampQ c = DoQuery $ \ o -> LastPostTimestampQ o c
     getUserLoginQ u = DoQuery $ \ o -> GetUserLoginQ o u
     getUserNameQ u = DoQuery $ \ o -> GetUserNameQ o u
     getUserDescQ u = DoQuery $ \ o -> GetUserDescQ o u

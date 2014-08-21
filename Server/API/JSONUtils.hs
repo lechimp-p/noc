@@ -8,6 +8,7 @@ module API.JSONUtils
     , writeProp
     , writeListProp
     , writeObjectProp
+    , withObject
     , maybeProp
     , prop
     , (.$)
@@ -17,6 +18,8 @@ module API.JSONUtils
     , (<::) 
     , (.:>)
     , (?:>)
+    , (..:>)
+    , (.?:>)
     , JSONError
     , JSONMonadT
     , runJSONMonadT
@@ -28,9 +31,9 @@ module API.JSONUtils
 where
 
 import Data.ByteString.Lazy hiding (unzip)
-import Data.Aeson
+import Data.Aeson hiding (withObject)
 import qualified Data.HashMap.Strict as HM
-import Data.Aeson.Types
+import Data.Aeson.Types hiding (withObject)
 import Data.Text
 import Control.Monad
 import Control.Applicative
@@ -52,6 +55,7 @@ class Monad m => MonadJSON m where
     writeProp       :: ToJSON a => Text -> a -> m () 
     writeObjectProp :: Text -> m a -> m a
     writeListProp   :: Text -> [m a] -> m [a] 
+    withObject      :: Object -> m a -> m a
 
 infixl 0 <:
 infixl 0 <:.
@@ -90,6 +94,18 @@ n ?:> m = do
             res <- m p
             return (Just res) 
 
+(..:>)  :: (MonadJSON m, MonadJSONError m) => Text -> m a -> m a
+p ..:> op = do
+    obj <- prop p
+    withObject obj op
+
+(.?:>) :: (MonadJSON m, MonadJSONError m) => Text -> m a -> m (Maybe a)
+p .?:> op = do
+    obj <- maybeProp p
+    case obj of
+        Nothing -> return Nothing
+        Just obj' -> withObject obj' op >>= return . Just
+
 
 maybeProp :: (FromJSON a, MonadJSON m) => Text -> m (Maybe a)
 maybeProp = readProp 
@@ -113,6 +129,7 @@ data JSONMonadT m a where
     WriteProp :: (ToJSON a, Monad m) => Text -> a -> JSONMonadT m ()
     WriteListProp :: Text -> [JSONMonadT m a] -> JSONMonadT m [a]
     WriteObjectProp :: Text -> JSONMonadT m a -> JSONMonadT m a
+    WithObject :: Object -> JSONMonadT m a -> JSONMonadT m a
     Return :: Monad m => a -> JSONMonadT m a
     Bind :: Monad m => JSONMonadT m a -> (a -> JSONMonadT m b) -> JSONMonadT m b
     Lift :: Monad m => m a -> JSONMonadT m a
@@ -136,6 +153,7 @@ instance Monad m => MonadJSON (JSONMonadT m) where
     writeProp = WriteProp
     writeListProp = WriteListProp
     writeObjectProp = WriteObjectProp
+    withObject = WithObject
 
 instance MonadIO m => MonadIO (JSONMonadT m) where
     liftIO = lift . liftIO
@@ -171,6 +189,9 @@ runJSONMonadT' m obj ps =
         WriteObjectProp p v -> do
             (res, val) <- runJSONMonadT' v obj []
             return (res, (p, toJSON . object $ val) : ps)  
+        WithObject obj' op -> do
+            (res, ps') <- runJSONMonadT' op obj' [] 
+            return (res, ps ++ ps') 
         Return val      -> return (val, ps)
         Lift m          -> m >>= \ v -> return (v, ps)
         ReadProp prop   -> 

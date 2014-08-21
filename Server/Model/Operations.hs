@@ -15,6 +15,8 @@ module Model.Operations
     , rmChanOwner
     , rmChanProducer
     , rmChanConsumer
+    , amountOfDistinctUsers
+    , lastPostTimestamp
     , subscribeToChan
     , unsubscribeFromChan
     , getUserByLogin
@@ -127,6 +129,18 @@ rmChanOwner cid uid = checkAccess cid forChanOwnersOrAdmins $ do
     storeChannel (over C.owners (S.delete uid) chan)
 rmChanProducer cid uid = rmChanXX C.producers cid uid
 rmChanConsumer cid uid = rmChanXX C.consumers cid uid
+
+amountOfDistinctUsers :: OpMonad m => ChanId -> m Int
+amountOfDistinctUsers cid = checkAccess cid forAllChanPeople $ do
+    chan <- getChannel cid
+    return . S.size . S.unions $ fmap (chan &) [_owners, _producers, _consumers]    
+
+lastPostTimestamp :: OpMonad m => ChanId -> m (Maybe UTCTime)
+lastPostTimestamp cid = do
+    chan <- getChannel cid
+    let mids = C._messages chan
+    msg <- head' . IX.toDescList (IX.Proxy :: IX.Proxy UTCTime) <$> getMessages @= cid
+    return $ fmap _timestamp msg
 
 subscribeToChan :: OpMonad m => UserId -> ChanId -> m () 
 subscribeToChan uid cid = checkAccess cid forAllChanPeople $
@@ -246,3 +260,6 @@ messages cid ofs am = checkAccess cid forConsumersOrOwners $ do
 checkDuplicateLogin l = do
     n <- IX.size <$> getUsers @= l 
     DuplicateLogin l `throwOn` (n >= 1) 
+
+head' []     = Nothing
+head' (x:_)  = Just x

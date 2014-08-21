@@ -27,12 +27,13 @@ import API.Utils
 import API.Errors
 import API.JSONUtils
 import API.Auth hiding (timestamp)
+import API.ImageUtils
 
 data API
-    = Get   -- name, desc, number of members, time of last post
+    = Get
     | Set
-    | Messages -- name of author, timestamp, text, image
-    | Post -- text, image
+    | Messages 
+    | Post
     | Subscribe
     | Unsubscribe
     deriving (Generic)
@@ -52,6 +53,8 @@ getHandler acid cid = handleError $
         trySessionLoginQ
         "name"          <:. getChanNameQ cid
         "description"   <:. getChanDescQ cid      
+        "amountOfUsers" <:. amountOfDistinctUsersQ cid
+        "lastPost"      <:. lastPostTimestampQ cid
 
 setHandler acid cid = handleError $
     updateWithJSONInput acid $ do
@@ -81,8 +84,11 @@ postHandler acid cid = handleError $
         trySessionLoginU
         ts <- liftIO $ getCurrentTime
         t <- prop "text"
-        -- ToDo: insert image here somehow
-        "id" <:. postU cid ts t Nothing
+        img <- "image" .?:> do
+            typ <- prop "type"
+            dat <- prop "data"
+            storeImage defaultConfig typ dat 
+        "id" <:. postU cid ts t img
  
 subscribeHandler acid cid = handleError $
     updateWithJSONInput acid $ do

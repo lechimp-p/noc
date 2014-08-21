@@ -15,6 +15,8 @@ $(makeAcidic ''NoC  [ 'doLoginQ
                     , 'getOperatorIdQ
                     , 'getChanNameQ
                     , 'getChanDescQ
+                    , 'amountOfDistinctUsersQ
+                    , 'lastPostTimestampQ
                     , 'getUserLoginQ
                     , 'getUserNameQ
                     , 'getUserDescQ
@@ -38,6 +40,8 @@ $(makeAcidic ''NoC  [ 'doLoginQ
                     , 'rmChanOwnerU
                     , 'rmChanProducerU
                     , 'rmChanConsumerU
+                    , 'amountOfDistinctUsersU
+                    , 'lastPostTimestampU
                     , 'subscribeToChanU
                     , 'unsubscribeFromChanU
                     , 'getUserLoginU 

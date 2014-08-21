@@ -20,6 +20,8 @@ module ACID.UpdateMonad
     , rmChanOwnerU
     , rmChanProducerU
     , rmChanConsumerU
+    , amountOfDistinctUsersU
+    , lastPostTimestampU
     , subscribeToChanU
     , unsubscribeFromChanU
     , getUserLoginU
@@ -84,6 +86,8 @@ class MonadUpdateError m => MonadUpdate m where
     rmChanOwnerU        :: ChanId -> UserId -> m ()
     rmChanProducerU     :: ChanId -> UserId -> m ()
     rmChanConsumerU     :: ChanId -> UserId -> m ()
+    amountOfDistinctUsersU  :: ChanId -> m Int
+    lastPostTimestampU      :: ChanId -> m (Maybe UTCTime)
     subscribeToChanU    :: UserId -> ChanId -> m ()
     unsubscribeFromChanU:: UserId -> ChanId -> m ()
     getUserLoginU       :: UserId -> m Login
@@ -176,6 +180,8 @@ instance MonadUpdateError m => MonadUpdate (UpdateMonadT NoC m) where
     rmChanOwnerU c u = DoUpdate $ \ o -> RmChanOwnerU o c u
     rmChanProducerU c u = DoUpdate $ \ o -> RmChanProducerU o c u
     rmChanConsumerU c u = DoUpdate $ \ o -> RmChanConsumerU o c u
+    amountOfDistinctUsersU c = DoUpdate $ \ o -> AmountOfDistinctUsersU o c
+    lastPostTimestampU c = DoUpdate $ \ o -> LastPostTimestampU o c
     subscribeToChanU u c = DoUpdate $ \ o -> SubscribeToChanU o u c
     unsubscribeFromChanU u c = DoUpdate $ \ o -> UnsubscribeFromChanU o u c
     getUserLoginU u = DoUpdate $ \ o -> GetUserLoginU o u
