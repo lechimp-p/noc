@@ -34,6 +34,8 @@ module ACID.UpdateMonad
     , getUserOwnedChannelsU
     , getUserSubscriptionsU
     , getUserContactsU
+    , addUserContactU
+    , rmUserContactU
     , getUserByLoginU
     , messagesU
     , createUserU
@@ -96,6 +98,8 @@ class MonadUpdateError m => MonadUpdate m where
     getUserOwnedChannelsU :: UserId -> m (S.Set ChanId)
     getUserSubscriptionsU :: UserId -> m (S.Set ChanId) 
     getUserContactsU    :: UserId -> m (S.Set UserId) 
+    addUserContactU     :: UserId -> UserId -> m ()
+    rmUserContactU      :: UserId -> UserId -> m ()
     getUserByLoginU     :: Text -> m UserId
     createUserU         :: Login -> Password -> m UserId
     createChannelU      :: Name -> Desc -> m ChanId
@@ -186,6 +190,8 @@ instance MonadUpdateError m => MonadUpdate (UpdateMonadT NoC m) where
     getUserOwnedChannelsU u = DoUpdate $ \ o -> GetUserOwnedChannelsU o u
     getUserSubscriptionsU u = DoUpdate $ \ o -> GetUserSubscriptionsU o u
     getUserContactsU u = DoUpdate $ \ o -> GetUserContactsU o u 
+    addUserContactU u o = DoUpdate $ \ o' -> AddUserContactU o' u o
+    rmUserContactU u o = DoUpdate $ \ o' -> RmUserContactU o' u o
     getUserByLoginU u = DoUpdate $ \ o -> GetUserByLoginU o u
     createUserU l p = DoUpdate $ \ o -> CreateUserU o l p
     createChannelU n d = DoUpdate $ \ o -> CreateChannelU o n d

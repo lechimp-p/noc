@@ -37,6 +37,8 @@ data API
     | Subscriptions
     | Channels
     | Notifications -- when a user in my contact list added me to a channel
+    | AddToContacts
+    | RemoveFromContacts
     deriving (Generic)
 
 route :: (Monad m, MonadIO m, Functor m)
@@ -49,6 +51,8 @@ route acid uid url = case url of
     Subscriptions   -> method [GET, HEAD]   >> subscriptionsHandler acid uid
     Channels        -> method [GET, HEAD]   >> channelsHandler acid uid
     Notifications   -> ok' "notifications"
+    AddToContacts       -> method [POST, HEAD]  >> addToContactsHandler acid uid
+    RemoveFromContacts  -> method [POST, HEAD]  >> removeFromContactsHandler acid uid
 
 getHandler acid uid = handleError $
     queryWithJSONResponse acid $ do
@@ -92,3 +96,15 @@ showChannels cids = do
     "subscriptions" <:: flip fmap (S.toList cids) .$ \ cid -> do
         "name"          <:. getChanNameQ cid
         "description"   <:. getChanDescQ cid
+
+addToContactsHandler acid uid = handleError $
+    updateWithJSONInput acid $ do
+        oid <- getOperatorIdU
+        addUserContactU oid uid
+        noContent'
+
+removeFromContactsHandler acid uid = handleError $
+    updateWithJSONInput acid $ do
+        oid <- getOperatorIdU
+        rmUserContactU oid uid
+        noContent'

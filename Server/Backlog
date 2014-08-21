@@ -13,4 +13,4 @@
 * try to remove tiresome name duplications in ACID
 * enforce update/query model already at model level
 * make implementation of storage engine switchable
-
+* add more tests on models functionality

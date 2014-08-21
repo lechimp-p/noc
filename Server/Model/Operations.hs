@@ -25,6 +25,8 @@ module Model.Operations
     , getUserOwnedChannels
     , getUserSubscriptions
     , getUserContacts
+    , addUserContact
+    , rmUserContact
     , setUserLogin
     , setUserPassword
     , setUserName
@@ -151,6 +153,11 @@ setToUser l uid v = checkAccess uid forUserSelfOrAdmins $ do
     user <- getUser uid
     storeUser (set l v user) 
 
+overInUser :: OpMonad m => SimpleLens User a -> UserId -> (a -> a) -> m ()
+overInUser l uid fun = checkAccess uid forUserSelfOrAdmins $ do
+    user <- getUser uid
+    storeUser (over l fun user)
+
 getUserLogin uid = getFromUser U.login uid
 getUserName uid = getFromUser U.name uid
 getUserDesc uid = getFromUser U.desc uid
@@ -161,6 +168,9 @@ getUserSubscriptions uid = checkAccess uid forUserSelfOrAdmins
     $ getFromUser U.subscriptions uid
 getUserContacts uid = checkAccess uid forUserSelfOrAdmins
     $ getFromUser U.contacts uid
+
+addUserContact uid other = overInUser U.contacts uid (S.insert other)  
+rmUserContact uid other = overInUser U.contacts uid (S.delete other)  
 
 setUserLogin uid l = do
     oid <- Model.Operations.getOperatorId

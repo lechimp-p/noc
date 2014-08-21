@@ -142,6 +142,12 @@ getUserSubscriptionsU oid = getUpdate oid . O.getUserSubscriptions
 getUserContactsU :: Maybe UserId -> UserId -> Update NoC (Either Error (Set UserId), Maybe UserId)
 getUserContactsU oid = getUpdate oid . O.getUserContacts
 
+addUserContactU :: Maybe UserId -> UserId -> UserId -> Update NoC (Either Error (), Maybe UserId)
+addUserContactU oid uid = getUpdate oid . O.addUserContact uid
+
+rmUserContactU :: Maybe UserId -> UserId -> UserId -> Update NoC (Either Error (), Maybe UserId)
+rmUserContactU oid uid = getUpdate oid . O.rmUserContact uid
+
 getUserByLoginU :: Maybe UserId -> Text -> Update NoC (Either Error UserId, Maybe UserId)
 getUserByLoginU oid = getUpdate oid . O.getUserByLogin
 
