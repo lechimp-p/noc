@@ -24,6 +24,7 @@ import Control.Monad
 import Control.Monad.IO.Class (liftIO, MonadIO)
 import Control.Monad.Trans.Class
 import Control.Monad.Trans.Either
+import Control.Monad.Error.Class hiding (Error)
 
 import Model
 import Model.BaseTypes
@@ -198,6 +199,21 @@ instance ( Monad m, MonadIO m, Functor m
     getSession = JSONUpdateMonadT . lift . lift . lift $ getSession
     putSession = JSONUpdateMonadT . lift . lift . lift . putSession
     expireSession = JSONUpdateMonadT . lift . lift . lift $ expireSession
+
+instance (Monad m, MonadIO m)
+      => MonadError Error (JSONUpdateMonadT acid url session m) where
+    throwError = JSONUpdateMonadT . lift . lift . throwError
+    catchError op handler = do
+        obj <- JSONUpdateMonadT $ getObject
+        ps <- JSONUpdateMonadT $ getPairs
+        uid <- JSONUpdateMonadT . lift $ maybeOperatorIdU
+        acid <- JSONUpdateMonadT . lift $ getAcidU
+        ((a', ps'), uid') <- JSONUpdateMonadT . lift . lift
+                . catchError (updateWithJSON' acid uid obj ps op)
+                           $ (\ e -> updateWithJSON' acid uid obj ps (handler e))
+        JSONUpdateMonadT $ setPairs ps'
+        JSONUpdateMonadT . lift $ setOperatorIdU uid'
+        return a'
 
 updateWithJSON' :: (Monad m, MonadIO m)
                => AcidState acid
