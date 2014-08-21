@@ -26,12 +26,14 @@ import Data.Monoid
 import qualified Model.Errors as ME
 import Model
 import API.JSONUtils 
+import API.ImageUtils 
 import API.APIMonad
 import ACID
 
 data Error
     = ModelError' ME.Error
     | JSONError' JSONError
+    | ImageError' ImageError
     | Abort
     deriving (Show)
 
@@ -44,7 +46,7 @@ handleError :: ( Monad m, MonadIO m
                )
             => EitherT Error m Response
             -> m Response
-handleError op = runEitherT op >>= \res -> 
+handleError op = runEitherT op >>= \ res -> 
     case res of
         Left err -> respondError err
         Right res -> return res
@@ -61,6 +63,9 @@ instance Monad m => MonadQueryError (EitherT Error m) where
 
 instance Monad m => MonadUpdateError (EitherT Error m) where
     throwUpdateError = left . ModelError'
+
+instance Monad m => MonadImageError (EitherT Error m) where
+    throwImageError = left . ImageError'
 
 instance FilterMonad Response m 
       => FilterMonad Response (EitherT Error m) 

@@ -83,9 +83,9 @@ instance ToMessage Value where
     toMessage       = encode
 
 bodyPolicy = defaultBodyPolicy "/tmp/NoC-Server-dev"
-                               1000 -- file upload
-                               1000 -- no files
-                               1000 -- overhead for multipart/form-data headers
+                               100000 -- file upload
+                               100000 -- no files
+                               100000 -- overhead for multipart/form-data headers
 
 getBody :: ( ServerMonad m, MonadPlus m, MonadIO m
            , FilterMonad Response m, WebMonad Response m) 

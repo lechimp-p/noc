@@ -30,6 +30,7 @@ import Control.Monad.Trans.Either
 import API.APIMonad
 import API.Errors
 import API.JSONUtils
+import API.ImageUtils
 import ACID
 import Model
 
@@ -46,6 +47,9 @@ instance Monad m => MonadJSONError (JSONUpdateMonadT acid url session m) where
 
 instance Monad m => MonadUpdateError (JSONUpdateMonadT acid url session m) where
     throwUpdateError = JSONUpdateMonadT . lift . lift . throwUpdateError 
+
+instance Monad m => MonadImageError (JSONUpdateMonadT acid url session m) where
+    throwImageError = JSONUpdateMonadT . lift . lift . throwImageError 
 
 instance Monad m => MonadJSON (JSONUpdateMonadT acid url session m) where
     readProp = JSONUpdateMonadT . readProp

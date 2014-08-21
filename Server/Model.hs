@@ -13,9 +13,9 @@ module Model
     , UserId
     , ChanId
     , MsgId
-    , Icon
+    , Icon (Icon, icnPath)
     , Message
-    , Image
+    , Image (Image, imgPath)
     )
 where
 

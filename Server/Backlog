@@ -14,3 +14,6 @@
 * enforce update/query model already at model level
 * make implementation of storage engine switchable
 * add more tests on models functionality
+* make json error output nicer
+* adjust size of http input to fit images (better: make it depend on usecase)
+* preprocess uploaded icons/images

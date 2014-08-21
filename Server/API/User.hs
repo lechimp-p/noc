@@ -13,11 +13,8 @@ import Happstack.Server
         , Method (POST, GET, HEAD)
         , FilterMonad
         )
---import Data.Aeson
---import Data.Aeson.Types
---import Control.Applicative
 import Control.Monad.IO.Class
---import Control.Monad.Trans.Class
+import Control.Monad.Error.Class
 import Control.Monad
 import qualified Data.Set as S
 
@@ -27,6 +24,7 @@ import API.APIMonad
 import API.Utils
 import API.Errors
 import API.JSONUtils
+import API.ImageUtils
 import API.Auth 
 
 data API
@@ -46,7 +44,7 @@ route :: (Monad m, MonadIO m, Functor m)
 route acid uid url = case url of
     Get             -> method [GET, HEAD]   >> getHandler acid uid 
     Set             -> method [POST, HEAD]  >> setHandler acid uid
-    UploadIcon      -> ok' "uploadIcon\n"
+    UploadIcon      -> method [POST, HEAD]  >> uploadIconHandler acid uid 
     Contacts        -> method [GET, HEAD]   >> contactsHandler acid uid
     Subscriptions   -> method [GET, HEAD]   >> subscriptionsHandler acid uid
     Channels        -> method [GET, HEAD]   >> channelsHandler acid uid
@@ -60,6 +58,7 @@ getHandler acid uid = handleError $
         "login"         <:. getUserLoginQ uid
         "name"          <:. getUserNameQ uid
         "description"   <:. getUserDescQ uid
+        "icon"          <:. getUserIconQ uid
 
 setHandler acid uid = handleError $
     updateWithJSONInput acid $ do
@@ -99,12 +98,28 @@ showChannels cids = do
 
 addToContactsHandler acid uid = handleError $
     updateWithJSONInput acid $ do
+        trySessionLoginU
         oid <- getOperatorIdU
         addUserContactU oid uid
         noContent'
 
 removeFromContactsHandler acid uid = handleError $
     updateWithJSONInput acid $ do
+        trySessionLoginU
         oid <- getOperatorIdU
         rmUserContactU oid uid
+        noContent'
+
+uploadIconHandler acid uid = handleError $
+    updateWithJSONInput acid $ do
+        trySessionLoginU
+        typ <- prop "type"
+        dat <- prop "data"
+        old <- getUserIconU uid
+        icon <- storeIcon defaultConfig uid typ dat
+        catchError (setUserIconU uid (Just icon))
+                   (\ _ -> do
+                        removeIcon defaultConfig icon
+                        setUserIconU uid old
+                   )
         noContent'
