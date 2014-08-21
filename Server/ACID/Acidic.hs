@@ -38,6 +38,8 @@ $(makeAcidic ''NoC  [ 'doLoginQ
                     , 'rmChanOwnerU
                     , 'rmChanProducerU
                     , 'rmChanConsumerU
+                    , 'subscribeToChanU
+                    , 'unsubscribeFromChanU
                     , 'getUserLoginU 
                     , 'getUserNameU 
                     , 'getUserDescU 

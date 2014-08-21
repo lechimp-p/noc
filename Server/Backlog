@@ -1,10 +1,16 @@
 * Think about weather a show instance is a good
   idea for the Password type.
 * Introduce types for channels: conversation | stream
-* UI: Channel owners need a way to edit channel i
+* UI: Channel owners need a way to edit channel
   name and description.
 * UI: edit own profile
 * UI: view others profiles 
 * UI: global channel search
 * UI: global user search
 * UI: How are channels separated where i'm only consumer and where i'm producer as well. 
+* make permission handling more flexible
+* consolidate JSONMonad
+* try to remove tiresome name duplications in ACID
+* enforce update/query model already at model level
+* make implementation of storage engine switchable
+

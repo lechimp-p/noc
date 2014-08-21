@@ -54,12 +54,6 @@ api acid = setDefault Default $ mkSitePI (runRouteT $ unAPIMonadT . route acid)
 helloWorld :: (Functor m, Monad m, MonadIO m)
            => APIMonadT API AuthData m Response
 helloWorld = ok . toResponse . pack $ "This is the NoC-Server.\n"
---helloWorld = showURL (User 100 User.Get) >>= ok . toResponse 
---helloWorld = do
---    lg <- authLogin
---    pw <- authPassword
---    timestamp <- authTimestamp
---    ok . toResponse . pack $ show lg ++ " " ++ show pw ++ " " ++ show timestamp ++ "\n"
 
 instance PathInfo User.API
 instance PathInfo Channel.API

@@ -15,6 +15,8 @@ module Model.Operations
     , rmChanOwner
     , rmChanProducer
     , rmChanConsumer
+    , subscribeToChan
+    , unsubscribeFromChan
     , getUserByLogin
     , getUserLogin
     , getUserName
@@ -124,6 +126,16 @@ rmChanOwner cid uid = checkAccess cid forChanOwnersOrAdmins $ do
 rmChanProducer cid uid = rmChanXX C.producers cid uid
 rmChanConsumer cid uid = rmChanXX C.consumers cid uid
 
+subscribeToChan :: OpMonad m => UserId -> ChanId -> m () 
+subscribeToChan uid cid = checkAccess cid forAllChanPeople $
+    checkAccess uid forUserSelfOrAdmins $ do
+        user <- getUser uid
+        storeUser (over U.subscriptions (S.insert cid) user)  
+      
+unsubscribeFromChan :: OpMonad m => UserId -> ChanId -> m ()
+unsubscribeFromChan uid cid = checkAccess uid forUserSelfOrAdmins $ do
+        user <- getUser uid
+        storeUser (over U.subscriptions (S.delete cid) user)
 
 ----------------------
 -- operations on users

@@ -100,6 +100,11 @@ rmChanProducerU oid cid = getUpdate oid . O.rmChanProducer cid
 rmChanConsumerU :: Maybe UserId -> ChanId -> UserId -> Update NoC (Either Error (), Maybe UserId)
 rmChanConsumerU oid cid = getUpdate oid . O.rmChanConsumer cid
 
+subscribeToChanU :: Maybe UserId -> UserId -> ChanId -> Update NoC (Either Error (), Maybe UserId)
+subscribeToChanU oid uid = getUpdate oid . O.subscribeToChan uid 
+
+unsubscribeFromChanU :: Maybe UserId -> UserId -> ChanId -> Update NoC (Either Error (), Maybe UserId)
+unsubscribeFromChanU oid uid = getUpdate oid . O.unsubscribeFromChan uid 
 
 getUserLoginU :: Maybe UserId -> UserId -> Update NoC (Either Error Login, Maybe UserId)
 getUserLoginU oid = getUpdate oid . O.getUserLogin 

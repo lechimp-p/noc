@@ -20,6 +20,8 @@ module ACID.UpdateMonad
     , rmChanOwnerU
     , rmChanProducerU
     , rmChanConsumerU
+    , subscribeToChanU
+    , unsubscribeFromChanU
     , getUserLoginU
     , getUserNameU
     , getUserDescU
@@ -74,12 +76,14 @@ class MonadUpdateError m => MonadUpdate m where
     getChanDescU        :: ChanId -> m Desc 
     setChanNameU        :: ChanId -> Name -> m () 
     setChanDescU        :: ChanId -> Desc -> m ()
-    addChanOwnerU        :: ChanId -> UserId -> m ()
-    addChanProducerU     :: ChanId -> UserId -> m ()
-    addChanConsumerU     :: ChanId -> UserId -> m ()
+    addChanOwnerU       :: ChanId -> UserId -> m ()
+    addChanProducerU    :: ChanId -> UserId -> m ()
+    addChanConsumerU    :: ChanId -> UserId -> m ()
     rmChanOwnerU        :: ChanId -> UserId -> m ()
     rmChanProducerU     :: ChanId -> UserId -> m ()
     rmChanConsumerU     :: ChanId -> UserId -> m ()
+    subscribeToChanU    :: UserId -> ChanId -> m ()
+    unsubscribeFromChanU:: UserId -> ChanId -> m ()
     getUserLoginU       :: UserId -> m Login
     getUserNameU        :: UserId -> m Name
     getUserDescU        :: UserId -> m Desc
@@ -168,6 +172,8 @@ instance MonadUpdateError m => MonadUpdate (UpdateMonadT NoC m) where
     rmChanOwnerU c u = DoUpdate $ \ o -> RmChanOwnerU o c u
     rmChanProducerU c u = DoUpdate $ \ o -> RmChanProducerU o c u
     rmChanConsumerU c u = DoUpdate $ \ o -> RmChanConsumerU o c u
+    subscribeToChanU u c = DoUpdate $ \ o -> SubscribeToChanU o u c
+    unsubscribeFromChanU u c = DoUpdate $ \ o -> UnsubscribeFromChanU o u c
     getUserLoginU u = DoUpdate $ \ o -> GetUserLoginU o u
     getUserNameU u = DoUpdate $ \ o -> GetUserNameU o u
     getUserDescU u = DoUpdate $ \ o -> GetUserDescU o u

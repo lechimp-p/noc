@@ -84,6 +84,17 @@ postHandler acid cid = handleError $
         -- ToDo: insert image here somehow
         "id" <:. postU cid ts t Nothing
  
-subscribeHandler = error "subscribeHandler"
-unsubscribeHandler = error "unsubscribeHandler"
+subscribeHandler acid cid = handleError $
+    updateWithJSONInput acid $ do
+        trySessionLoginU
+        uid <- getOperatorIdU
+        subscribeToChanU uid cid
+        noContent'        
+
+unsubscribeHandler acid cid = handleError $
+    updateWithJSONInput acid $ do
+        trySessionLoginU
+        uid <- getOperatorIdU
+        unsubscribeFromChanU uid cid
+        noContent'        
 
