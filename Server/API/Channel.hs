@@ -1,11 +1,15 @@
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TypeOperators #-}
 
 module API.Channel
 where
 
+import Prelude hiding ( id, (.) )
+import Control.Category ( Category(id, (.)) )
 import Web.Routes
 import Web.Routes.Happstack
 import Happstack.Server 
@@ -18,6 +22,8 @@ import Control.Monad
 import Control.Lens
 import qualified Data.Set as S
 import Data.Time.Clock
+import Text.Boomerang.TH (makeBoomerangs)
+import Web.Routes.Boomerang
 
 import Model
 import Model.Message
@@ -38,6 +44,18 @@ data API
     | Unsubscribe
     deriving (Generic)
 
+$(makeBoomerangs ''API)
+
+channelroutes :: Router () (API :- ())
+channelroutes =
+    (  "get" . rGet
+    <> "set" . rSet
+    <> "messages" . rMessages
+    <> "post" . rPost
+    <> "subscribe" . rSubscribe
+    <> "unsubscribe" . rUnsubscribe 
+    )
+
 route :: (Monad m, MonadIO m, Functor m)
       => ACID -> ChanId -> API -> APIMonadT API AuthData m Response
 route acid cid url = case url of
@@ -47,6 +65,8 @@ route acid cid url = case url of
     Post        -> method [POST, HEAD]  >> postHandler acid cid
     Subscribe   -> method [POST, HEAD]  >> subscribeHandler acid cid
     Unsubscribe -> method [POST, HEAD]  >> unsubscribeHandler acid cid
+
+genericHandler acid = ok' "channel generic"
 
 getHandler acid cid = handleError $
     queryWithJSONResponse acid $ do

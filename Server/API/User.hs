@@ -1,11 +1,15 @@
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TypeOperators #-}
 
 module API.User 
 where
 
+import Prelude hiding ( id, (.) )
+import Control.Category ( Category(id, (.)) )
 import Web.Routes
 import Web.Routes.Happstack
 import Happstack.Server 
@@ -17,6 +21,8 @@ import Control.Monad.IO.Class
 import Control.Monad.Error.Class
 import Control.Monad
 import qualified Data.Set as S
+import Text.Boomerang.TH (makeBoomerangs)
+import Web.Routes.Boomerang
 
 import Model
 import ACID
@@ -39,6 +45,21 @@ data API
     | RemoveFromContacts
     deriving (Generic)
 
+$(makeBoomerangs ''API)
+
+--userroutes :: Router () (API :- ())
+userroutes = 
+    (  "get" . rGet
+    <> "set" . rSet
+    <> "upload-icon" . rUploadIcon
+    <> "contacts" . rContacts
+    <> "subscriptions" . rSubscriptions
+    <> "channels" . rChannels
+    <> "notifications" . rNotifications
+    <> "add-to-contacts" . rAddToContacts
+    <> "remove-from-contacts" . rRemoveFromContacts
+    )
+
 route :: (Monad m, MonadIO m, Functor m)
       => ACID -> UserId -> API -> APIMonadT API AuthData m Response
 route acid uid url = case url of
@@ -51,6 +72,8 @@ route acid uid url = case url of
     Notifications   -> ok' "notifications"
     AddToContacts       -> method [POST, HEAD]  >> addToContactsHandler acid uid
     RemoveFromContacts  -> method [POST, HEAD]  >> removeFromContactsHandler acid uid
+
+genericHandler acid = ok' "user generic"
 
 getHandler acid uid = handleError $
     queryWithJSONResponse acid $ do
