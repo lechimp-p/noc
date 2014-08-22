@@ -234,7 +234,7 @@ createChannel n d = ifIsLoggedIn $ do
 ----------------------
 
 post :: OpMonad m => ChanId -> UTCTime -> Text -> Maybe Image -> m MsgId
-post cid ts txt img = checkAccess cid forChanProducers $ do
+post cid ts txt img = checkAccess cid forProducersOrOwners $ do
     mid <- newMsgId 
     oid <- Model.Operations.getOperatorId
     chan <- getChannel cid

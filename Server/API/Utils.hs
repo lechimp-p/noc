@@ -57,6 +57,9 @@ instance FromJSON Desc where
 instance ToJSON UserId where
     toJSON = toJSON . uiToInt 
 
+instance ToJSON ChanId where
+    toJSON = toJSON . ciToInt 
+
 instance ToJSON MsgId where
     toJSON = toJSON . miToInt 
 

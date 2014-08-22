@@ -66,7 +66,17 @@ route acid cid url = case url of
     Subscribe   -> method [POST, HEAD]  >> subscribeHandler acid cid
     Unsubscribe -> method [POST, HEAD]  >> unsubscribeHandler acid cid
 
-genericHandler acid = ok' "channel generic"
+genericHandler acid = (method [GET, HEAD] >> searchHandler acid)
+              `mplus` (method [POST] >> createHandler acid)
+
+searchHandler acid = ok' "Channel.searchHandler"
+
+createHandler acid = handleError $ 
+    updateWithJSONResponse acid $ do
+        trySessionLoginU
+        n <- prop "name"
+        d <- prop "description"
+        "id"    <:. createChannelU n d
 
 getHandler acid cid = handleError $
     queryWithJSONResponse acid $ do
@@ -86,9 +96,9 @@ setHandler acid cid = handleError $
 messagesHandler acid cid = handleError $
     queryWithJSONResponse acid $ do
         trySessionLoginQ
-        a <- prop "amount"
         o <- prop "offset"
-        msgs <- messagesQ cid a o
+        a <- prop "amount"
+        msgs <- messagesQ cid o a
         "messages" <:: flip fmap msgs .$ \ msg -> do
             "image"     <: view image msg
             "text"      <: view text msg

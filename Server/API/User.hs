@@ -73,7 +73,17 @@ route acid uid url = case url of
     AddToContacts       -> method [POST, HEAD]  >> addToContactsHandler acid uid
     RemoveFromContacts  -> method [POST, HEAD]  >> removeFromContactsHandler acid uid
 
-genericHandler acid = ok' "user generic"
+genericHandler acid = (method [GET, HEAD] >> searchHandler acid)
+              `mplus` (method [POST] >> createHandler acid)
+
+searchHandler acid = ok' "User.searchHandler" 
+
+createHandler acid = handleError $
+    updateWithJSONResponse acid $ do
+        trySessionLoginU
+        l <- prop "login"
+        p <- prop "password"
+        "id"    <:. createUserU l p
 
 getHandler acid uid = handleError $
     queryWithJSONResponse acid $ do
