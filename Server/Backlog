@@ -17,3 +17,5 @@
 * make json error output nicer
 * adjust size of http input to fit images (better: make it depend on usecase)
 * preprocess uploaded icons/images
+* think about how config of the server should be made
+* think about how the model is represented
