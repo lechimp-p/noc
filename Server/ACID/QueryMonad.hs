@@ -10,6 +10,7 @@ module ACID.QueryMonad
     , getOperatorIdQ
     , getChanNameQ
     , getChanDescQ
+    , getChanTypeQ
     , amountOfDistinctUsersQ
     , lastPostTimestampQ
     , getUserLoginQ
@@ -54,6 +55,7 @@ class MonadQueryError m => MonadQuery m where
     getOperatorIdQ          :: m UserId
     getChanNameQ            :: ChanId -> m Name
     getChanDescQ            :: ChanId -> m Desc
+    getChanTypeQ            :: ChanId -> m ChanType
     amountOfDistinctUsersQ  :: ChanId -> m Int
     lastPostTimestampQ      :: ChanId -> m (Maybe UTCTime)
     getUserLoginQ           :: UserId -> m Login 
@@ -125,6 +127,7 @@ instance MonadQueryError m => MonadQuery (QueryMonadT NoC m) where
     getOperatorIdQ = DoQuery GetOperatorIdQ
     getChanNameQ c = DoQuery $ \ o -> GetChanNameQ o c
     getChanDescQ c = DoQuery $ \ o -> GetChanDescQ o c
+    getChanTypeQ c = DoQuery $ \ o -> GetChanTypeQ o c
     amountOfDistinctUsersQ c = DoQuery $ \ o -> AmountOfDistinctUsersQ o c
     lastPostTimestampQ c = DoQuery $ \ o -> LastPostTimestampQ o c
     getUserLoginQ u = DoQuery $ \ o -> GetUserLoginQ o u

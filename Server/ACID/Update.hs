@@ -75,12 +75,17 @@ getChanNameU oid = getUpdate oid . O.getChanName
 getChanDescU :: Maybe UserId -> ChanId -> Update NoC (Either Error Desc, Maybe UserId) 
 getChanDescU oid = getUpdate oid . O.getChanDesc
 
+getChanTypeU :: Maybe UserId -> ChanId -> Update NoC (Either Error ChanType, Maybe UserId)
+getChanTypeU oid = getUpdate oid . O.getChanType
+
 setChanNameU :: Maybe UserId -> ChanId -> Name -> Update NoC (Either Error (), Maybe UserId)
 setChanNameU oid cid = getUpdate oid . O.setChanName cid
 
 setChanDescU :: Maybe UserId -> ChanId -> Desc -> Update NoC (Either Error (), Maybe UserId) 
 setChanDescU oid cid = getUpdate oid . O.setChanDesc cid
 
+setChanTypeU :: Maybe UserId -> ChanId -> ChanType -> Update NoC (Either Error (), Maybe UserId)
+setChanTypeU oid cid = getUpdate oid . O.setChanType cid
 
 addChanOwnerU :: Maybe UserId -> ChanId -> UserId -> Update NoC (Either Error (), Maybe UserId)
 addChanOwnerU oid cid = getUpdate oid . O.addChanOwner cid

@@ -12,8 +12,10 @@ module ACID.UpdateMonad
     , rmAdminU
     , getChanNameU
     , getChanDescU
+    , getChanTypeU
     , setChanNameU
     , setChanDescU
+    , setChanTypeU
     , addChanOwnerU
     , addChanProducerU
     , addChanConsumerU
@@ -78,8 +80,10 @@ class MonadUpdateError m => MonadUpdate m where
     rmAdminU            :: UserId -> m () 
     getChanNameU        :: ChanId -> m Name 
     getChanDescU        :: ChanId -> m Desc 
+    getChanTypeU        :: ChanId -> m ChanType 
     setChanNameU        :: ChanId -> Name -> m () 
     setChanDescU        :: ChanId -> Desc -> m ()
+    setChanTypeU        :: ChanId -> ChanType -> m ()
     addChanOwnerU       :: ChanId -> UserId -> m ()
     addChanProducerU    :: ChanId -> UserId -> m ()
     addChanConsumerU    :: ChanId -> UserId -> m ()
@@ -172,8 +176,10 @@ instance MonadUpdateError m => MonadUpdate (UpdateMonadT NoC m) where
     rmAdminU u = DoUpdate $ \ o -> RmAdminU o u
     getChanNameU c = DoUpdate $ \ o -> GetChanNameU o c
     getChanDescU c = DoUpdate $ \ o -> GetChanDescU o c
+    getChanTypeU c = DoUpdate $ \ o -> GetChanTypeU o c
     setChanNameU c n = DoUpdate $ \ o -> SetChanNameU o c n
     setChanDescU c d = DoUpdate $ \ o -> SetChanDescU o c d
+    setChanTypeU c t = DoUpdate $ \ o -> SetChanTypeU o c t
     addChanOwnerU c u = DoUpdate $ \ o -> AddChanOwnerU o c u
     addChanProducerU c u = DoUpdate $ \ o -> AddChanProducerU o c u
     addChanConsumerU c u = DoUpdate $ \ o -> AddChanConsumerU o c u

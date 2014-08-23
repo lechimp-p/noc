@@ -1,6 +1,5 @@
 * Think about weather a show instance is a good
   idea for the Password type.
-* Introduce types for channels: conversation | stream
 * UI: Channel owners need a way to edit channel
   name and description.
 * UI: edit own profile
@@ -19,3 +18,5 @@
 * preprocess uploaded icons/images
 * think about how config of the server should be made
 * think about how the model is represented
+* think about the structure of the api (use POST and GET instead of fixed names)
+

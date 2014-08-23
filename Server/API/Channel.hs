@@ -83,6 +83,7 @@ getHandler acid cid = handleError $
         trySessionLoginQ
         "name"          <:. getChanNameQ cid
         "description"   <:. getChanDescQ cid      
+        "type"          <:. getChanTypeQ cid
         "amountOfUsers" <:. amountOfDistinctUsersQ cid
         "lastPost"      <:. lastPostTimestampQ cid
 
@@ -91,6 +92,7 @@ setHandler acid cid = handleError $
         trySessionLoginU
         "name"          ?:> setChanNameU cid
         "description"   ?:> setChanDescU cid  
+        "type"          ?:> setChanTypeU cid
         noContent'
 
 messagesHandler acid cid = handleError $

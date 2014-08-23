@@ -12,6 +12,7 @@ module Model
     , mkDesc
     , UserId
     , ChanId
+    , ChanType
     , MsgId
     , Icon (Icon, icnPath)
     , Message
@@ -23,3 +24,4 @@ import Model.Operations
 import Model.NoC
 import Model.Message
 import Model.BaseTypes
+import Model.Channel

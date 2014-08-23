@@ -128,6 +128,7 @@ showChannels cids = do
     "subscriptions" <:: flip fmap (S.toList cids) .$ \ cid -> do
         "name"          <:. getChanNameQ cid
         "description"   <:. getChanDescQ cid
+        "type"          <:. getChanTypeQ cid
 
 addToContactsHandler acid uid = handleError $
     updateWithJSONInput acid $ do

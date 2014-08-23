@@ -7,8 +7,10 @@ module Model.Operations
     , Model.Operations.rmAdmin
     , getChanName
     , getChanDesc
+    , getChanType
     , setChanName
     , setChanDesc
+    , setChanType
     , addChanOwner
     , addChanProducer
     , addChanConsumer
@@ -101,9 +103,11 @@ setToChan l cid v = checkAccess cid forChanOwnersOrAdmins $ do
 
 getChanName cid = getFromChan C.name cid
 getChanDesc cid = getFromChan C.desc cid
+getChanType cid = getFromChan C.type' cid
 
 setChanName cid v = setToChan C.name cid v
 setChanDesc cid v = setToChan C.desc cid v
+setChanType cid v = setToChan C.type' cid v
 
 addChanXX :: OpMonad m 
           => SimpleLens Channel (S.Set UserId)
@@ -225,7 +229,7 @@ createChannel n d = ifIsLoggedIn $ do
     cid <- newChanId
     oid <- Model.Operations.getOperatorId
     user <- getUser oid
-    storeChannel $ Channel cid n d (S.insert oid S.empty) S.empty S.empty S.empty
+    storeChannel $ Channel cid n d None (S.insert oid S.empty) S.empty S.empty S.empty
     storeUser $ over U.ownedChannels (S.insert cid) user
     return cid
 

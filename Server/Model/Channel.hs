@@ -16,10 +16,19 @@ import Control.Lens (makeLenses)
 
 import Model.BaseTypes
 
+data ChanType
+    = None
+    | Stream
+    | Conversation
+    deriving (Data, Typeable)
+
+$(deriveSafeCopy 0 'base ''ChanType)
+
 data Channel = Channel
     { _id           :: ChanId
     , _name         :: Name
     , _desc         :: Desc
+    , _type'        :: ChanType
     , _owners       :: S.Set UserId
     , _producers    :: S.Set UserId
     , _consumers    :: S.Set UserId

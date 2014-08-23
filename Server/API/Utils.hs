@@ -9,7 +9,7 @@
 module API.Utils
 where
 
-import Data.Text
+import Data.Text hiding (any)
 import Data.Acid ( AcidState )
 import qualified Data.ByteString.Lazy.Char8 as L 
 import qualified Data.ByteString.Char8 as B 
@@ -28,6 +28,7 @@ import Control.Monad.Error.Class hiding (Error)
 
 import Model
 import Model.BaseTypes
+import Model.Channel
 import API.Errors
 import API.APIMonad
 import API.JSONQueryMonad
@@ -45,7 +46,6 @@ instance FromJSON Password where
     parseJSON (String t) = return . mkPassword $ t
     parseJSON _ = mzero
 
-
 instance FromJSON Name where
     parseJSON (String t) = return . mkName $ t
     parseJSON _ = mzero 
@@ -53,6 +53,14 @@ instance FromJSON Name where
 instance FromJSON Desc where
     parseJSON (String t) = return . mkDesc $ t
     parseJSON _ = mzero 
+
+instance FromJSON ChanType where
+    parseJSON (String t)
+        | any (t == ) ["none", "None", "NONE"] = return None
+        | any (t == ) ["stream", "Stream", "STREAM"] = return Stream 
+        | any (t == ) ["conversation", "Conversation", "CONVERSATION"] = return Conversation
+        | otherwise = mzero
+    parseJSON _ = mzero
 
 instance ToJSON UserId where
     toJSON = toJSON . uiToInt 
@@ -80,6 +88,11 @@ instance ToJSON Icon where
 
 instance ToJSON Image where
     toJSON = String . imgPath 
+
+instance ToJSON ChanType where
+    toJSON None         = String "none"
+    toJSON Stream       = String "stream"
+    toJSON Conversation = String "conversation"
 
 instance ToMessage Value where
     toContentType _ = B.pack "application/json"

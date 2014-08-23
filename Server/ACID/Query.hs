@@ -67,6 +67,9 @@ getChanNameQ oid = getQuery oid . O.getChanName
 getChanDescQ :: Maybe UserId -> ChanId -> Query NoC (Either Error Desc, Maybe UserId) 
 getChanDescQ oid = getQuery oid . O.getChanDesc
 
+getChanTypeQ :: Maybe UserId -> ChanId -> Query NoC (Either Error ChanType, Maybe UserId)
+getChanTypeQ oid = getQuery oid . O.getChanType
+
 amountOfDistinctUsersQ :: Maybe UserId -> ChanId -> Query NoC (Either Error Int, Maybe UserId)
 amountOfDistinctUsersQ oid = getQuery oid . O.amountOfDistinctUsers
 

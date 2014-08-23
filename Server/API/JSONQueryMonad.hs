@@ -59,6 +59,7 @@ instance Monad m => MonadQuery (JSONQueryMonadT NoC url session m) where
     getOperatorIdQ = JSONQueryMonadT . lift $ getOperatorIdQ 
     getChanNameQ = JSONQueryMonadT . lift . getChanNameQ
     getChanDescQ = JSONQueryMonadT . lift . getChanDescQ
+    getChanTypeQ = JSONQueryMonadT . lift . getChanTypeQ
     amountOfDistinctUsersQ = JSONQueryMonadT . lift . amountOfDistinctUsersQ
     lastPostTimestampQ = JSONQueryMonadT . lift . lastPostTimestampQ 
     getUserLoginQ = JSONQueryMonadT . lift . getUserLoginQ

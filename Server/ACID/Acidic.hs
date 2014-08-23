@@ -15,6 +15,7 @@ $(makeAcidic ''NoC  [ 'doLoginQ
                     , 'getOperatorIdQ
                     , 'getChanNameQ
                     , 'getChanDescQ
+                    , 'getChanTypeQ
                     , 'amountOfDistinctUsersQ
                     , 'lastPostTimestampQ
                     , 'getUserLoginQ
@@ -32,8 +33,10 @@ $(makeAcidic ''NoC  [ 'doLoginQ
                     , 'rmAdminU
                     , 'getChanNameU 
                     , 'getChanDescU 
+                    , 'getChanTypeU
                     , 'setChanNameU
                     , 'setChanDescU
+                    , 'setChanTypeU
                     , 'addChanOwnerU
                     , 'addChanProducerU
                     , 'addChanConsumerU
