@@ -22,10 +22,10 @@ import Control.Monad.IO.Class
 import Control.Monad.Trans.Either
 import Control.Monad.Trans
 import Data.Monoid
+import Control.Monad.Trans.JSON
 
 import qualified Model.Errors as ME
 import Model
-import API.JSONUtils 
 import API.ImageUtils 
 import API.APIMonad
 import ACID

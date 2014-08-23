@@ -24,6 +24,7 @@ import qualified Data.Set as S
 import Data.Time.Clock
 import Text.Boomerang.TH (makeBoomerangs)
 import Web.Routes.Boomerang
+import Control.Monad.Trans.JSON
 
 import Model
 import Model.Message
@@ -31,7 +32,6 @@ import ACID
 import API.APIMonad
 import API.Utils
 import API.Errors
-import API.JSONUtils
 import API.Auth hiding (timestamp)
 import API.ImageUtils
 
@@ -76,23 +76,23 @@ createHandler acid = handleError $
         trySessionLoginU
         n <- prop "name"
         d <- prop "description"
-        "id"    <:. createChannelU n d
+        "id"    <$ createChannelU n d
 
 getHandler acid cid = handleError $
     queryWithJSONResponse acid $ do
         trySessionLoginQ
-        "name"          <:. getChanNameQ cid
-        "description"   <:. getChanDescQ cid      
-        "type"          <:. getChanTypeQ cid
-        "amountOfUsers" <:. amountOfDistinctUsersQ cid
-        "lastPost"      <:. lastPostTimestampQ cid
+        "name"          <$ getChanNameQ cid
+        "description"   <$ getChanDescQ cid      
+        "type"          <$ getChanTypeQ cid
+        "amountOfUsers" <$ amountOfDistinctUsersQ cid
+        "lastPost"      <$ lastPostTimestampQ cid
 
 setHandler acid cid = handleError $
     updateWithJSONInput acid $ do
         trySessionLoginU
-        "name"          ?:> setChanNameU cid
-        "description"   ?:> setChanDescU cid  
-        "type"          ?:> setChanTypeU cid
+        "name"          ?> setChanNameU cid
+        "description"   ?> setChanDescU cid  
+        "type"          ?> setChanTypeU cid
         noContent'
 
 messagesHandler acid cid = handleError $
@@ -101,26 +101,26 @@ messagesHandler acid cid = handleError $
         o <- prop "offset"
         a <- prop "amount"
         msgs <- messagesQ cid o a
-        "messages" <:: flip fmap msgs .$ \ msg -> do
+        "messages" <$: flip fmap msgs .$ \ msg -> do
             "image"     <: view image msg
             "text"      <: view text msg
             "timestamp" <: view timestamp msg 
-            "author"    <:.. do
+            "author"    <$. do
                 let uid = view author msg  
                 "id"        <: uid
-                "login"     <:. getUserLoginQ uid
-                "icon"      <:. getUserIconQ uid
+                "login"     <$ getUserLoginQ uid
+                "icon"      <$ getUserIconQ uid
 
 postHandler acid cid = handleError $
     updateWithJSONResponse acid $ do
         trySessionLoginU
         ts <- liftIO $ getCurrentTime
         t <- prop "text"
-        img <- "image" .?:> do
+        img <- "image" .?> do
             typ <- prop "type"
             dat <- prop "data"
             storeImage defaultConfig typ dat 
-        "id" <:. postU cid ts t img
+        "id" <$ postU cid ts t img
  
 subscribeHandler acid cid = handleError $
     updateWithJSONInput acid $ do

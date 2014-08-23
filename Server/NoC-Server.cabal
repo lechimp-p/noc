@@ -79,7 +79,6 @@ executable NoC-Server-dev
                         , API.Channel
                         , API.Auth
                         , API.Utils
-                        , API.JSONUtils
                         , API.Errors
                         , API.APIMonad
                         , ACID.Query
@@ -111,6 +110,7 @@ executable NoC-Server-dev
                         , hashable ==1.2.*
                         , directory ==1.2.*
                         , base64-bytestring ==1.0.*
+                        , json-transformer ==0.1.*
 
 Test-Suite test-NoC-Server
     type:               detailed-0.9

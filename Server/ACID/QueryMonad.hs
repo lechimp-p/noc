@@ -38,6 +38,7 @@ import Data.Acid
         )
 import Data.Acid.Advanced ( query' )
 import Control.Monad
+import Control.Applicative
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Class
 import qualified Data.Set as S
@@ -121,6 +122,16 @@ instance MonadPlus m => MonadPlus (QueryMonadT acid m) where
     
 instance MonadQueryError m => MonadQueryError (QueryMonadT acid m) where
     throwQueryError = lift . throwQueryError
+
+instance Monad m => Functor (QueryMonadT acid m) where
+    fmap f m = m >>= return . f
+        
+instance Monad m => Applicative (QueryMonadT acid m) where
+    pure = return
+    l <*> r = do
+        f <- l
+        v <- r
+        return $ f v
 
 instance MonadQueryError m => MonadQuery (QueryMonadT NoC m) where
     doLoginQ l p = DoQuery $ const $ DoLoginQ l p 

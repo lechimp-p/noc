@@ -11,6 +11,7 @@ where
 
 import Data.Text hiding (any)
 import Data.Acid ( AcidState )
+import qualified Data.HashMap.Strict as HM
 import qualified Data.ByteString.Lazy.Char8 as L 
 import qualified Data.ByteString.Char8 as B 
 import Data.Aeson
@@ -25,6 +26,9 @@ import Control.Monad.IO.Class (liftIO, MonadIO)
 import Control.Monad.Trans.Class
 import Control.Monad.Trans.Either
 import Control.Monad.Error.Class hiding (Error)
+import Control.Monad.Trans.JSON
+import Control.Monad.Writer
+import Control.Monad.Reader
 
 import Model
 import Model.BaseTypes
@@ -33,7 +37,6 @@ import API.Errors
 import API.APIMonad
 import API.JSONQueryMonad
 import API.JSONUpdateMonad
-import API.JSONUtils
 import ACID
 
 type ACID = AcidState NoC
@@ -142,13 +145,14 @@ instance (Monad m, MonadIO m)
     composeFilter = JSONQueryMonadT . lift . lift . lift . composeFilter
     -- getFilter :: m b -> m (b, a -> a)
     getFilter m = do
-        obj <- JSONQueryMonadT $ getObject
-        ps <- JSONQueryMonadT $ getPairs   
+        obj <- JSONQueryMonadT . JSONMonadT $ ask
         uid <- JSONQueryMonadT . lift $ maybeOperatorIdQ
         acid <- JSONQueryMonadT . lift $ getAcidQ
-        (((a', ps'), uid'), res) <- JSONQueryMonadT . lift . lift 
-                . getFilter . queryWithJSON' acid uid obj ps $ m
-        JSONQueryMonadT $ setPairs ps'
+        (((a', obj'), uid'), res) <- JSONQueryMonadT . lift . lift 
+                . getFilter . queryWithJSON' acid uid obj $ m
+        case obj' of
+            Object o -> JSONQueryMonadT . JSONMonadT . lift . tell $ HM.toList o
+            otherwise -> error "API.Utils.getFilter (QueryMonadT): this should not happen."
         JSONQueryMonadT . lift $ setOperatorIdQ uid'
         return (a', res)
 
@@ -164,13 +168,12 @@ queryWithJSON' :: (Monad m, MonadIO m)
                => AcidState acid
                -> Maybe UserId
                -> Object
-               -> [Pair]
                -> JSONQueryMonadT acid url session m a
-               -> EitherT Error (APIMonadT url session m) ((a, [Pair]), Maybe UserId)
-queryWithJSON' acid uid obj ps json = do
+               -> EitherT Error (APIMonadT url session m) ((a, Value), Maybe UserId)
+queryWithJSON' acid uid obj json = do
     body <- getBody
     (\ m -> runQueryMonadT' m acid uid) 
-        . (\ m -> runJSONMonadT' m obj ps) 
+        . (\ m -> runJSONMonadTWithObject m obj) 
         . runJSONQueryMonadT 
         $ json 
 
@@ -198,13 +201,14 @@ instance (Monad m, MonadIO m)
     composeFilter = JSONUpdateMonadT . lift . lift . lift . composeFilter
     -- getFilter :: m b -> m (b, a -> a)
     getFilter m = do
-        obj <- JSONUpdateMonadT $ getObject
-        ps <- JSONUpdateMonadT $ getPairs   
+        obj <- JSONUpdateMonadT . JSONMonadT $ ask
         uid <- JSONUpdateMonadT . lift $ maybeOperatorIdU
         acid <- JSONUpdateMonadT . lift $ getAcidU
-        (((a', ps'), uid'), res) <- JSONUpdateMonadT . lift . lift 
-                . getFilter . updateWithJSON' acid uid obj ps $ m
-        JSONUpdateMonadT $ setPairs ps'
+        (((a', obj'), uid'), res) <- JSONUpdateMonadT . lift . lift 
+                . getFilter . updateWithJSON' acid uid obj $ m
+        case obj' of
+            Object o -> JSONUpdateMonadT . JSONMonadT . lift . tell $ HM.toList o
+            otherwise -> error "API.Utils.getFilter (UpdateMonadT): this should not happen."
         JSONUpdateMonadT . lift $ setOperatorIdU uid'
         return (a', res)
 
@@ -220,14 +224,15 @@ instance (Monad m, MonadIO m)
       => MonadError Error (JSONUpdateMonadT acid url session m) where
     throwError = JSONUpdateMonadT . lift . lift . throwError
     catchError op handler = do
-        obj <- JSONUpdateMonadT $ getObject
-        ps <- JSONUpdateMonadT $ getPairs
+        obj <- JSONUpdateMonadT . JSONMonadT $ ask
         uid <- JSONUpdateMonadT . lift $ maybeOperatorIdU
         acid <- JSONUpdateMonadT . lift $ getAcidU
-        ((a', ps'), uid') <- JSONUpdateMonadT . lift . lift
-                . catchError (updateWithJSON' acid uid obj ps op)
-                           $ (\ e -> updateWithJSON' acid uid obj ps (handler e))
-        JSONUpdateMonadT $ setPairs ps'
+        ((a', obj'), uid') <- JSONUpdateMonadT . lift . lift
+                . catchError (updateWithJSON' acid uid obj op)
+                           $ (\ e -> updateWithJSON' acid uid obj (handler e))
+        case obj' of
+            Object o -> JSONUpdateMonadT . JSONMonadT . lift . tell $ HM.toList o
+            otherwise -> error "API.Utils.catchError (UpdateMonadT): this should not happen."
         JSONUpdateMonadT . lift $ setOperatorIdU uid'
         return a'
 
@@ -235,13 +240,12 @@ updateWithJSON' :: (Monad m, MonadIO m)
                => AcidState acid
                -> Maybe UserId
                -> Object
-               -> [Pair]
                -> JSONUpdateMonadT acid url session m a
-               -> EitherT Error (APIMonadT url session m) ((a, [Pair]), Maybe UserId)
-updateWithJSON' acid uid obj ps json = do
+               -> EitherT Error (APIMonadT url session m) ((a, Value), Maybe UserId)
+updateWithJSON' acid uid obj json = do
     body <- getBody
     (\ m -> runUpdateMonadT' m acid uid) 
-        . (\ m -> runJSONMonadT' m obj ps) 
+        . (\ m -> runJSONMonadTWithObject m obj) 
         . runJSONUpdateMonadT 
         $ json 
 

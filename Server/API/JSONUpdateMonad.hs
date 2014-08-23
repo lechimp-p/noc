@@ -26,10 +26,10 @@ import Control.Monad
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Class
 import Control.Monad.Trans.Either
+import Control.Monad.Trans.JSON
 
 import API.APIMonad
 import API.Errors
-import API.JSONUtils
 import API.ImageUtils
 import ACID
 import Model
@@ -37,8 +37,15 @@ import Model
 
 newtype JSONUpdateMonadT acid url session m a = 
     JSONUpdateMonadT { runJSONUpdateMonadT :: JSONMonadT (UpdateMonadT acid (EitherT Error (APIMonadT url session m))) a}
-    deriving (Monad, MonadIO, Functor, Applicative, MonadPlus)
-                            
+    deriving (Monad, MonadIO, MonadPlus)
+ 
+instance (Functor m, Monad m) => Functor (JSONUpdateMonadT acid url session m) where
+    fmap f = JSONUpdateMonadT . fmap f . runJSONUpdateMonadT
+
+instance (Applicative m, Monad m) => Applicative (JSONUpdateMonadT acid url session m) where
+    pure = return
+    l <*> r = JSONUpdateMonadT $ runJSONUpdateMonadT l <*> runJSONUpdateMonadT r
+                           
 instance Monad m => MonadJSONError (UpdateMonadT acid (EitherT Error (APIMonadT url session m))) where
     throwJSONError = lift . throwJSONError
 
@@ -52,11 +59,10 @@ instance Monad m => MonadImageError (JSONUpdateMonadT acid url session m) where
     throwImageError = JSONUpdateMonadT . lift . lift . throwImageError 
 
 instance Monad m => MonadJSON (JSONUpdateMonadT acid url session m) where
-    readProp = JSONUpdateMonadT . readProp
+    maybeValue = JSONUpdateMonadT . maybeValue
     writeProp n = JSONUpdateMonadT . writeProp n
-    writeListProp n = JSONUpdateMonadT . writeListProp n . fmap runJSONUpdateMonadT 
-    writeObjectProp n = JSONUpdateMonadT . writeObjectProp n . runJSONUpdateMonadT 
-    withObject o = JSONUpdateMonadT . withObject o . runJSONUpdateMonadT
+    extract = JSONUpdateMonadT . extract . runJSONUpdateMonadT
+    useObject obj = JSONUpdateMonadT . useObject obj . runJSONUpdateMonadT
 
 instance Monad m => MonadUpdate (JSONUpdateMonadT NoC url session m) where
     doLoginU l = JSONUpdateMonadT . lift . doLoginU l

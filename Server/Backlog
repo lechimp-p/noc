@@ -8,7 +8,6 @@
 * UI: global user search
 * UI: How are channels separated where i'm only consumer and where i'm producer as well. 
 * make permission handling more flexible
-* consolidate JSONMonad
 * try to remove tiresome name duplications in ACID
 * enforce update/query model already at model level
 * make implementation of storage engine switchable

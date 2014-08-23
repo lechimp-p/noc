@@ -26,17 +26,24 @@ import Control.Monad
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Class
 import Control.Monad.Trans.Either
+import Control.Monad.Trans.JSON
 
 import API.APIMonad
 import API.Errors
-import API.JSONUtils
 import ACID
 import Model
 
 
 newtype JSONQueryMonadT acid url session m a = 
     JSONQueryMonadT { runJSONQueryMonadT :: JSONMonadT (QueryMonadT acid (EitherT Error (APIMonadT url session m))) a}
-    deriving (Monad, MonadIO, Functor, Applicative, MonadPlus)
+    deriving (Monad, MonadIO, MonadPlus)
+
+instance (Functor m, Monad m) => Functor (JSONQueryMonadT acid url session m) where
+    fmap f = JSONQueryMonadT . fmap f . runJSONQueryMonadT
+
+instance (Applicative m, Monad m) => Applicative (JSONQueryMonadT acid url session m) where
+    pure = return
+    l <*> r = JSONQueryMonadT $ runJSONQueryMonadT l <*> runJSONQueryMonadT r
                             
 instance Monad m => MonadJSONError (QueryMonadT acid (EitherT Error (APIMonadT url session m))) where
     throwJSONError = lift . throwJSONError
@@ -48,11 +55,10 @@ instance Monad m => MonadQueryError (JSONQueryMonadT acid url session m) where
     throwQueryError = JSONQueryMonadT . lift . lift . throwQueryError 
 
 instance Monad m => MonadJSON (JSONQueryMonadT acid url session m) where
-    readProp = JSONQueryMonadT . readProp
+    maybeValue = JSONQueryMonadT . maybeValue
     writeProp n = JSONQueryMonadT . writeProp n
-    writeListProp n = JSONQueryMonadT . writeListProp n . fmap runJSONQueryMonadT 
-    writeObjectProp n = JSONQueryMonadT . writeObjectProp n . runJSONQueryMonadT 
-    withObject o = JSONQueryMonadT . withObject o . runJSONQueryMonadT
+    extract = JSONQueryMonadT . extract . runJSONQueryMonadT
+    useObject obj = JSONQueryMonadT . useObject obj . runJSONQueryMonadT
 
 instance Monad m => MonadQuery (JSONQueryMonadT NoC url session m) where
     doLoginQ l = JSONQueryMonadT . lift . doLoginQ l

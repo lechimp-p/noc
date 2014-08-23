@@ -62,6 +62,7 @@ import Data.Acid
 import Data.Acid.Advanced ( update' )
 import Data.Time.Clock
 import Control.Monad
+import Control.Applicative
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Class
 import qualified Data.Set as S
@@ -165,6 +166,16 @@ instance MonadIO m => MonadIO (UpdateMonadT acid m) where
 instance MonadPlus m => MonadPlus (UpdateMonadT acid m) where
     mzero = lift mzero
     mplus = Plus
+
+instance Monad m => Functor (UpdateMonadT acid m) where
+    fmap f m = m >>= return . f
+        
+instance Monad m => Applicative (UpdateMonadT acid m) where
+    pure = return
+    l <*> r = do
+        f <- l
+        v <- r
+        return $ f v
 
 instance MonadUpdateError m => MonadUpdateError (UpdateMonadT acid m) where
     throwUpdateError = lift . throwUpdateError

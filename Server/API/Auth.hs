@@ -26,11 +26,11 @@ import Control.Monad
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Class
 import Data.Acid.Advanced ( query' )
+import Control.Monad.Trans.JSON
 
 import API.APIMonad
 import API.JSONQueryMonad
 import API.Utils
-import API.JSONUtils
 import API.Errors
 import ACID
 import Model

@@ -23,13 +23,13 @@ import Control.Monad
 import qualified Data.Set as S
 import Text.Boomerang.TH (makeBoomerangs)
 import Web.Routes.Boomerang
+import Control.Monad.Trans.JSON
 
 import Model
 import ACID
 import API.APIMonad
 import API.Utils
 import API.Errors
-import API.JSONUtils
 import API.ImageUtils
 import API.Auth 
 
@@ -83,23 +83,23 @@ createHandler acid = handleError $
         trySessionLoginU
         l <- prop "login"
         p <- prop "password"
-        "id"    <:. createUserU l p
+        "id"    <$. createUserU l p
 
 getHandler acid uid = handleError $
     queryWithJSONResponse acid $ do
         trySessionLoginQ 
-        "login"         <:. getUserLoginQ uid
-        "name"          <:. getUserNameQ uid
-        "description"   <:. getUserDescQ uid
-        "icon"          <:. getUserIconQ uid
+        "login"         <$ getUserLoginQ uid
+        "name"          <$ getUserNameQ uid
+        "description"   <$ getUserDescQ uid
+        "icon"          <$ getUserIconQ uid
 
 setHandler acid uid = handleError $
     updateWithJSONInput acid $ do
         trySessionLoginU 
-        l <- "login"    ?:> \ l -> setUserLoginU uid l >> return l
-        p <- "password" ?:> \ p -> setUserPasswordU uid p >> return p
-        "name"          ?:> setUserNameU uid
-        "description"   ?:> setUserDescU uid
+        l <- "login"    ?> \ l -> setUserLoginU uid l >> return l
+        p <- "password" ?> \ p -> setUserPasswordU uid p >> return p
+        "name"          ?> setUserNameU uid
+        "description"   ?> setUserDescU uid
         refreshCookie l $ p
         noContent'
 
@@ -107,10 +107,10 @@ contactsHandler acid uid = handleError $
     queryWithJSONResponse acid $ do
         trySessionLoginQ
         uids <- getUserContactsQ uid
-        "contacts" <:: flip fmap (S.toList uids) .$ \ uid -> do
-            "login"         <:. getUserLoginQ uid
-            "description"   <:. getUserDescQ uid
-            "icon"          <:. getUserIconQ uid
+        "contacts" <$: flip fmap (S.toList uids) .$ \ uid -> do
+            "login"         <$ getUserLoginQ uid
+            "description"   <$ getUserDescQ uid
+            "icon"          <$ getUserIconQ uid
 
 subscriptionsHandler acid uid = handleError $
     queryWithJSONResponse acid $ do
@@ -125,10 +125,10 @@ channelsHandler acid uid = handleError $
         showChannels cids
 
 showChannels cids = do         
-    "subscriptions" <:: flip fmap (S.toList cids) .$ \ cid -> do
-        "name"          <:. getChanNameQ cid
-        "description"   <:. getChanDescQ cid
-        "type"          <:. getChanTypeQ cid
+    "subscriptions" <$: flip fmap (S.toList cids) .$ \ cid -> do
+        "name"          <$ getChanNameQ cid
+        "description"   <$ getChanDescQ cid
+        "type"          <$ getChanTypeQ cid
 
 addToContactsHandler acid uid = handleError $
     updateWithJSONInput acid $ do
