@@ -60,7 +60,7 @@ route acid cid url = case url of
     Users       ->      (method [POST, HEAD]>> setUsersHandler acid cid)
 
 genericHandler acid = (method [GET, HEAD] >> searchHandler acid)
-              `mplus` (method [POST] >> createHandler acid)
+              `mplus` (method POST >> createHandler acid)
 
 searchHandler acid = ok' "Channel.searchHandler"
 

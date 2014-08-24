@@ -26,6 +26,7 @@ data User = User
     , _ownedChannels :: S.Set ChanId
     , _subscriptions :: S.Set ChanId
     , _contacts      :: S.Set UserId
+    , _notifications :: [Notification]
     }
     deriving (Data, Typeable)
 
@@ -35,6 +36,11 @@ instance Eq User where
 instance Ord User where
     compare u u' = compare (_id u) (_id u')
 
+data Notification
+    = AddedToChannel UserId ChanId
+    deriving (Data, Typeable)
+
+$(deriveSafeCopy 0 'base ''Notification)
 $(deriveSafeCopy 0 'base ''User) 
 makeLenses ''User
 

@@ -217,7 +217,7 @@ getUserByLogin l = ifIsLoggedIn $ do
 createUser :: OpMonad m => Login -> Password -> m UserId
 createUser l pw = checkAccess () forNoCAdmins $ do
     uid <- newUserId
-    storeUser $ User uid l pw (mkName "") (mkDesc "") Nothing S.empty S.empty S.empty
+    storeUser $ User uid l pw (mkName "") (mkDesc "") Nothing S.empty S.empty S.empty []
     return uid
 
 -----------------------
@@ -256,7 +256,7 @@ type Amount = Int
 messages :: OpMonad m => ChanId -> Offset -> Amount -> m [Message]
 messages cid ofs am = checkAccess cid forConsumersOrOwners $ do
     take am . drop ofs . IX.toDescList (IX.Proxy :: IX.Proxy UTCTime) <$> getMessages @= cid  
-    
+
 ----------
 -- helpers
 ----------
