@@ -36,35 +36,28 @@ import API.Auth hiding (timestamp)
 import API.ImageUtils
 
 data API
-    = Get
-    | Set
+    = Base
     | Messages 
-    | Post
-    | Subscribe
-    | Unsubscribe
+    | Users
     deriving (Generic)
 
 $(makeBoomerangs ''API)
 
 channelroutes :: Router () (API :- ())
 channelroutes =
-    (  "get" . rGet
-    <> "set" . rSet
+    (  rBase 
     <> "messages" . rMessages
-    <> "post" . rPost
-    <> "subscribe" . rSubscribe
-    <> "unsubscribe" . rUnsubscribe 
+    <> "users" . rUsers
     )
 
 route :: (Monad m, MonadIO m, Functor m)
       => ACID -> ChanId -> API -> APIMonadT API AuthData m Response
 route acid cid url = case url of
-    Get         -> method [GET, HEAD]   >> getHandler acid cid
-    Set         -> method [POST, HEAD]  >> setHandler acid cid
-    Messages    -> method [GET, HEAD]   >> messagesHandler acid cid
-    Post        -> method [POST, HEAD]  >> postHandler acid cid
-    Subscribe   -> method [POST, HEAD]  >> subscribeHandler acid cid
-    Unsubscribe -> method [POST, HEAD]  >> unsubscribeHandler acid cid
+    Base        ->      (method [GET, HEAD] >> getHandler acid cid)
+                `mplus` (method [POST]      >> setHandler acid cid)
+    Messages    ->      (method [GET, HEAD] >> getMessagesHandler acid cid)
+                `mplus` (method [POST]      >> postHandler acid cid)
+    Users       ->      (method [POST, HEAD]>> setUsersHandler acid cid)
 
 genericHandler acid = (method [GET, HEAD] >> searchHandler acid)
               `mplus` (method [POST] >> createHandler acid)
@@ -95,7 +88,7 @@ setHandler acid cid = handleError $
         "type"          ?> setChanTypeU cid
         noContent'
 
-messagesHandler acid cid = handleError $
+getMessagesHandler acid cid = handleError $
     queryWithJSONResponse acid $ do
         trySessionLoginQ
         o <- prop "offset"
@@ -112,7 +105,7 @@ messagesHandler acid cid = handleError $
                 "icon"      <$ getUserIconQ uid
 
 postHandler acid cid = handleError $
-    updateWithJSONResponse acid $ do
+    updateWithJSONInput acid $ do
         trySessionLoginU
         ts <- liftIO $ getCurrentTime
         t <- prop "text"
@@ -120,19 +113,16 @@ postHandler acid cid = handleError $
             typ <- prop "type"
             dat <- prop "data"
             storeImage defaultConfig typ dat 
-        "id" <$ postU cid ts t img
- 
-subscribeHandler acid cid = handleError $
+        postU cid ts t img
+        noContent'   
+
+setUsersHandler acid cid = handleError $
     updateWithJSONInput acid $ do
         trySessionLoginU
-        uid <- getOperatorIdU
-        subscribeToChanU uid cid
-        noContent'        
-
-unsubscribeHandler acid cid = handleError $
-    updateWithJSONInput acid $ do
-        trySessionLoginU
-        uid <- getOperatorIdU
-        unsubscribeFromChanU uid cid
-        noContent'        
-
+        "addOwners"         ?> sequence . fmap (addChanOwnerU cid)
+        "removeOwners"      ?> sequence . fmap (rmChanOwnerU cid)
+        "addProducers"      ?> sequence . fmap (addChanProducerU cid)
+        "removeProducers"   ?> sequence . fmap (rmChanProducerU cid)
+        "addConsumers"      ?> sequence . fmap (addChanConsumerU cid)
+        "removeConsumers"   ?> sequence . fmap (rmChanConsumerU cid) 
+        noContent'

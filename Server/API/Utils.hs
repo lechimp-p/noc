@@ -16,6 +16,7 @@ import qualified Data.ByteString.Lazy.Char8 as L
 import qualified Data.ByteString.Char8 as B 
 import Data.Aeson
 import Data.Aeson.Types
+import Data.Scientific
 import Control.Lens
 import Control.Lens.Prism
 import Happstack.Server
@@ -63,6 +64,26 @@ instance FromJSON ChanType where
         | any (t == ) ["stream", "Stream", "STREAM"] = return Stream 
         | any (t == ) ["conversation", "Conversation", "CONVERSATION"] = return Conversation
         | otherwise = mzero
+    parseJSON _ = mzero
+
+instance FromJSON UserId where
+    parseJSON (Number s)
+        | not . isInteger $ s = mzero
+        | otherwise =
+            let res = toBoundedInteger s
+            in case res of
+                Nothing  -> mzero
+                Just uid -> return . UserId $ uid
+    parseJSON _ = mzero
+
+instance FromJSON ChanId where
+    parseJSON (Number s)
+        | not . isInteger $ s = mzero
+        | otherwise =
+            let res = toBoundedInteger s
+            in case res of
+                Nothing  -> mzero
+                Just cid -> return . ChanId $ cid
     parseJSON _ = mzero
 
 instance ToJSON UserId where
