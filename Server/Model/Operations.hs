@@ -186,6 +186,8 @@ getUserSubscriptions uid = checkAccess uid forUserSelfOrAdmins
     $ getFromUser U.subscriptions uid
 getUserContacts uid = checkAccess uid forUserSelfOrAdmins
     $ getFromUser U.contacts uid
+getUserNotifications uid = checkAccess uid forUserSelfOrAdmins
+    $ getFromUser U.notifications uid
 
 addUserContact uid other = overInUser U.contacts uid (S.insert other)  
 rmUserContact uid other = overInUser U.contacts uid (S.delete other)  

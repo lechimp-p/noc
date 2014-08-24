@@ -106,8 +106,16 @@ forUserSelf = Permission
 
 forUserAdmins :: OpMonad m => Permission UserId m
 forUserAdmins = Permission 
-    (\ oid _ -> getAdmins >>= \as -> return (oid `S.member` as))
+    (\ oid _ -> getAdmins >>= \ as -> return (oid `S.member` as))
     (\ oid uid -> return (NoUserAdmin oid uid))
+
+forUsersOnContactList :: OpMonad m => Permission UserId m
+forUsersOnContactList = Permission
+    (\ oid uid -> getUser uid >>= \ u -> return (oid `S.member` U._contacts u))
+    (\ oid uid -> return (NotOnContactList oid uid))
 
 forUserSelfOrAdmins :: OpMonad m => Permission UserId m
 forUserSelfOrAdmins = mconcat [forUserSelf, forUserAdmins]
+
+forUserOnContactListSelfOrAdmins :: OpMonad m => Permission UserId m
+forUserOnContactListSelfOrAdmins = mconcat [forUsersOnContactList, forUserSelf, forUserAdmins]

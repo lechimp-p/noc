@@ -20,6 +20,7 @@ data PermissionViolation =
     | NoChanConsumer UserId ChanId
     | NoUserAdmin UserId UserId
     | NoUserSelf UserId UserId
+    | NotOnContactList UserId UserId
     | PVAnd PermissionViolation PermissionViolation
     deriving (Show, Eq, Data, Typeable)
 
