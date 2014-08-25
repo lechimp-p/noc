@@ -40,6 +40,9 @@ module ACID.UpdateMonad
     , getUserContactsU
     , addUserContactU
     , rmUserContactU
+    , getUserNotificationsU
+    , addUserNotificationU
+    , tryToAddUserNotificationU
     , getUserByLoginU
     , messagesU
     , createUserU
@@ -109,6 +112,9 @@ class MonadUpdateError m => MonadUpdate m where
     getUserContactsU    :: UserId -> m (S.Set UserId) 
     addUserContactU     :: UserId -> UserId -> m ()
     rmUserContactU      :: UserId -> UserId -> m ()
+    getUserNotificationsU :: UserId -> Offset -> Amount -> m [Notification] 
+    addUserNotificationU :: UserId -> Notification -> m ()
+    tryToAddUserNotificationU :: UserId -> Notification -> m (Maybe ())
     getUserByLoginU     :: Text -> m UserId
     createUserU         :: Login -> Password -> m UserId
     createChannelU      :: Name -> Desc -> m ChanId
@@ -214,6 +220,9 @@ instance MonadUpdateError m => MonadUpdate (UpdateMonadT NoC m) where
     getUserSubscriptionsU u = DoUpdate $ \ o -> GetUserSubscriptionsU o u
     getUserContactsU u = DoUpdate $ \ o -> GetUserContactsU o u 
     addUserContactU u o = DoUpdate $ \ o' -> AddUserContactU o' u o
+    getUserNotificationsU u o a = DoUpdate $ \ o' -> GetUserNotificationsU o' u o a
+    addUserNotificationU u n = DoUpdate $ \ o -> AddUserNotificationU o u n
+    tryToAddUserNotificationU u n = DoUpdate $ \ o -> TryToAddUserNotificationU o u n
     rmUserContactU u o = DoUpdate $ \ o' -> RmUserContactU o' u o
     getUserByLoginU u = DoUpdate $ \ o -> GetUserByLoginU o u
     createUserU l p = DoUpdate $ \ o -> CreateUserU o l p

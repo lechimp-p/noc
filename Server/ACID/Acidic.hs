@@ -25,6 +25,7 @@ $(makeAcidic ''NoC  [ 'doLoginQ
                     , 'getUserOwnedChannelsQ
                     , 'getUserSubscriptionsQ
                     , 'getUserContactsQ
+                    , 'getUserNotificationsQ
                     , 'getUserByLoginQ
                     , 'messagesQ
                     , 'doLoginU
@@ -61,6 +62,9 @@ $(makeAcidic ''NoC  [ 'doLoginQ
                     , 'getUserContactsU 
                     , 'addUserContactU
                     , 'rmUserContactU
+                    , 'getUserNotificationsU
+                    , 'addUserNotificationU
+                    , 'tryToAddUserNotificationU
                     , 'getUserByLoginU 
                     , 'createUserU
                     , 'createChannelU

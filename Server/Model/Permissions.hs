@@ -36,6 +36,19 @@ checkAccess cont (Permission check constr) action = ifIsLoggedIn' $ \oid -> do
         then constr oid cont >>= throw . InsufficientPermissions 
         else action
 
+tryAccess :: OpMonad m => a -> Permission a m -> m b -> m (Maybe b)
+tryAccess cont (Permission check _) action = do
+    oid <- getOperatorId
+    case oid of
+        Nothing -> return Nothing
+        Just oid' -> do
+            success <- check oid' cont
+            if success
+                then do
+                    res <- action
+                    return $ Just res
+                else return Nothing 
+
 ifIsLoggedIn' :: OpMonad m => (UserId -> m b) -> m b 
 ifIsLoggedIn' op = do
     oid <- getOperatorId
@@ -117,5 +130,5 @@ forUsersOnContactList = Permission
 forUserSelfOrAdmins :: OpMonad m => Permission UserId m
 forUserSelfOrAdmins = mconcat [forUserSelf, forUserAdmins]
 
-forUserOnContactListSelfOrAdmins :: OpMonad m => Permission UserId m
-forUserOnContactListSelfOrAdmins = mconcat [forUsersOnContactList, forUserSelf, forUserAdmins]
+forUserContactsSelfOrAdmins :: OpMonad m => Permission UserId m
+forUserContactsSelfOrAdmins = mconcat [forUsersOnContactList, forUserSelf, forUserAdmins]

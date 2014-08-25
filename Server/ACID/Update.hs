@@ -159,8 +159,19 @@ addUserContactU oid uid = getUpdate oid . O.addUserContact uid
 rmUserContactU :: Maybe UserId -> UserId -> UserId -> Update NoC (Either Error (), Maybe UserId)
 rmUserContactU oid uid = getUpdate oid . O.rmUserContact uid
 
+getUserNotificationsU :: Maybe UserId -> UserId -> Offset -> Amount -> Update NoC (Either Error [Notification], Maybe UserId)
+getUserNotificationsU oid uid offs = getUpdate oid . O.getUserNotifications uid offs
+
+addUserNotificationU :: Maybe UserId -> UserId -> Notification -> Update NoC (Either Error (), Maybe UserId)
+addUserNotificationU oid uid = getUpdate oid . O.addUserNotification uid  
+
+tryToAddUserNotificationU :: Maybe UserId -> UserId -> Notification -> Update NoC (Either Error (Maybe ()), Maybe UserId)
+tryToAddUserNotificationU oid uid = getUpdate oid . O.tryToAddUserNotification uid  
+
 getUserByLoginU :: Maybe UserId -> Text -> Update NoC (Either Error UserId, Maybe UserId)
 getUserByLoginU oid = getUpdate oid . O.getUserByLogin
+
+
 
 createUserU :: Maybe UserId -> Login -> Password -> Update NoC (Either Error UserId, Maybe UserId)
 createUserU oid l = getUpdate oid . O.createUser l

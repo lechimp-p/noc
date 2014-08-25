@@ -17,11 +17,13 @@ module Model
     , Icon (Icon, icnPath)
     , Message
     , Image (Image, imgPath)
+    , Notification (..)
     )
 where
 
 import Model.Operations
 import Model.NoC
 import Model.Message
+import Model.User
 import Model.BaseTypes
 import Model.Channel

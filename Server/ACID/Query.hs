@@ -97,6 +97,9 @@ getUserSubscriptionsQ oid = getQuery oid . O.getUserSubscriptions
 getUserContactsQ :: Maybe UserId -> UserId -> Query NoC (Either Error (Set UserId), Maybe UserId)
 getUserContactsQ oid = getQuery oid . O.getUserContacts
 
+getUserNotificationsQ :: Maybe UserId -> UserId -> Offset -> Amount -> Query NoC (Either Error [Notification], Maybe UserId)
+getUserNotificationsQ oid uid offs = getQuery oid . O.getUserNotifications uid offs
+
 getUserByLoginQ :: Maybe UserId -> Text -> Query NoC (Either Error UserId, Maybe UserId)
 getUserByLoginQ oid = getQuery oid . O.getUserByLogin
 

@@ -20,6 +20,7 @@ module ACID.QueryMonad
     , getUserOwnedChannelsQ
     , getUserSubscriptionsQ
     , getUserContactsQ
+    , getUserNotificationsQ
     , getUserByLoginQ
     , messagesQ
     , QueryMonadT
@@ -66,6 +67,7 @@ class MonadQueryError m => MonadQuery m where
     getUserOwnedChannelsQ   :: UserId -> m (S.Set ChanId)
     getUserSubscriptionsQ   :: UserId -> m (S.Set ChanId)
     getUserContactsQ        :: UserId -> m (S.Set UserId)
+    getUserNotificationsQ   :: UserId -> Offset -> Amount -> m [Notification]
     getUserByLoginQ         :: Text -> m UserId
     messagesQ               :: ChanId -> Offset -> Amount -> m [Message] 
 
@@ -147,6 +149,7 @@ instance MonadQueryError m => MonadQuery (QueryMonadT NoC m) where
     getUserIconQ u = DoQuery $ \ o -> GetUserIconQ o u
     getUserOwnedChannelsQ u = DoQuery $ \ o -> GetUserOwnedChannelsQ o u
     getUserSubscriptionsQ u = DoQuery $ \ o -> GetUserSubscriptionsQ o u
+    getUserNotificationsQ u o a = DoQuery $ \ o' -> GetUserNotificationsQ o' u o a
     getUserContactsQ u = DoQuery $ \ o -> GetUserContactsQ o u 
     getUserByLoginQ u = DoQuery $ \ o -> GetUserByLoginQ o u
     messagesQ c o a = DoQuery $ \ u -> MessagesQ u c o a

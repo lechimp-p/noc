@@ -13,6 +13,7 @@ import Data.Text hiding (concat, filter)
 import Data.IxSet (Indexable, empty, ixSet, ixFun) 
 import Data.SafeCopy (SafeCopy, base, deriveSafeCopy)
 import Control.Lens (makeLenses)
+import Data.Time.Clock
 
 import Model.BaseTypes
 
@@ -37,7 +38,7 @@ instance Ord User where
     compare u u' = compare (_id u) (_id u')
 
 data Notification
-    = AddedToChannel UserId ChanId
+    = AddedToChannel UTCTime UserId ChanId
     deriving (Data, Typeable)
 
 $(deriveSafeCopy 0 'base ''Notification)

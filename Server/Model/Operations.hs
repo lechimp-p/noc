@@ -31,6 +31,9 @@ module Model.Operations
     , getUserContacts
     , addUserContact
     , rmUserContact
+    , getUserNotifications
+    , addUserNotification
+    , tryToAddUserNotification
     , setUserLogin
     , setUserPassword
     , setUserName
@@ -186,8 +189,18 @@ getUserSubscriptions uid = checkAccess uid forUserSelfOrAdmins
     $ getFromUser U.subscriptions uid
 getUserContacts uid = checkAccess uid forUserSelfOrAdmins
     $ getFromUser U.contacts uid
-getUserNotifications uid = checkAccess uid forUserSelfOrAdmins
-    $ getFromUser U.notifications uid
+getUserNotifications uid offs amo = checkAccess uid forUserSelfOrAdmins
+    $ do
+        res <- getFromUser U.notifications uid
+        return . take amo . drop offs $ res
+
+addUserNotification uid notf = checkAccess uid forUserContactsSelfOrAdmins $ do
+    user <- getUser uid
+    storeUser (over U.notifications (notf :) user)
+
+tryToAddUserNotification uid notf = tryAccess uid forUserContactsSelfOrAdmins $ do
+    user <- getUser uid
+    storeUser (over U.notifications (notf :) user)
 
 addUserContact uid other = overInUser U.contacts uid (S.insert other)  
 rmUserContact uid other = overInUser U.contacts uid (S.delete other)  

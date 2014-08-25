@@ -74,6 +74,7 @@ instance Monad m => MonadQuery (JSONQueryMonadT NoC url session m) where
     getUserIconQ = JSONQueryMonadT . lift . getUserIconQ
     getUserOwnedChannelsQ = JSONQueryMonadT . lift . getUserOwnedChannelsQ 
     getUserSubscriptionsQ = JSONQueryMonadT . lift . getUserSubscriptionsQ
+    getUserNotificationsQ u o = JSONQueryMonadT . lift . getUserNotificationsQ u o
     getUserContactsQ = JSONQueryMonadT . lift . getUserContactsQ
     getUserByLoginQ = JSONQueryMonadT . lift . getUserByLoginQ
     messagesQ c o = JSONQueryMonadT . lift . messagesQ c o
