@@ -119,10 +119,15 @@ postHandler acid cid = handleError $
 setUsersHandler acid cid = handleError $
     updateWithJSONInput acid $ do
         trySessionLoginU
-        "addOwners"         ?> sequence . fmap (addChanOwnerU cid)
-        "removeOwners"      ?> sequence . fmap (rmChanOwnerU cid)
-        "addProducers"      ?> sequence . fmap (addChanProducerU cid)
-        "removeProducers"   ?> sequence . fmap (rmChanProducerU cid)
-        "addConsumers"      ?> sequence . fmap (addChanConsumerU cid)
-        "removeConsumers"   ?> sequence . fmap (rmChanConsumerU cid) 
+        ts <- liftIO $ getCurrentTime
+        oid <- getOperatorIdU
+        let wN = withNotification ts oid
+        "addOwners"         ?> sequence . fmap (wN $ addChanOwnerU cid)
+        "removeOwners"      ?> sequence . fmap (wN $ rmChanOwnerU cid)
+        "addProducers"      ?> sequence . fmap (wN $ addChanProducerU cid)
+        "removeProducers"   ?> sequence . fmap (wN $ rmChanProducerU cid)
+        "addConsumers"      ?> sequence . fmap (wN $ addChanConsumerU cid)
+        "removeConsumers"   ?> sequence . fmap (wN $ rmChanConsumerU cid) 
         noContent'
+    where
+    withNotification ts oid f uid = f uid >> tryToAddUserNotificationU uid (AddedToChannel ts oid cid)
