@@ -72,12 +72,11 @@ authTimestamp = authGet _timestamp
 logUserIn :: ( Monad m, MonadIO m, Functor m ) 
           => ACID -> APIMonadT url AuthData m Response
 logUserIn acid = handleError $ 
-    queryWithJSONInput acid $ do
+    queryWithJSONResponse acid $ do
         l <- prop "login"
         pw <- prop "password"
-        doLoginQ l pw
+        "id" <$ doLoginQ l pw
         refreshCookie (Just l) (Just pw)
-        noContent' 
 
 logUserOut :: ( Monad m, MonadIO m, Functor m
               , MonadClientSession AuthData m
@@ -97,21 +96,21 @@ refreshCookie l pw = do
 trySessionLoginQ :: ( Monad m, MonadIO m, Functor m
                     , MonadClientSession AuthData m
                     , MonadQuery m)
-                 => m ()
+                 => m () 
 trySessionLoginQ = do
     l' <- authLogin
     pw' <- authPassword
     case (l', pw') of
-        (Just l, Just pw) -> doLoginQ l pw
+        (Just l, Just pw) -> doLoginQ l pw >> return ()
         _ -> return ()
 
 trySessionLoginU :: ( Monad m, MonadIO m, Functor m
                     , MonadClientSession AuthData m
                     , MonadUpdate m)
-                 => m ()
+                 => m () 
 trySessionLoginU = do
     l' <- authLogin
     pw' <- authPassword
     case (l', pw') of
-        (Just l, Just pw) -> doLoginU l pw
+        (Just l, Just pw) -> doLoginU l pw >> return ()
         _ -> return ()

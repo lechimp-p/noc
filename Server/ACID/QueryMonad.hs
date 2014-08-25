@@ -53,7 +53,7 @@ class Monad m => MonadQueryError m where
     throwQueryError :: Error -> m a
 
 class MonadQueryError m => MonadQuery m where
-    doLoginQ                :: Login -> Password -> m ()
+    doLoginQ                :: Login -> Password -> m UserId 
     getOperatorIdQ          :: m UserId
     getChanNameQ            :: ChanId -> m Name
     getChanDescQ            :: ChanId -> m Desc

@@ -87,7 +87,7 @@ instance OpMonad Operation where
     doLogin = doLogin'
     doLogout = doLogout'
 
-doLogin' :: Login -> Password -> Operation ()
+doLogin' :: Login -> Password -> Operation UserId 
 doLogin' l pw = do
     oid <- getOperatorId'
     AlreadyLoggedIn `throwOn` isJust oid
@@ -99,7 +99,7 @@ doLogin' l pw = do
                     else fail "password mismatch" 
         in case maybeUserId of
                 Nothing  -> Left $ CantLogin l
-                Just uid -> Right $ (s & operator .~ Just uid, ())  
+                Just uid -> Right $ (s & operator .~ Just uid, uid) 
 
 doLogout' :: Operation ()
 doLogout' = Operation $ \ s -> Right (set operator Nothing s, ())

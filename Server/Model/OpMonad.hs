@@ -28,7 +28,7 @@ class (Functor m, Applicative m, Monad m) => OpMonad m where
     addAdmin :: UserId -> m ()
     rmAdmin :: UserId -> m ()
     getOperatorId :: m (Maybe UserId)
-    doLogin :: Login -> Password -> m ()
+    doLogin :: Login -> Password -> m UserId
     doLogout :: m ()
 
 

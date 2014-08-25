@@ -78,7 +78,7 @@ class Monad m => MonadUpdateError m where
     throwUpdateError :: Error -> m a
 
 class MonadUpdateError m => MonadUpdate m where
-    doLoginU            :: Login -> Password -> m ()
+    doLoginU            :: Login -> Password -> m UserId 
     getOperatorIdU      :: m UserId 
     addAdminU           :: UserId -> m () 
     rmAdminU            :: UserId -> m () 

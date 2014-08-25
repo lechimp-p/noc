@@ -55,7 +55,7 @@ onSimple op = OpQuery $ do
             lift . put . _operator $ context
             return v
 
-doLoginQ :: Login -> Password -> Query NoC (Either Error (), Maybe UserId)
+doLoginQ :: Login -> Password -> Query NoC (Either Error UserId, Maybe UserId)
 doLoginQ l = getQuery Nothing . doLogin l
 
 getOperatorIdQ :: Maybe UserId -> Query NoC (Either Error UserId, Maybe UserId) 

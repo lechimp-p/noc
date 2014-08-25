@@ -111,6 +111,7 @@ executable NoC-Server-dev
                         , directory ==1.2.*
                         , base64-bytestring ==1.0.*
                         , json-transformer ==0.1.*
+                        , scientific ==0.3.*
 
 Test-Suite test-NoC-Server
     type:               detailed-0.9

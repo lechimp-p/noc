@@ -56,7 +56,7 @@ onSimple op = OpUpdate $ do
             lift . lift . put . _noc $ context
             return v
 
-doLoginU :: Login -> Password -> Update NoC (Either Error (), Maybe UserId)
+doLoginU :: Login -> Password -> Update NoC (Either Error UserId, Maybe UserId)
 doLoginU l = getUpdate Nothing . doLogin l
 
 getOperatorIdU :: Maybe UserId -> Update NoC (Either Error UserId, Maybe UserId) 
