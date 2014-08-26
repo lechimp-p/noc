@@ -10,7 +10,7 @@ import Happstack.Server
         ( Response, FilterMonad, ok
         , toResponse, ServerMonad
         , setFilter, getFilter, composeFilter
-        , askRq, localRq
+        , askRq, localRq, badRequest
         )
 import Happstack.Server.ClientSession
         ( MonadClientSession, getSession
@@ -53,7 +53,7 @@ handleError op = runEitherT op >>= \ res ->
             
 respondError :: (Monad m, MonadIO m, FilterMonad Response m)
              => Error -> m Response
-respondError = ok . toResponse . T.pack . show 
+respondError = badRequest . toResponse . T.pack . show 
 
 instance Monad m => MonadJSONError (EitherT Error m) where
     throwJSONError = left . JSONError'
