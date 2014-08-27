@@ -27,7 +27,7 @@ Scenario Outline: Permissions on setting of properties of user
     Given User <user> exists
     And User <other> exists
     When I am <user>
-    Then I <can> set <property> of <other>
+    Then I <can> set <property> of user "<other>"
 
 Examples: User Property Permission
     | user      | other     | can     | property    |

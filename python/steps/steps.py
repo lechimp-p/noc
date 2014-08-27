@@ -57,19 +57,33 @@ def step_impl(context, can, what, name):
     else:
         raise ValueError("Don't know how i could possibly create a %s" % what)
 
-@then("I {can} set {property} of {user}")
-def step_imp(context, can, property, user):
+@then("I {can} set {property} of {what} \"{user}\"")
+def step_imp(context, can, property, what, name):
     mod = can_to_modifier(can)
-    if property == "icon":
-        value = "icon.png"
-    elif property in ["password", "login"]:
-        value = user
-    else:
-        value = random_string()
 
-    try:
-        context.users[user].set(context.actor, **{ property : value })
-        raised = False
-    except context.NoC.NoCError:
-        raised = True
-    return mod(raised) 
+    if what == "channel":
+        value = random_string()
+        try:
+            context.channels[name].set(context.actor, **{ property : value })
+            raised = False
+        except context.NoC.NoCError:
+            raised = True
+        return mod(raised) 
+    
+    elif what == "user": 
+        if property == "icon":
+            value = "icon.png"
+        elif property in ["password", "login"]:
+            value = name 
+        else:
+            value = random_string()
+
+        try:
+            context.users[name].set(context.actor, **{ property : value })
+            raised = False
+        except context.NoC.NoCError:
+            raised = True
+        return mod(raised) 
+
+    else:
+        raise ValueError("Don't know how i could possibly set something for a %s" % what)
