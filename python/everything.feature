@@ -34,20 +34,20 @@ Examples: User Property Permission
     | admin     | user_1    | can     | login       |
     | admin     | user_1    | can     | password    |
     | admin     | user_1    | can     | name        |
-    | admin     | user_1    | can     | desc        |
+    | admin     | user_1    | can     | description |
     | admin     | user_1    | can     | icon        |
     | user_2    | admin     | can not | login       |
     | user_2    | admin     | can not | password    |
     | user_2    | admin     | can not | name        |
-    | user_2    | admin     | can not | desc        |
+    | user_2    | admin     | can not | description |
     | user_2    | admin     | can not | icon        |
     | user_2    | user_3    | can not | login       |
     | user_2    | user_3    | can not | password    |
     | user_2    | user_3    | can not | name        |
-    | user_2    | user_3    | can not | desc        |
+    | user_2    | user_3    | can not | description |
     | user_2    | user_3    | can not | icon        |
-    | user_2    | user_2    | can not | login       |
-    | user_2    | user_2    | can not | password    |
-    | user_2    | user_2    | can not | name        |
-    | user_2    | user_2    | can not | desc        |
-    | user_2    | user_2    | can not | icon        |
+    | user_2    | user_2    | can     | login       |
+    | user_2    | user_2    | can     | password    |
+    | user_2    | user_2    | can     | name        |
+    | user_2    | user_2    | can     | description |
+    | user_2    | user_2    | can     | icon        |

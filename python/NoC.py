@@ -79,6 +79,7 @@ class user(object):
     def get_postR(self, method, path, data):
         r = method( path, headers = json_headers, data = json.dumps(data), cookies = self.cookies) 
         cookies = r.cookies.get_dict()
+        #print str(r.status_code) + ": " + r.text
         if len(cookies) > 0:
             self.cookies = cookies
         if not 200 <= r.status_code < 300: 
