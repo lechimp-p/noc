@@ -57,6 +57,23 @@ def step_impl(context, can, what, name):
     else:
         raise ValueError("Don't know how i could possibly create a %s" % what)
 
+
+@when("I create a channel \"{name}\"")
+def step_impl(context, name):
+    create_channel(context.actor, name)
+
+@when("{user} creates a channel \"{name}\"")
+def step_impl(context, user, name):
+    create_channel(context.users[user], name)
+
+def create_channel(who, name):
+    try:
+        context.channels[name] = context.NoC.channel.create(who, name, "Description of %s" % name)
+        raised = False
+    except context.NoC.NoCError:
+        raised = True
+
+
 @then("I {can} set {property} of {what} \"{name}\"")
 def step_imp(context, can, property, what, name):
     mod = can_to_modifier(can)
