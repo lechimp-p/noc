@@ -1,7 +1,21 @@
+import random
+import string
 from behave import *
+
+def can_to_modifier(can):
+    if can == "can":
+        return id
+    elif can == "can not":
+        return (lambda x : not x)
+    else:
+        raise ValueError("Either you can or you can not, but i don't know how you '%s'" % can)
+
+def random_string(length = 10):
+    return ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(0, length))
 
 @given("User {user} exists")
 def step_impl(context, user):
+    print context.users.keys()
     if not user in context.users:
         try:
             context.users[user] = context.NoC.user(user, user)
@@ -21,13 +35,8 @@ def step_impl(context, what):
 
 @then("I {can} create a {what} \"{name}\"")
 def step_impl(context, can, what, name):
-    if can == "can":
-        mod = id
-    elif can == "can not":
-        mod = lambda x : not x
-    else:
-        raise ValueError("Either you can or you can not, but i don't know how you '%s'" % can)
-        
+    mod = can_to_modifier(can)
+       
     if what == "channel":
         try:
             context.channels[name] = context.NoC.channel.create(context.actor, name, "Description of %s" % name)
@@ -47,3 +56,20 @@ def step_impl(context, can, what, name):
 
     else:
         raise ValueError("Don't know how i could possibly create a %s" % what)
+
+@then("I {can} set {property} of {user}")
+def step_imp(context, can, property, user):
+    mod = can_to_modifier(can)
+    if property == "icon":
+        value = "icon.png"
+    elif property in ["password", "login"]:
+        value = user
+    else:
+        value = random_string()
+
+    try:
+        context.users[user].set(context.actor, **{ property : value })
+        raised = False
+    except context.NoC.NoCError:
+        raised = True
+    return mod(raised) 
