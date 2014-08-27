@@ -57,7 +57,7 @@ def step_impl(context, can, what, name):
     else:
         raise ValueError("Don't know how i could possibly create a %s" % what)
 
-@then("I {can} set {property} of {what} \"{user}\"")
+@then("I {can} set {property} of {what} \"{name}\"")
 def step_imp(context, can, property, what, name):
     mod = can_to_modifier(can)
 
