@@ -45,8 +45,9 @@ class user(object):
     # Methods
 
     def set(self, op, **dct):
-        if "image" in dct:
-            dct["image"] = image_json(dct["image"])
+        if "icon" in dct:
+            dct["icon"] = image_json(dct["icon"])
+            print dct
 
         return op.postR(self.user_path % self.id, dct)
 
