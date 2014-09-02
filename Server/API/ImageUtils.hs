@@ -8,10 +8,7 @@ module API.ImageUtils
     , removeIcon
     , storeImage
     , removeImage
-    , basepath
-    , salt
     , defaultConfig
-    , Config
     )
 where
 
@@ -30,6 +27,7 @@ import System.Directory
 
 import Model
 import Model.BaseTypes
+import API.Config (ImageConfig(..))
 
 data ImgType 
     = PNG
@@ -54,32 +52,25 @@ data ImageError
 class MonadImageError m where
     throwImageError :: ImageError -> m a 
 
-data Config = Config
-    { basepath :: FilePath 
-    , userdir  :: FilePath
-    , msgdir   :: FilePath
-    , salt     :: Int
-    } 
-
-defaultConfig = Config "./files" "user" "channel" 0
+defaultConfig = ImageConfig "./files" "user" "channel" 0
 
 storeIcon cnfg uid typ dat = do
-    let sub = userdir cnfg </> (show . uiToInt $ uid)
+    let sub = _userDir cnfg </> (show . uiToInt $ uid)
     path <- storeGeneric cnfg sub typ dat 
     return . Icon . T.pack $ path
 removeIcon cnfg = removeGeneric cnfg . T.unpack . icnPath
 
 storeImage cnfg typ dat = do
-    path <- storeGeneric cnfg (msgdir cnfg) typ dat 
+    path <- storeGeneric cnfg (_channelDir cnfg) typ dat 
     return . Image . T.pack $ path
 removeImage cnfg = removeGeneric cnfg . T.unpack . imgPath 
 
 storeGeneric :: (MonadIO m, MonadImageError m) 
-          => Config -> FilePath -> ImgType -> Text -> m String 
+          => ImageConfig -> FilePath -> ImgType -> Text -> m String 
 storeGeneric cnfg path typ dat = do
     base <- liftIO $ getCurrentDirectory
-    let hash = hashWithSalt (salt cnfg) dat
-        path' = basepath cnfg </> path 
+    let hash = hashWithSalt (_salt cnfg) dat
+        path' = _basePath cnfg </> path 
         filename = show hash <.> getExtension typ 
     imgDat <- decodeBase64 dat
     liftIO $ createDirectoryIfMissing True (base </> path')
@@ -88,8 +79,8 @@ storeGeneric cnfg path typ dat = do
     return (path </> filename) 
 
 removeGeneric :: (MonadIO m, MonadImageError m) 
-           => Config -> String -> m ()
-removeGeneric cnfg path = liftIO . removeFile $ (basepath cnfg) </> path 
+           => ImageConfig -> String -> m ()
+removeGeneric cnfg path = liftIO . removeFile $ (_basePath cnfg) </> path 
 
 decodeBase64 :: (MonadIO m, MonadImageError m) 
              => Text -> m ByteString

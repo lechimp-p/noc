@@ -30,6 +30,7 @@ import Model
 import Model.Message
 import ACID
 import API.APIMonad
+import API.Config
 import API.Utils
 import API.Errors
 import API.Auth hiding (timestamp)
@@ -112,7 +113,8 @@ postHandler acid cid = handleError $
         img <- "image" .?> do
             typ <- prop "type"
             dat <- prop "data"
-            storeImage defaultConfig typ dat 
+            cfg <- config imageConfig 
+            storeImage cfg typ dat 
         postU cid ts t img
         noContent'   
 

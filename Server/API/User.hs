@@ -28,6 +28,7 @@ import Control.Monad.Trans.JSON
 import Model
 import ACID
 import API.APIMonad
+import API.Config
 import API.Utils
 import API.Errors
 import API.ImageUtils
@@ -95,10 +96,11 @@ setHandler acid uid = handleError $
             typ <- prop "type"
             dat <- prop "data"
             old <- getUserIconU uid
-            icon <- storeIcon defaultConfig uid typ dat
+            cfg <- config imageConfig
+            icon <- storeIcon cfg uid typ dat
             catchError (setUserIconU uid (Just icon))
                        (\ _ -> do
-                            removeIcon defaultConfig icon
+                            removeIcon cfg icon
                             setUserIconU uid old
                        )           
         refreshCookie l $ p

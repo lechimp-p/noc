@@ -12,6 +12,7 @@ import Happstack.Server.ClientSession
         ( getDefaultKey, mkSessionConf
         , withClientSessionT, SessionConf
         )
+import Happstack.Server.Internal.Cookie (CookieLife (..))
 import Happstack.Server.Monads
 import Control.Exception (bracket)
 import Control.Monad.Trans.Reader (runReaderT)
@@ -29,7 +30,33 @@ import ACID.Query
 import ACID.Update
 
 initialNoC = mkNoC (mkLogin "admin") (mkPassword "admin") 
-config = Config "Hello World!"
+config' = Config 
+    ( "Hello World!" )
+    ( SessionConfig 
+        "NoCSession"    
+        Session         -- | MaxAge seconds | Expires UTCTime | Expired
+        ""  
+        "/"
+        "client_session_key.aes"
+        False
+    )
+    ( SiteConfig
+        "http://localhost:8000"
+        ""
+    )
+    ( "./state" )
+    ( ImageConfig
+        "./files"
+        "user"
+        "channel"
+        0
+    )
+    ( BodyPolicy
+        "/tmp/NoC-Server-dev"
+        100000
+        100000
+        100000
+    )    
 
 main :: IO ()
 main = do
@@ -42,7 +69,7 @@ main = do
                 $ site' sessionConf "http://localhost:8000" "" acid
 
 site :: Text -> Text -> ACID -> InnerAPIMonadT AuthData IO Response 
-site location handlerPath acid = implSite location handlerPath (api config acid)
+site location handlerPath acid = implSite location handlerPath (api config' acid)
 
 site' :: SessionConf -> Text -> Text -> ACID -> ServerPartT IO Response
 site' sessionConf location handlerPath acid = withClientSessionT sessionConf $ site location handlerPath acid

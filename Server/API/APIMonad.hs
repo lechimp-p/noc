@@ -29,7 +29,6 @@ import Control.Monad.Trans.Class
 import Control.Monad.Trans.Either
 import Control.Monad.Trans.Reader
 import Control.Lens (view)
-import Control.Lens.Getter (Getting)
 
 import API.Config
 
@@ -37,8 +36,8 @@ type InnerAPIMonadT session m = (ClientSessionT session (ServerPartT m))
 newtype APIMonadT url session m a = APIMonadT { unAPIMonadT :: ReaderT Config (RouteT url (InnerAPIMonadT session m)) a }
                                     deriving (Monad, MonadPlus, MonadIO, Applicative, Functor)
 
-config :: Monad m => Getting a Config a -> APIMonadT url session m a 
-config = APIMonadT . asks . view 
+instance Monad m => WithConfig (APIMonadT url session m) where
+    config = APIMonadT . asks . view 
 
 instance (Monad m)
       => FilterMonad Response (APIMonadT url session m) 

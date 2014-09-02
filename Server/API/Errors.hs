@@ -28,6 +28,7 @@ import qualified Model.Errors as ME
 import Model
 import API.ImageUtils 
 import API.APIMonad
+import API.Config
 import ACID
 
 data Error
@@ -66,6 +67,9 @@ instance Monad m => MonadUpdateError (EitherT Error m) where
 
 instance Monad m => MonadImageError (EitherT Error m) where
     throwImageError = left . ImageError'
+
+instance WithConfig m => WithConfig (EitherT Error m) where
+    config = lift . config
 
 instance FilterMonad Response m 
       => FilterMonad Response (EitherT Error m) 

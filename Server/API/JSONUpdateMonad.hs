@@ -28,6 +28,7 @@ import Control.Monad.Trans.Class
 import Control.Monad.Trans.Either
 import Control.Monad.Trans.JSON
 
+import API.Config 
 import API.APIMonad
 import API.Errors
 import API.ImageUtils
@@ -57,6 +58,9 @@ instance Monad m => MonadUpdateError (JSONUpdateMonadT acid url session m) where
 
 instance Monad m => MonadImageError (JSONUpdateMonadT acid url session m) where
     throwImageError = JSONUpdateMonadT . lift . lift . throwImageError 
+
+instance Monad m => WithConfig (JSONUpdateMonadT acid url session m) where
+    config = JSONUpdateMonadT . lift . lift . config
 
 instance Monad m => MonadJSON (JSONUpdateMonadT acid url session m) where
     maybeValue = JSONUpdateMonadT . maybeValue

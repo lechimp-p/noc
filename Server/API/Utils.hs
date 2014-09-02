@@ -34,6 +34,7 @@ import Control.Monad.Reader
 import Model
 import Model.BaseTypes
 import Model.Channel
+import API.Config
 import API.Errors
 import API.APIMonad
 import API.JSONQueryMonad
@@ -122,16 +123,13 @@ instance ToMessage Value where
     toContentType _ = B.pack "application/json"
     toMessage       = encode
 
-bodyPolicy = defaultBodyPolicy "/tmp/NoC-Server-dev"
-                               100000 -- file upload
-                               100000 -- no files
-                               100000 -- overhead for multipart/form-data headers
-
 getBody :: ( ServerMonad m, MonadPlus m, MonadIO m
-           , FilterMonad Response m, WebMonad Response m) 
+           , FilterMonad Response m, WebMonad Response m
+           , WithConfig m) 
         => m L.ByteString
 getBody = do
-    decodeBody bodyPolicy
+    bplc <- config bodyPolicy
+    decodeBody $ defaultBodyPolicy (_uploadPath bplc) (_maxBytesFile bplc) (_maxBytesBody bplc) (_maxBytesHeader bplc)
     body <- askRq >>= liftIO . takeRequestBody
     case body of
         Just rqbody -> return . unBody $ rqbody
@@ -234,7 +232,7 @@ instance (Monad m, MonadIO m)
         return (a', res)
 
 instance ( Monad m, MonadIO m, Functor m
-         , ClientSession session )
+         , ClientSession session)
       => MonadClientSession session (JSONUpdateMonadT acid url session m)
     where 
     getSession = JSONUpdateMonadT . lift . lift . lift $ getSession
@@ -281,6 +279,10 @@ updateWithJSON acid json = do
         . runJSONUpdateMonadT 
         $ json 
 
+updateWithJSONInput :: (Monad m, MonadIO m)
+                    => AcidState acid
+                    -> JSONUpdateMonadT acid url session m a
+                    -> EitherT Error (APIMonadT url session m) a
 updateWithJSONInput acid json = updateWithJSON acid json >>= return . fst 
 updateWithJSONResponse acid json = do
     (_, res) <- updateWithJSON acid json
