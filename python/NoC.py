@@ -68,6 +68,9 @@ class user(object):
     def getChannels(self, op):
         return op.getR(self.contacts_path % self.id)
 
+    def getNotifications(self, op):
+        return op.getR(self.notifications_path % self.id)
+
     # Request handling
 
     def getR(self, path, data = {}):

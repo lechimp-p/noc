@@ -9,6 +9,7 @@ module API.User
 where
 
 import Prelude hiding ( id, (.) )
+import Data.Text
 import Control.Category ( Category(id, (.)) )
 import Web.Routes
 import Web.Routes.Happstack
@@ -63,7 +64,7 @@ route acid uid url = case url of
     Subscriptions   ->      (method [GET, HEAD] >> getSubscriptionsHandler acid uid)
                     `mplus` (method [POST]      >> setSubscriptionsHandler acid uid)
     Channels        ->      (method [GET, HEAD] >> getChannelsHandler acid uid)
-    Notifications   -> ok' "notifications"
+    Notifications   ->      (method [GET, HEAD] >> getNotificationsHandler acid uid)
 
 genericHandler acid = (method [GET, HEAD] >> searchHandler acid)
               `mplus` (method POST >> createHandler acid)
@@ -147,3 +148,16 @@ showChannels cids = do
         "description"   <$ getChanDescQ cid
         "type"          <$ getChanTypeQ cid
 
+getNotificationsHandler acid uid = handleError $
+    queryWithJSONResponse acid $ do
+        trySessionLoginQ
+        o <- prop "offset"
+        a <- prop "amount"
+        ns <- getUserNotificationsQ uid o a
+        "notifications" <$: flip fmap ns .$ \ n ->
+            case n of
+                AddedToChannel ts uid cid -> do
+                    "type" <: ("added-to-channel" :: Text)
+                    "timestamp" <: ts
+                    "user"      <$. userInfoQ uid
+                    "channel"   <$. channelInfoQ cid  

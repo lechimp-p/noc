@@ -309,3 +309,14 @@ updateWithJSONResponse acid json = do
         Left err -> return $ Left err
         Right (_, v) -> jsonR' v >>= return . Right
 --}
+
+userInfoQ uid = do
+    "id"        <: uid
+    "login"     <$ getUserLoginQ uid
+    "icon"      <$ getUserIconQ uid
+
+channelInfoQ cid = do
+    "id"            <: cid
+    "name"          <$ getChanNameQ cid
+    "description"   <$ getChanDescQ cid      
+    "type"          <$ getChanTypeQ cid

@@ -99,11 +99,8 @@ getMessagesHandler acid cid = handleError $
             "image"     <: view image msg
             "text"      <: view text msg
             "timestamp" <: view timestamp msg 
-            "author"    <$. do
-                let uid = view author msg  
-                "id"        <: uid
-                "login"     <$ getUserLoginQ uid
-                "icon"      <$ getUserIconQ uid
+            let uid = view author msg  
+            "author"    <$. userInfoQ uid
 
 postHandler acid cid = handleError $
     updateWithJSONInput acid $ do

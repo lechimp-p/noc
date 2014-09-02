@@ -25,3 +25,7 @@
 * preprocess uploaded icons/images
 
 * think about how config of the server should be read 
+
+* implement search
+* implement statistics functions for admins
+* implement output of channel type
