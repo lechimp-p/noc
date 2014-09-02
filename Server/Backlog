@@ -7,13 +7,16 @@
 * UI: global channel search
 * UI: global user search
 * UI: How are channels separated where i'm only consumer and where i'm producer as well. 
+
 * make permission handling more flexible
+
 * try to remove tiresome name duplications in ACID
 * enforce update/query model already at model level
 * make implementation of storage engine switchable
+* think about how the model is represented
+
 * add more tests on models functionality
 * make json error output nicer
 * adjust size of http input to fit images (better: make it depend on usecase)
 * preprocess uploaded icons/images
 * think about how config of the server should be made
-* think about how the model is represented

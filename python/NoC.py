@@ -47,7 +47,6 @@ class user(object):
     def set(self, op, **dct):
         if "icon" in dct:
             dct["icon"] = image_json(dct["icon"])
-            print dct
 
         return op.postR(self.user_path % self.id, dct)
 
@@ -85,7 +84,10 @@ class user(object):
             self.cookies = cookies
         if not 200 <= r.status_code < 300: 
             raise NoCError(r.text)
-        return r.json()
+        if len(r.text) > 0:
+            return r.json()
+        else:
+            return None
  
 
 class channel(object):

@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
@@ -12,8 +13,9 @@ import Control.Category ( Category(id, (.)) )
 import Data.Text (pack)
 import Web.Routes
         ( Site, setDefault, PathInfo, Generic
-        , mkSitePI, runRouteT )
+        , mkSitePI, runRouteT, RouteT )
 import Web.Routes.Happstack
+import Web.Routes.Boomerang
 import Happstack.Server 
         ( ServerPartT, Response, ok
         , toResponse, Method (..), method
@@ -22,12 +24,13 @@ import Happstack.Server
 import Data.Aeson
 import Data.Aeson.Types
 import Control.Monad.IO.Class
+import Control.Monad.Trans.Reader (runReaderT)
 import Text.Boomerang.TH (makeBoomerangs)
-import Web.Routes.Boomerang
 
 import qualified Model.BaseTypes as BT
 import API.APIMonad
 import API.Auth
+import API.Config
 import API.Utils
 import qualified API.User as User
 import qualified API.Channel as Channel
@@ -74,13 +77,16 @@ route acid url = case url of
     Default             -> helloWorld
 
 api :: (Functor m, Monad m, MonadIO m)
-    => ACID -> Site API (InnerAPIMonadT AuthData m Response)
-api acid = setDefault Default $ boomerangSite (runRouteT $ unAPIMonadT . route acid) apiroutes
+    => Config -> ACID -> Site API (InnerAPIMonadT AuthData m Response)
+api cfg acid = 
+    let handler :: (MonadIO m, Functor m) => API -> RouteT API (InnerAPIMonadT AuthData m) Response
+        handler = flip runReaderT cfg . unAPIMonadT . route acid
+    in setDefault Default $ boomerangSite (runRouteT handler) apiroutes
 --api acid = setDefault Default $ mkSitePI (runRouteT $ unAPIMonadT . route acid)
 
 helloWorld :: (Functor m, Monad m, MonadIO m)
            => APIMonadT API AuthData m Response
-helloWorld = ok . toResponse . pack $ "This is the NoC-Server.\n"
+helloWorld = ok . toResponse =<< config helloWorldMessage
 
 instance PathInfo User.API
 instance PathInfo Channel.API

@@ -27,10 +27,18 @@ import Control.Monad
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Class
 import Control.Monad.Trans.Either
+import Control.Monad.Trans.Reader
+import Control.Lens (view)
+import Control.Lens.Getter (Getting)
+
+import API.Config
 
 type InnerAPIMonadT session m = (ClientSessionT session (ServerPartT m))
-newtype APIMonadT url session m a = APIMonadT { unAPIMonadT :: RouteT url (InnerAPIMonadT session m) a }
+newtype APIMonadT url session m a = APIMonadT { unAPIMonadT :: ReaderT Config (RouteT url (InnerAPIMonadT session m)) a }
                                     deriving (Monad, MonadPlus, MonadIO, Applicative, Functor)
+
+config :: Monad m => Getting a Config a -> APIMonadT url session m a 
+config = APIMonadT . asks . view 
 
 instance (Monad m)
       => FilterMonad Response (APIMonadT url session m) 
@@ -48,9 +56,9 @@ instance ( Functor m
          ) 
       => MonadClientSession session (APIMonadT url session m) 
     where
-    getSession = APIMonadT . liftRouteT $ getSession
-    putSession = APIMonadT . liftRouteT . putSession
-    expireSession = APIMonadT . liftRouteT $ expireSession
+    getSession = APIMonadT . lift . liftRouteT $ getSession
+    putSession = APIMonadT . lift . liftRouteT . putSession
+    expireSession = APIMonadT . lift . liftRouteT $ expireSession
 
 instance Monad m => ServerMonad (APIMonadT url session m) where
     askRq = APIMonadT askRq
@@ -60,8 +68,10 @@ instance Monad m => WebMonad Response (APIMonadT url session m) where
     finishWith = APIMonadT . finishWith
 
 
-nestURL :: (url1 -> url2) -> APIMonadT url1 session a m -> APIMonadT url2 session a m
-nestURL f = APIMonadT . WR.nestURL f . unAPIMonadT
+nestURL :: Monad m => (url1 -> url2) -> APIMonadT url1 session m a -> APIMonadT url2 session m a
+nestURL f m2 = do
+    cfg <- config id
+    APIMonadT . lift . WR.nestURL f . flip runReaderT cfg . unAPIMonadT $ m2
 
 {--
 mapAPIMonadT :: (m a -> n a) -> APIMonadT url session m a -> APIMonadT url session n a
