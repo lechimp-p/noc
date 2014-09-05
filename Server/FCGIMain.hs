@@ -62,13 +62,14 @@ config' = Config
 simpleCGI threads = runFastCGIConcurrent threads . serverPartToCGI
 
 main :: IO ()
-main = simpleCGI 10 $ do
+main = do
     key <- getDefaultKey
     let sessionConf = mkSessionConf key
     bracket (openLocalState initialNoC)
             createCheckpointAndClose 
         $ \acid ->
-            simpleHTTP nullConf 
+            --simpleHTTP nullConf 
+            simpleCGI 10
                 $ site' sessionConf "http://localhost:8000" "" acid
 
 site :: Text -> Text -> ACID -> InnerAPIMonadT AuthData IO Response 

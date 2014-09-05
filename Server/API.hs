@@ -21,11 +21,16 @@ import Happstack.Server
         , toResponse, Method (..), method
         , FilterMonad
         )
+import Happstack.Server.ClientSession
+        ( getKey, mkSessionConf
+        , withClientSessionT, SessionConf
+        )
 import Data.Aeson
 import Data.Aeson.Types
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Reader (runReaderT)
 import Text.Boomerang.TH (makeBoomerangs)
+import Control.Lens
 
 import qualified Model.BaseTypes as BT
 import API.APIMonad
@@ -83,6 +88,14 @@ api cfg acid =
         handler = flip runReaderT cfg . unAPIMonadT . route acid
     in setDefault Default $ boomerangSite (runRouteT handler) apiroutes
 --api acid = setDefault Default $ mkSitePI (runRouteT $ unAPIMonadT . route acid)
+
+site :: Config -> ACID -> ServerPartT IO Response
+site cfg acid = do
+    key <- liftIO . getKey $ cfg ^. sessionConfig . keyfileName
+    let sessionConf = mkSessionConf key
+    withClientSessionT sessionConf $
+        implSite (cfg ^. siteConfig . location) (cfg ^. siteConfig . handlerPath) $
+        api cfg acid
 
 helloWorld :: (Functor m, Monad m, MonadIO m)
            => APIMonadT API AuthData m Response

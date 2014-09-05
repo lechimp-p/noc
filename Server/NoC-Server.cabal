@@ -116,6 +116,7 @@ executable NoC-Server-fcgi
                         , cgi ==3001.1.*
                         , fastcgi ==3001.0.*
                         , happstack-fastcgi ==0.1.5
+                        , yaml ==0.8.9.1
 
 executable NoC-Server-dev
     main-is:              DevMain.hs            
