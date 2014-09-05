@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module DevMain
+module Main
 where
 
 import Web.Routes.Happstack (implSite)
@@ -22,7 +22,7 @@ import Data.Text (Text)
 
 import Model
 import Maintenance
-import API (api)
+import API (site)
 import API.Config
 import API.Utils (ACID)
 import API.Auth (AuthData)
@@ -34,8 +34,8 @@ initialNoC = mkNoC (mkLogin "admin") (mkPassword "admin")
 
 main :: IO ()
 main = do
-    opts <- getOptions
-    cfg <- getConfig . optConfigFile $ opts 
+    opts <- readOptions
+    cfg <- readConfig . optConfigFile $ opts 
 
     case cfg of
         Nothing -> return ()

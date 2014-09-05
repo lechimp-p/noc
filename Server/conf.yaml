@@ -1,24 +1,24 @@
-_bodyPolicy:
-  _maxBytesFile: 100000
-  _maxBytesBody: 100000
-  _uploadPath: /tmp/NoC-Server-dev
-  _maxBytesHeader: 100000
-_imageConfig:
-  _salt: 0
-  _channelDir: channel
-  _basePath: ./files
-  _userDir: user
-_acidPath: ./state
-_sessionConfig:
-  _cookieName: NoCSession
-  _httpsOnly: false
-  _cookiePath: /
-  _keyfileName: client_session_key.aes
-  _cookieLifetime:
+bodyPolicy:
+  maxBytesFile: 100000
+  maxBytesBody: 100000
+  uploadPath: /tmp/NoC-Server-dev
+  maxBytesHeader: 100000
+imageConfig:
+  salt: 0
+  channelDir: channel
+  basePath: ./files
+  userDir: user
+acidPath: ./state
+sessionConfig:
+  cookieName: NoCSession
+  httpsOnly: false
+  cookiePath: /
+  keyfileName: client_session_key.aes
+  cookieLifetime:
     tag: Session
     contents: []
-  _cookieDomain: ''
-_helloWorldMessage: Hello World!
-_siteConfig:
-  _handlerPath: ''
-  _location: http://localhost:8000
+  cookieDomain: ''
+helloWorldMessage: NoC-Server-dev
+siteConfig:
+  handlerPath: ''
+  location: http://localhost:8000

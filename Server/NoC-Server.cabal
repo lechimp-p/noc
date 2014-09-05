@@ -168,6 +168,7 @@ executable NoC-Server-dev
                         , base64-bytestring ==1.0.*
                         , json-transformer ==0.1.*
                         , scientific ==0.3.*
+                        , yaml ==0.8.9.1
 
 Test-Suite test-NoC-Server
     type:               detailed-0.9

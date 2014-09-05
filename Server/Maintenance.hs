@@ -3,6 +3,7 @@
 module Maintenance 
     ( Options (..)
     , readOptions
+    , readConfig
     )
 where
 
@@ -35,15 +36,15 @@ readOptions = do
     return $ (foldr (.) id actions) defaultOptions
 
 
-$(TH.deriveJSON TH.defaultOptions ''SessionConfig)
-$(TH.deriveJSON TH.defaultOptions ''SiteConfig)
-$(TH.deriveJSON TH.defaultOptions ''ImageConfig)
-$(TH.deriveJSON TH.defaultOptions ''BodyPolicy)
+$(TH.deriveJSON TH.defaultOptions{TH.fieldLabelModifier = drop 1} ''SessionConfig)
+$(TH.deriveJSON TH.defaultOptions{TH.fieldLabelModifier = drop 1} ''SiteConfig)
+$(TH.deriveJSON TH.defaultOptions{TH.fieldLabelModifier = drop 1} ''ImageConfig)
+$(TH.deriveJSON TH.defaultOptions{TH.fieldLabelModifier = drop 1} ''BodyPolicy)
 $(TH.deriveJSON TH.defaultOptions ''CookieLife)
-$(TH.deriveJSON TH.defaultOptions ''Config)
+$(TH.deriveJSON TH.defaultOptions{TH.fieldLabelModifier = drop 1} ''Config)
     
-loadConfig :: FilePath -> IO (Maybe Config) 
-loadConfig path = do
+readConfig :: FilePath -> IO (Maybe Config) 
+readConfig path = do
     res <- decodeFileEither path
     case res of
         Left err -> do 
