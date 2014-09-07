@@ -1,0 +1,65 @@
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE StandaloneDeriving #-}
+
+module API.Config
+where
+
+import Data.Text
+import Data.Int
+import Data.Data (Data, Typeable)
+import Control.Lens (makeLenses)
+import Control.Lens.Getter (Getting)
+import Happstack.Server.Internal.Cookie
+
+data Config = Config
+    { _helloWorldMessage    :: Text 
+    , _sessionConfig        :: SessionConfig
+    , _siteConfig           :: SiteConfig
+    , _acidPath             :: FilePath 
+    , _imageConfig          :: ImageConfig
+    , _bodyPolicy           :: BodyPolicy
+    }
+    deriving (Show, Data, Typeable)
+
+data SessionConfig = SessionConfig
+    { _cookieName           :: String
+    , _cookieLifetime       :: CookieLife
+    , _cookieDomain         :: String
+    , _cookiePath           :: String
+    , _keyfileName          :: FilePath 
+    , _httpsOnly            :: Bool
+    }
+    deriving (Show, Data, Typeable)
+
+deriving instance Data CookieLife
+
+data SiteConfig = SiteConfig
+    { _location             :: Text
+    , _handlerPath          :: Text 
+    } 
+    deriving (Show, Data, Typeable)
+
+data ImageConfig = ImageConfig
+    { _basePath             :: FilePath
+    , _userDir              :: FilePath
+    , _channelDir           :: FilePath
+    , _salt                 :: Int
+    }
+    deriving (Show, Data, Typeable)
+
+data BodyPolicy = BodyPolicy
+    { _uploadPath           :: FilePath
+    , _maxBytesFile         :: Int64
+    , _maxBytesBody         :: Int64
+    , _maxBytesHeader       :: Int64
+    }
+    deriving (Show, Data, Typeable)
+
+makeLenses ''Config
+makeLenses ''SessionConfig
+makeLenses ''SiteConfig
+makeLenses ''BodyPolicy
+
+class Monad m => WithConfig m where
+    config :: Getting a Config a -> m a  
