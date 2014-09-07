@@ -7,6 +7,7 @@ import Web.Routes.Happstack (implSite)
 import Happstack.Server 
         ( simpleHTTP, nullConf, Response
         , decodeBody, BodyPolicy, defaultBodyPolicy
+        , ok, look, toResponse
         )
 import Happstack.Server.ClientSession
         ( getDefaultKey, mkSessionConf
@@ -19,7 +20,7 @@ import Control.Exception (bracket)
 import Control.Monad.Trans.Reader (runReaderT)
 import Data.Acid (openLocalState)
 import Data.Acid.Local (createCheckpointAndClose)
-import Data.Text (Text)
+import Data.Text (Text, pack)
 
 import Maintenance
 import Model
@@ -33,7 +34,12 @@ import ACID.Update
 
 initialNoC = mkNoC (mkLogin "admin") (mkPassword "admin") 
 
-simpleCGI threads = runFastCGIConcurrent threads . serverPartToCGI
+simpleFCGI threads = runFastCGIConcurrent threads . serverPartToCGI
+
+unwrap__path :: ServerPartT IO Response -> ServerPartT IO Response 
+unwrap__path m = do
+    path <- look "__path"
+    ok . toResponse . pack $ path
 
 main :: IO ()
 main = do
@@ -45,5 +51,5 @@ main = do
         Just cfg -> do
             bracket (openLocalState initialNoC)
                     createCheckpointAndClose 
-                    $ \acid ->
-                        simpleCGI 10 $ site cfg acid
+                    $ \acid -> do
+                        simpleFCGI 1 . unwrap__path $ site cfg acid
