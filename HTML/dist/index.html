@@ -24,58 +24,68 @@
   </head>
   <body>
 
-    <!-- Small Screens: Offcanvas-Menu
-    <div class="visible-xs">
-      <ul class="nav">
-        <li><a href="#">Max Mustermannnnnnnn</a></li>
-        <li><a href="#"><span class="glyphicon glyphicon-bullhorn marginright"></span>Notifications</a></li>
-        <li><a href="#"><span class="glyphicon glyphicon-user marginright"></span>Contacts</a></li>
-      </ul>
-    </div> -->
-
     <div class="navbar navbar-fixed-top navbar-inverse" role="navigation">
       <div class="container">
 
         <div class="navbar-header">
           <a class="navbar-brand" href="#">urbanoid</a>
 
+          <div class="visible-xs">
           <!-- Offcanvas Trigger Button -->
-          <div class="visible-xs pull-right" style="width:70px;">
+          <div class="pull-right" style="width:70px;">
             <button type="button" class="navbar-account navbar-toggle collapsed pull-left button-xs" data-toggle="collapse" data-target=".navbar-collapse">
               <img src="img/profilepic.png" class="img-circle" alt="Profilepicture">
               <span class="sr-only">Toggle navigation</span>
             </button>
           </div>
 
+          </div>
+
         </div>
 
+        <!-- ============== Small Screens ============== -->
+
+        <div class="visible-xs">
+
+          <!-- Personal Navigation -->
+          <div class="collapse navbar-collapse">
+
+            <ul class="nav navbar-nav navbar-right text-right">
+              <li><a href="#">Max Mustermann</a></li>
+              <li><a href="#">Notifications
+              <span class="glyphicon glyphicon-bullhorn marginleft"></span></a></li>
+              <li><a href="#">Contacts
+              <span class="glyphicon glyphicon-user marginleft"></span></a></li>
+            </ul>
+
+          </div><!--/Collapse-->
+
+        </div>
+
+        <!-- ============== Large Screens ============== -->
 
         <div class="visible-sm visible-md visible-lg visible-xl">
 
-          <!-- Navi Chats Channels -->
+          <!-- Site Navigation -->
           <ul class="nav navbar-nav">
             <li class="active"><a href="#about">Chats</a></li>
             <li><a href="#contact">Channels</a></li>
           </ul>
 
+          <!-- Personal Navigation -->
+          <ul class="nav navbar-nav pull-right">
+            <li><a href="#"><span class="glyphicon glyphicon-bullhorn marginright"></span>Notifications</a></li>
+            <li><a href="#"><span class="glyphicon glyphicon-user marginright"></span>Contacts</a></li>
+            <li><button type="button" class="btn btn-default navbar-account">
+                    <img src="img/profilepic.png" class="marginright img-circle" alt="Profilepicture">
+                  Max Mustermann
+                </button>
+            </li>
+          </ul>
+
         </div>
 
-          <!-- Navi Right-hand: Large Screens -->
-          <div class="collapse navbar-collapse">
-
-            <ul class="nav navbar-nav navbar-right">
-              <li><a href="#"><span class="glyphicon glyphicon-bullhorn marginright"></span>Notifications</a></li>
-              <li><a href="#"><span class="glyphicon glyphicon-user marginright"></span>Contacts</a></li>
-              <li><button type="button" class="btn btn-default navbar-account">
-                    <div class="visible-sm visible-md visible-lg visible-xl">
-                      <img src="img/profilepic.png" class="marginright img-circle" alt="Profilepicture">
-                    </div>
-                    Max Mustermann
-                  </button></a>
-              </li>
-            </ul>
-
-          </div><!--/Collapse-->
+        <!-- ============== Until here ============== -->
 
       </div>
     </div>
@@ -109,6 +119,8 @@
       </div>
 
     </div>
+
+
 
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>

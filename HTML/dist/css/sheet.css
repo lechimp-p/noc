@@ -9,6 +9,10 @@ html, body {
 	margin-right:10px;
 }
 
+.marginleft {
+	margin-left:10px;
+}
+
 .noborder {
 	border:none;
 }
@@ -32,3 +36,7 @@ html, body {
 	border:none;
 	color:#fff;
 }
+
+
+
+
