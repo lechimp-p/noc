@@ -71,7 +71,7 @@ module.exports = function (grunt) {
         , 'custom-css' :
             { expand : true
             , cwd : 'custom/css'
-            , src : '*'
+            , src : '*.css'
             , dest : 'dist/css'
             , filter : 'isFile'
             }                  
@@ -103,11 +103,35 @@ module.exports = function (grunt) {
             , dest : 'dist'
             , filter : 'isFile'
             }
+        },
+
+        watch :
+        { 'custom-html' :
+            { files : ['custom/*.html']
+            , tasks : ['copy:custom-html']
+            }
+        , 'custom-js' :
+            { files : ['custom/js/*.js']
+            , tasks : ['copy:custom-html']
+            }
+        , 'custom-css' :
+            { files : ['custom/*.css']
+            , tasks : ['copy:custom-css']
+            }
+        , 'custom-fonts' :
+            { files : ['custom/*']
+            , tasks : ['copy:custom-fonts']
+            }
+        , 'custom-img' :
+            { files : ['custom/img/*']
+            , tasks : ['copy:custom-img']
+            }
         }
     });
 
     grunt.loadNpmTasks('grunt-contrib-clean');
     grunt.loadNpmTasks('grunt-contrib-copy');
+    grunt.loadNpmTasks('grunt-contrib-watch');
 
     // install bootstrap
     grunt.registerTask('setup-bootstrap', function() {
@@ -163,7 +187,7 @@ module.exports = function (grunt) {
     grunt.registerTask('dist-js', ['copy:custom-js', 'copy:ng-js', 'copy:ng-bs-js']);
 
     // CSS distribution task.
-    grunt.registerTask('dist-css', ['copy:bs-css', 'copy:ng-css']);
+    grunt.registerTask('dist-css', ['copy:bs-css', 'copy:ng-css', 'copy:custom-css']);
 
     // IMG distribution task.
     grunt.registerTask('dist-img', ['copy:custom-img']);
@@ -176,6 +200,8 @@ module.exports = function (grunt) {
 
     // Full distribution task.
     grunt.registerTask('dist', ['clean', 'dist-css', 'dist-js', 'dist-img', 'dist-fonts', 'dist-html']);
+
+    grunt.registerTask('dist-custom', ['copy:custom-js', 'copy:custom-css', 'copy:custom-img', 'copy:custom-fonts', 'copy:custom-html']);
 
     grunt.registerTask('dist-full', ['run-bootstrap-grunt', 'dist']);
 
