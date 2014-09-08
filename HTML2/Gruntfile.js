@@ -18,6 +18,9 @@ module.exports = function (grunt) {
     var sys = require('sys');
     var exec = require('child_process').exec;
 
+    // FTP config
+    var ftp_conf = JSON.parse(fs.readFileSync('./ftp.json', 'utf-8'));
+
     // Project configuration.
     grunt.initConfig({
         // Metadata.
@@ -108,23 +111,32 @@ module.exports = function (grunt) {
         watch :
         { 'custom-html' :
             { files : ['custom/*.html']
-            , tasks : ['copy:custom-html']
+            , tasks : ['copy:custom-html', 'ftp-deploy']
             }
         , 'custom-js' :
             { files : ['custom/js/*.js']
-            , tasks : ['copy:custom-html']
+            , tasks : ['copy:custom-html', 'ftp-deploy']
             }
         , 'custom-css' :
             { files : ['custom/*.css']
-            , tasks : ['copy:custom-css']
+            , tasks : ['copy:custom-css', 'ftp-deploy']
             }
         , 'custom-fonts' :
             { files : ['custom/*']
-            , tasks : ['copy:custom-fonts']
+            , tasks : ['copy:custom-fonts', 'ftp-deploy']
             }
         , 'custom-img' :
             { files : ['custom/img/*']
-            , tasks : ['copy:custom-img']
+            , tasks : ['copy:custom-img', 'ftp-deploy']
+            }
+        },
+
+        'ftp-deploy' :
+        { urbanoid :
+            { auth : ftp_conf
+            , src : ftp_conf.src
+            , dest : ftp_conf.desct
+            , authKey : ftp_conf.authKey
             }
         }
     });
@@ -132,6 +144,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-clean');
     grunt.loadNpmTasks('grunt-contrib-copy');
     grunt.loadNpmTasks('grunt-contrib-watch');
+    grunt.loadNpmTasks('grunt-ftp-deploy');
 
     // install bootstrap
     grunt.registerTask('setup-bootstrap', function() {

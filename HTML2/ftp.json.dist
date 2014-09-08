@@ -1,0 +1,7 @@
+{ "host" : "host"
+, "port" : 21
+, "authKey" : "password"
+, "src" : "src"
+, "dest" : "dest"
+, "exclusions" : []
+}
