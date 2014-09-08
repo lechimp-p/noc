@@ -15,6 +15,8 @@ module.exports = function (grunt) {
 
     var fs = require('fs');
     var path = require('path');
+    var sys = require('sys');
+    var exec = require('child_process').exec;
 
     // Project configuration.
     grunt.initConfig({
@@ -26,10 +28,109 @@ module.exports = function (grunt) {
         // Task configuration.
         clean: {
             dist: ['dist']
+        },
+
+        copy: 
+        { 'bs-css' :
+            { expand : true
+            , cwd : 'bower_components/bootstrap/dist/css'
+            , src : '*.css'
+            , dest : 'dist/css'
+            , filter : 'isFile'
+            }                  
+        , 'bs-fonts' :
+            { expand : true
+            , cwd : 'bower_components/bootstrap/dist/fonts'
+            , src : '*'
+            , dest : 'dist/fonts'
+            , filter : 'isFile'
+            }
+        , 'ng-css' :
+            { expand : true
+            , cwd : 'bower_components/angular'
+            , src : 'angular-csp.css'
+            , dest : 'dist/css'
+            }
+        , 'ng-js' : { files : [
+            { expand : true
+            , cwd : 'bower_components/angular'
+            , src : 'angular.min.js'
+            , dest : 'dist/js'
+            },
+            { expand : true
+            , cwd : 'bower_components/angular'
+            , src : 'angular.min.js.map'
+            , dest : 'dist/js'
+            }]}
+        , 'ng-bs-js' :
+            { expand : true
+            , cwd : 'bower_components/angular-bootstrap'
+            , src : '*.min.js'
+            , dest : 'dist/js'
+            }
+        , 'custom-css' :
+            { expand : true
+            , cwd : 'custom/css'
+            , src : '*'
+            , dest : 'dist/css'
+            , filter : 'isFile'
+            }                  
+        , 'custom-fonts' :
+            { expand : true
+            , cwd : 'custom/fonts'
+            , src : '*'
+            , dest : 'dist/css'
+            , filter : 'isFile'
+            }
+        , 'custom-img' :
+            { expand : true
+            , cwd : 'custom/img'
+            , src : '*'
+            , dest : 'dist/img'
+            , filter : 'isFile'
+            }
+        , 'custom-js' :
+            { expand : true
+            , cwd : 'custom/js'
+            , src : '*.js'
+            , dest : 'dist/js'
+            , filter : 'isFile'
+            }
+        , 'custom-html' :
+            { expand : true
+            , cwd : 'custom'
+            , src : '*.html'
+            , dest : 'dist'
+            , filter : 'isFile'
+            }
         }
     });
 
     grunt.loadNpmTasks('grunt-contrib-clean');
+    grunt.loadNpmTasks('grunt-contrib-copy');
+
+    // install bootstrap
+    grunt.registerTask('setup-bootstrap', function() {
+        var cb = this.async();
+        exec('cd bower_components/bootstrap; npm install; bower install;',
+        function(error, result, stderr) {
+            console.log(result.stdout);
+            console.log(stderr);
+            cb();
+        });
+    });
+
+    grunt.registerTask('setup-self', function() {
+        var cb = this.async();
+        exec('npm install; bower install;',
+        function(error, result, stderr) {
+            console.log(result.stdout);
+            console.log(stderr);
+            cb();
+        }); 
+    });
+
+    grunt.registerTask('setup', ['setup-self', 'setup-bootstrap']);
 
     // run gruntfile from bootstrap
     grunt.registerTask('run-bootstrap-grunt', function() {
@@ -47,39 +148,37 @@ module.exports = function (grunt) {
     });
 
     // collect all js files from bootstrap 
-    grunt.registerTask('bs-js-copy', function () {
-    });
+    //grunt.registerTask('bs-js-copy', function () {
+    //});
 
     // collect all css files from bootstrap 
-    grunt.registerTask('bs-css-copy', function () {
-    });
+    //grunt.registerTask('bs-css-copy', function () {
+    //});
 
     // collect all css files from bootstrap 
-    grunt.registerTask('bs-img-copy', function () {
-    });
-
-    // collect all css files from bootstrap 
-    grunt.registerTask('bs-font-copy', function () {
-    });
+    //grunt.registerTask('bs-img-copy', function () {
+    //});
 
     // JS distribution task.
-    grunt.registerTask('dist-js', ['bs-js-copy']);
+    grunt.registerTask('dist-js', ['copy:custom-js', 'copy:ng-js', 'copy:ng-bs-js']);
 
     // CSS distribution task.
-    grunt.registerTask('dist-css', ['bs-css-copy']);
+    grunt.registerTask('dist-css', ['copy:bs-css', 'copy:ng-css']);
 
     // IMG distribution task.
-    grunt.registerTask('dist-img', ['bs-img-copy']);
+    grunt.registerTask('dist-img', ['copy:custom-img']);
 
     // FONT distribution task.
-    grunt.registerTask('dist-font', ['bs-font-copy']);
+    grunt.registerTask('dist-fonts', ['copy:bs-fonts', 'copy:custom-fonts']);
 
     // HTML distribution task.
-    grunt.registerTask('dist-html', []);
+    grunt.registerTask('dist-html', ['copy:custom-html']);
 
     // Full distribution task.
-    grunt.registerTask('dist', ['run-bootstrap-grunt', 'clean', 'dist-css', 'dist-js', 'dist-img', 'dist-font', 'dist-html']);
+    grunt.registerTask('dist', ['clean', 'dist-css', 'dist-js', 'dist-img', 'dist-fonts', 'dist-html']);
+
+    grunt.registerTask('dist-full', ['run-bootstrap-grunt', 'dist']);
 
     // Default task.
-    grunt.registerTask('default', ['dist']);
+    //grunt.registerTask('default', ['dist']);
 };
