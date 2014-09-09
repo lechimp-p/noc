@@ -22,3 +22,5 @@ helloWorldMessage: NoC-Server-dev
 siteConfig:
   handlerPath: ''
   location: http://localhost:8000
+serverConfig:
+  numThreads: 1
