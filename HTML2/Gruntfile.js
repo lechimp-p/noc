@@ -135,7 +135,7 @@ module.exports = function (grunt) {
         { urbanoid :
             { auth : ftp_conf
             , src : ftp_conf.src
-            , dest : ftp_conf.desct
+            , dest : ftp_conf.desc
             , authKey : ftp_conf.authKey
             }
         }
