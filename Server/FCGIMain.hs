@@ -14,6 +14,7 @@ import Happstack.Server.ClientSession
         , withClientSessionT, SessionConf
         )
 import Happstack.Server.Internal.Cookie (CookieLife (..))
+import Happstack.Server.Internal.Types (Request(..))
 import Happstack.Server.Monads
 import Happstack.Server.FastCGI
 import Control.Exception (bracket)
@@ -21,6 +22,8 @@ import Control.Monad.Trans.Reader (runReaderT)
 import Data.Acid (openLocalState)
 import Data.Acid.Local (createCheckpointAndClose)
 import Data.Text (Text, pack)
+import Data.List.Split (wordsBy)
+import Control.Lens
 
 import Maintenance
 import Model
@@ -39,7 +42,12 @@ simpleFCGI threads = runFastCGIConcurrent threads . serverPartToCGI
 unwrap__path :: ServerPartT IO Response -> ServerPartT IO Response 
 unwrap__path m = do
     path <- look "__path"
-    ok . toResponse . pack $ path
+    localRq (setPath path) $ do
+        path' <- fmap rqPaths askRq 
+        m
+        --ok . toResponse . pack $ show path' 
+    where
+    setPath path req = req { rqPaths = wordsBy ( == '/') path }  
 
 main :: IO ()
 main = do
@@ -52,4 +60,5 @@ main = do
             bracket (openLocalState initialNoC)
                     createCheckpointAndClose 
                     $ \acid -> do
-                        simpleFCGI 1 . unwrap__path $ site cfg acid
+                        simpleFCGI (cfg ^. serverConfig . numThreads)  
+                                 . unwrap__path $ site cfg acid

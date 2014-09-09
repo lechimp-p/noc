@@ -40,6 +40,7 @@ $(TH.deriveJSON TH.defaultOptions{TH.fieldLabelModifier = drop 1} ''SessionConfi
 $(TH.deriveJSON TH.defaultOptions{TH.fieldLabelModifier = drop 1} ''SiteConfig)
 $(TH.deriveJSON TH.defaultOptions{TH.fieldLabelModifier = drop 1} ''ImageConfig)
 $(TH.deriveJSON TH.defaultOptions{TH.fieldLabelModifier = drop 1} ''BodyPolicy)
+$(TH.deriveJSON TH.defaultOptions{TH.fieldLabelModifier = drop 1} ''ServerConfig)
 $(TH.deriveJSON TH.defaultOptions ''CookieLife)
 $(TH.deriveJSON TH.defaultOptions{TH.fieldLabelModifier = drop 1} ''Config)
     
