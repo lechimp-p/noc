@@ -1,7 +1,10 @@
 { "host" : "host"
 , "port" : 21
-, "authKey" : "password"
-, "src" : "src"
+, "authKey" : 
+    { "username" : ""
+    , "password" : ""
+    } 
+, "src" : "/dist"
 , "dest" : "dest"
 , "exclusions" : []
 }
