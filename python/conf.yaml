@@ -1,0 +1,26 @@
+bodyPolicy:
+  maxBytesFile: 100000
+  maxBytesBody: 100000
+  uploadPath: /tmp/NoC-Server-dev
+  maxBytesHeader: 100000
+imageConfig:
+  salt: 0
+  channelDir: channel
+  basePath: ./files
+  userDir: user
+acidPath: ./state
+sessionConfig:
+  cookieName: NoCSession
+  httpsOnly: false
+  cookiePath: /
+  keyfileName: client_session_key.aes
+  cookieLifetime:
+    tag: Session
+    contents: []
+  cookieDomain: ''
+helloWorldMessage: NoC-Server-dev
+siteConfig:
+  handlerPath: ''
+  location: http://localhost:8000
+serverConfig:
+  numThreads: 1
