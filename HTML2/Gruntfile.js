@@ -57,20 +57,31 @@ module.exports = function (grunt) {
         , 'ng-js' : { files : [
             { expand : true
             , cwd : 'bower_components/angular'
-            , src : 'angular.min.js'
+            , src : 'angular.js'
             , dest : 'dist/js'
-            },
+            }]}/*,
             { expand : true
             , cwd : 'bower_components/angular'
             , src : 'angular.min.js.map'
             , dest : 'dist/js'
-            }]}
-        , 'ng-bs-js' :
+            }]}*/
+        , 'ng-bs-js' : { files : [
             { expand : true
             , cwd : 'bower_components/angular-bootstrap'
-            , src : '*.min.js'
+            , src : 'ui-bootstrap.js'
             , dest : 'dist/js'
-            }
+            },
+            { expand : true
+            , cwd : 'bower_components/angular-bootstrap'
+            , src : 'ui-bootstrap-tpls.js'
+            , dest : 'dist/js'
+            }]}
+        , 'ng-route-js' : { files : [
+            { expand : true
+            , cwd : 'bower_components/angular-route'
+            , src : 'angular-route.js'
+            , dest : 'dist/js'
+            }]}
         , 'custom-css' :
             { expand : true
             , cwd : 'custom/css'
@@ -115,7 +126,7 @@ module.exports = function (grunt) {
             }
         , 'custom-js' :
             { files : ['custom/js/*.js']
-            , tasks : ['copy:custom-html', 'ftp-deploy']
+            , tasks : ['copy:custom-js', 'ftp-deploy']
             }
         , 'custom-css' :
             { files : ['custom/*.css']
@@ -197,7 +208,7 @@ module.exports = function (grunt) {
     //});
 
     // JS distribution task.
-    grunt.registerTask('dist-js', ['copy:custom-js', 'copy:ng-js', 'copy:ng-bs-js']);
+    grunt.registerTask('dist-js', ['copy:custom-js', 'copy:ng-js', 'copy:ng-bs-js', 'copy:ng-route-js']);
 
     // CSS distribution task.
     grunt.registerTask('dist-css', ['copy:bs-css', 'copy:ng-css', 'copy:custom-css']);
