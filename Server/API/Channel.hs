@@ -94,9 +94,12 @@ setHandler acid cid = handleError $
 getMessagesHandler acid cid = do
     o <- maybe 0 id . readMaybe <$> look "offset"
     a <- maybe 10 id . readMaybe <$> look "amount"
+    ts <- readMaybe <$> look "timestamp"
     handleError $ queryWithJSONResponse acid $ do
         trySessionLoginQ
-        msgs <- messagesQ cid o a
+        msgs <- case ts of
+                    Nothing -> messagesQ cid o a
+                    Just ts -> messagesTillQ cid ts
         "messages" <$: flip fmap msgs .$ \ msg -> do
             "image"     <: view image msg
             "text"      <: view text msg
