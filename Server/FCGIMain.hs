@@ -24,6 +24,7 @@ import Data.Acid.Local (createCheckpointAndClose)
 import Data.Text (Text, pack)
 import Data.List.Split (wordsBy)
 import Control.Lens
+import System.IO
 
 import Maintenance
 import Model
@@ -43,7 +44,9 @@ unwrap__path :: ServerPartT IO Response -> ServerPartT IO Response
 unwrap__path m = do
     path <- look "__path"
     localRq (setPath path) $ do
-        path' <- fmap rqPaths askRq 
+        --path' <- fmap rqPaths askRq 
+        liftIO $ putStrLn path
+        liftIO $ hFlush stdout
         m
         --ok . toResponse . pack $ show path' 
     where
@@ -53,6 +56,9 @@ main :: IO ()
 main = do
     opts <- readOptions
     cfg <- readConfig . optConfigFile $ opts 
+
+    putStrLn "Starting NoC-Server-fcgi"
+    hFlush stdout
 
     case cfg of
         Nothing -> return ()
