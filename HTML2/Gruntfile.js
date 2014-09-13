@@ -126,7 +126,7 @@ module.exports = function (grunt) {
             }
         , 'custom-js' :
             { files : ['custom/js/*.js']
-            , tasks : ['copy:custom-js', 'ftp-deploy']
+            , tasks : ['jshint:custom', 'copy:custom-js', 'ftp-deploy']
             }
         , 'custom-css' :
             { files : ['custom/*.css']
@@ -142,6 +142,13 @@ module.exports = function (grunt) {
             }
         },
 
+        jshint :
+        { options :
+            { laxcomma : true
+            }
+        , custom : [ 'custom/js/*' ]
+        },
+
         'ftp-deploy' :
         { urbanoid :
             { auth : ftp_conf
@@ -155,6 +162,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-clean');
     grunt.loadNpmTasks('grunt-contrib-copy');
     grunt.loadNpmTasks('grunt-contrib-watch');
+    grunt.loadNpmTasks('grunt-contrib-jshint');
     grunt.loadNpmTasks('grunt-ftp-deploy');
 
     // install bootstrap
