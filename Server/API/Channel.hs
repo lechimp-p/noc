@@ -15,19 +15,21 @@ import Web.Routes.Happstack
 import Happstack.Server 
         ( Response, ok, method
         , Method (POST, GET, HEAD)
-        , FilterMonad
+        , FilterMonad, look
         )
 import Control.Monad.IO.Class
 import Control.Monad
+import Control.Applicative ((<$>))
 import Control.Lens
 import qualified Data.Set as S
 import Data.Time.Clock
 import Text.Boomerang.TH (makeBoomerangs)
 import Web.Routes.Boomerang
 import Control.Monad.Trans.JSON
+import Text.Read (readMaybe)
 
 import Model
-import Model.Message
+import Model.Message hiding (id)
 import ACID
 import API.APIMonad
 import API.Config
@@ -89,11 +91,11 @@ setHandler acid cid = handleError $
         "type"          ?> setChanTypeU cid
         noContent'
 
-getMessagesHandler acid cid = handleError $
-    queryWithJSONResponse acid $ do
+getMessagesHandler acid cid = do
+    o <- maybe 0 id . readMaybe <$> look "offset"
+    a <- maybe 10 id . readMaybe <$> look "amount"
+    handleError $ queryWithJSONResponse acid $ do
         trySessionLoginQ
-        o <- prop "offset"
-        a <- prop "amount"
         msgs <- messagesQ cid o a
         "messages" <$: flip fmap msgs .$ \ msg -> do
             "image"     <: view image msg
