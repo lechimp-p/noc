@@ -23,6 +23,7 @@ module ACID.QueryMonad
     , getUserNotificationsQ
     , getUserByLoginQ
     , messagesQ
+    , messagesTillQ
     , QueryMonadT
     , runQueryMonadT
     , runQueryMonadT'
@@ -70,6 +71,7 @@ class MonadQueryError m => MonadQuery m where
     getUserNotificationsQ   :: UserId -> Offset -> Amount -> m [Notification]
     getUserByLoginQ         :: Text -> m UserId
     messagesQ               :: ChanId -> Offset -> Amount -> m [Message] 
+    messagesTillQ           :: ChanId -> UTCTime -> m [Message] 
 
 
 
@@ -153,6 +155,7 @@ instance MonadQueryError m => MonadQuery (QueryMonadT NoC m) where
     getUserContactsQ u = DoQuery $ \ o -> GetUserContactsQ o u 
     getUserByLoginQ u = DoQuery $ \ o -> GetUserByLoginQ o u
     messagesQ c o a = DoQuery $ \ u -> MessagesQ u c o a
+    messagesTillQ c ts = DoQuery $ \ u -> MessagesTillQ u c ts 
 
 setOperatorIdQ :: Monad m => Maybe UserId -> QueryMonadT acid m ()
 setOperatorIdQ = SetOperatorId

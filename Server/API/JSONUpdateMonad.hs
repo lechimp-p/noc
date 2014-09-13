@@ -111,3 +111,4 @@ instance Monad m => MonadUpdate (JSONUpdateMonadT NoC url session m) where
     createChannelU n = JSONUpdateMonadT . lift . createChannelU n
     postU c ts t = JSONUpdateMonadT . lift . postU c ts t
     messagesU c o = JSONUpdateMonadT . lift . messagesU c o
+    messagesTillU c = JSONUpdateMonadT . lift . messagesTillU c
