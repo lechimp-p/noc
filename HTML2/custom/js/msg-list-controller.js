@@ -1,6 +1,25 @@
 angular.module("NoC.controllers", []).
-controller("msg-list-controller", function($scope) {
-    $scope.msgs =
+controller("msg-list-controller", function($scope, API) {
+    "use strict";
+
+    API.login("admin", "admin")
+        .success(function(response) {
+            API.messages(0, 0, 10)
+                .success(function(response) {
+                    $scope.msgs = response.messages;   
+                })
+                .error(function(data, status, headers, config) {
+                    console.log("API.messages not reachable?");
+                    console.log(data);
+                })
+                ;
+        })
+        .error(function(data, status, headers, config) {
+            console.log("API.login not reachable?");
+        })
+        ;
+
+    /*$scope.msgs =
         [ { author : 
             { icon : "img/profilepic.png"
             , name : "Max Mustermann"
@@ -16,4 +35,5 @@ controller("msg-list-controller", function($scope) {
             , text : "Ja, echt spitze!"
           }
         ];
+    */
 });
