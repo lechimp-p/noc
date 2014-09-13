@@ -2,8 +2,9 @@ import os.path as path
 import base64
 import requests
 import json
+import pdb
 
-base_url = "http://localhost:8000"
+base_url = "http://localhost/api"
 json_headers = {"content-type" : "application/json"}
 
 class NoCError(Exception):
@@ -73,19 +74,25 @@ class user(object):
 
     # Request handling
 
-    def getR(self, path, data = {}):
-        return self.get_postR(requests.get, path, data)
+    def getR(self, path, params = {}):
+        return self.get_postR(requests.get, path, None, params)
 
     def postR(self, path, data):
-        return self.get_postR(requests.post, path, data)
+        return self.get_postR(requests.post, path, data, None)
 
-    def get_postR(self, method, path, data):
-        r = method( path, headers = json_headers, data = json.dumps(data), cookies = self.cookies) 
+    def get_postR(self, method, path, data, params):
+        r = method( path
+                  , headers = json_headers
+                  , data = None if data is None else json.dumps(data)
+                  , cookies = self.cookies
+                  , params = params
+                  ) 
         cookies = r.cookies.get_dict()
         #print str(r.status_code) + ": " + r.text
         if len(cookies) > 0:
             self.cookies = cookies
         if not 200 <= r.status_code < 300: 
+            #pdb.set_trace();
             raise NoCError(r.text)
         if len(r.text) > 0:
             return r.json()
@@ -118,7 +125,10 @@ class channel(object):
         return op.getR(self.messages_path % self.id, { "offset" : offset, "amount" : amount })
 
     def post(self, op, text, image = None):
-       return op.postR( self.messages_path % self.id, { "text" : text, "image" : image_json(image) } )
+        data = { "text" : text}
+        if not image is None:
+            data["image"] = image_json(image)
+        return op.postR( self.messages_path % self.id, data )
 
     def modifyUsers(self, op, addOwners = [], removeOwners = [], addProducers = [], removeProducers = [], addConsumers = [], removeConsumers = []):
         return op.postR( self.users_path % self.id, { "addOwners" : addOwners, "removeOwners" : removeOwners, "addProducers" : addProducers, "removeProducers" : removeProducers, "addConsumers" : addConsumers, "removeConsumers" : removeConsumers })
