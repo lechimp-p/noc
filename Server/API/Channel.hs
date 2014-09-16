@@ -4,6 +4,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module API.Channel
 where
@@ -27,6 +28,8 @@ import Text.Boomerang.TH (makeBoomerangs)
 import Web.Routes.Boomerang
 import Control.Monad.Trans.JSON
 import Text.Read (readMaybe)
+
+import Debug.Trace
 
 import Model
 import Model.Message hiding (id)
@@ -91,15 +94,16 @@ setHandler acid cid = handleError $
         "type"          ?> setChanTypeU cid
         noContent'
 
-getMessagesHandler acid cid = do
-    o <- maybe 0 id . readMaybe <$> look "offset"
-    a <- maybe 10 id . readMaybe <$> look "amount"
-    ts <- readMaybe <$> look "timestamp"
-    handleError $ queryWithJSONResponse acid $ do
+getMessagesHandler acid cid = handleError $ do
+    o <- maybe 0 id <$> maybeQueryParam "offset"
+    a <- maybe 10 id <$> maybeQueryParam "amount"
+    ts' <- maybeQueryParam' "timestamp"
+    let ts = join . fmap convertTimestamp $ ts' 
+    queryWithJSONResponse acid $ do
         trySessionLoginQ
         msgs <- case ts of
-                    Nothing -> messagesQ cid o a
-                    Just ts -> messagesTillQ cid ts
+            Nothing -> messagesQ cid o a
+            Just ts -> messagesTillQ cid ts
         "messages" <$: flip fmap msgs .$ \ msg -> do
             "image"     <: view image msg
             "text"      <: view text msg

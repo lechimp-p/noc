@@ -35,6 +35,8 @@ data Error
     = ModelError' ME.Error
     | JSONError' JSONError
     | ImageError' ImageError
+    | QueryParamNotFound String
+    | QueryParamNotConverted String String
     | Abort
     deriving (Show)
 
@@ -55,6 +57,8 @@ handleError op = runEitherT op >>= \ res ->
 respondError :: (Monad m, MonadIO m, FilterMonad Response m)
              => Error -> m Response
 respondError = badRequest . toResponse . T.pack . show 
+
+throwAPIError e = left e
 
 instance Monad m => MonadJSONError (EitherT Error m) where
     throwJSONError = left . JSONError'

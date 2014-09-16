@@ -9,7 +9,7 @@
 module API.Utils
 where
 
-import Data.Text hiding (any)
+import Data.Text hiding (any,head)
 import Data.Acid ( AcidState )
 import qualified Data.HashMap.Strict as HM
 import qualified Data.ByteString.Lazy.Char8 as L 
@@ -17,6 +17,7 @@ import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString.Char8 as B 
 import Data.Aeson
 import Data.Aeson.Types
+import Data.Time.Clock (UTCTime)
 import Data.Scientific
 import Control.Lens
 import Control.Lens.Prism
@@ -31,6 +32,7 @@ import Control.Monad.Error.Class hiding (Error)
 import Control.Monad.Trans.JSON
 import Control.Monad.Writer
 import Control.Monad.Reader
+import Text.Read (readMaybe)
 
 import Model
 import Model.BaseTypes
@@ -158,6 +160,34 @@ ifIsJust v op =
         Nothing -> return () 
 
 ifIsJust' = flip ifIsJust
+
+queryParam :: (MonadIO m, Read a) => String -> EitherT Error (APIMonadT url session m) a
+queryParam name = do
+    res <- lift $ getDataFn (queryString . look $ name)
+    case res of
+        Left err -> throwAPIError . QueryParamNotFound $ name
+        Right st -> case readMaybe st of
+            Nothing -> throwAPIError . QueryParamNotConverted name $ st 
+            Just r -> return r
+
+maybeQueryParam :: (MonadIO m, Read a) => String -> EitherT Error (APIMonadT url session m) (Maybe a)
+maybeQueryParam name = do
+    res <- lift $ getDataFn (queryString . look $ name)
+    case res of
+        Left err -> return Nothing
+        Right st -> case readMaybe st of
+            Nothing -> throwAPIError . QueryParamNotConverted name $ st 
+            Just r' -> return $ Just r'
+
+maybeQueryParam' :: MonadIO m => String -> EitherT Error (APIMonadT url session m) (Maybe String)
+maybeQueryParam' name = do
+    res <- lift $ getDataFn (queryString . look $ name)
+    case res of
+        Left err -> return Nothing
+        Right st -> return $ Just st 
+
+convertTimestamp :: String -> Maybe UTCTime
+convertTimestamp st = fmap head . decode . L.pack $ "[\"" ++ st ++ "\"]"
 
 instance (Monad m, MonadIO m)
      => FilterMonad Response (JSONQueryMonadT acid url session m) where
