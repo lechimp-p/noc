@@ -29,8 +29,6 @@ import Web.Routes.Boomerang
 import Control.Monad.Trans.JSON
 import Text.Read (readMaybe)
 
-import Debug.Trace
-
 import Model
 import Model.Message hiding (id)
 import ACID
@@ -103,7 +101,10 @@ getMessagesHandler acid cid = handleError $ do
         trySessionLoginQ
         msgs <- case ts of
             Nothing -> messagesQ cid o a
-            Just ts -> messagesTillQ cid ts
+            -- use a little offset to the delivered time here
+            -- since precision of utc time is lost during 
+            -- json-serialization/deserialization
+            Just ts -> messagesTillQ cid (0.01 `addUTCTime` ts)
         "messages" <$: flip fmap msgs .$ \ msg -> do
             "image"     <: view image msg
             "text"      <: view text msg

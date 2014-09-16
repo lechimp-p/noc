@@ -3,12 +3,20 @@ controller("msg-list-controller", function($scope, $interval, API) {
     "use strict";
 
     var lastTS = {};
+    var updateIntervalMS = 5000;
     
     var toScope = function(response) {
+        console.log("received messages");
+        console.log(response);
         if (response.messages.length > 0) {
             lastTS.value = response.messages[0].timestamp;
         }
-        $scope.msgs = response.messages;
+        if ($scope.msgs) {
+            $scope.msgs = response.messages.concat($scope.msgs);
+        }
+        else {
+            $scope.msgs = response.messages;
+        }
     };
 
     API.login("admin", "admin")
@@ -18,12 +26,11 @@ controller("msg-list-controller", function($scope, $interval, API) {
                 .success(toScope)
                 .success(function(_) {
                     $interval(function() {
+                        console.log(lastTS.value);
                         API.messagesTill(0, lastTS.value).success(toScope);
-                        //API.messages(0, 0, 10).success(toScope);
-                    }, 5000);
+                    }, updateIntervalMS);
                 }); 
-        })
-        ;
+        });
 
     /*$scope.msgs =
         [ { author : 

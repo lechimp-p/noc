@@ -275,7 +275,7 @@ messages cid ofs am = checkAccess cid forConsumersOrOwners $ do
 
 messagesTill :: OpMonad m => ChanId -> UTCTime -> m [Message]
 messagesTill cid ts = checkAccess cid forConsumersOrOwners $ do
-    takeWhile ((<=) ts . _timestamp) . IX.toDescList (IX.Proxy :: IX.Proxy UTCTime) <$> getMessages @= cid
+    takeWhile ((<) ts . _timestamp) . IX.toDescList (IX.Proxy :: IX.Proxy UTCTime) <$> getMessages @= cid
 
 ----------
 -- helpers
