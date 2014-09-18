@@ -23,4 +23,6 @@ getChanType cid = send $ \ next -> inj (ChanQuery cid (GetChanType next))
 getChanImage :: Member Query r => ChanId -> Eff r (Maybe Image)
 getChanImage cid = send $ \ next -> inj (ChanQuery cid (GetChanImage next))
 
- 
+
+addAdmin :: Member Update r => UserId -> Eff r () 
+addAdmin uid = send $ \ next -> inj (AddAdmin uid next)

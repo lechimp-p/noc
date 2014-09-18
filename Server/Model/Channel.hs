@@ -21,6 +21,7 @@ data Channel = Channel
     , _name         :: Name
     , _desc         :: Desc
     , _type'        :: ChanType
+    , _image        :: Maybe Image
     , _owners       :: S.Set UserId
     , _producers    :: S.Set UserId
     , _consumers    :: S.Set UserId
@@ -34,16 +35,9 @@ instance Eq Channel where
 instance Ord Channel where
     compare c c' = compare (_id c) (_id c') 
 
-data ChanType
-    = None
-    | Stream
-    | Conversation
-    deriving (Data, Typeable)
-
 $(deriveSafeCopy 0 'base ''ChanType)
 $(deriveSafeCopy 0 'base ''Channel) 
 makeLenses ''Channel
-
 
 
 newtype IxExactName = IxExactName Text

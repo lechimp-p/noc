@@ -10,24 +10,25 @@
 
 * make permission handling more flexible
 
-* try to remove tiresome name duplications in ACID
-* enforce update/query model already at model level
-* make implementation of storage engine switchable
-* think about how the model is represented
-
 * think about body policy and get body for images and other requests
-
-* think about organisation of nasty monad transformer layers
 
 * add more tests on models functionality
 * make json error output nicer
 * adjust size of http input to fit images (better: make it depend on usecase)
 * preprocess uploaded icons/images
 
-* think about how config of the server should be read 
-
 * implement search
 * implement statistics functions for admins
 * implement output of channel type
 
 * delete users and channels
+
+Refactoring:
+
+* try to remove tiresome name duplications in ACID
+* enforce update/query model already at model level
+* make implementation of storage engine switchable
+* think about how the model is represented
+* think about organisation of nasty monad transformer layers
+
+

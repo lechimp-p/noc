@@ -16,10 +16,13 @@ module Model.BaseTypes
     , Image (..)
     , Icon (..)
     , checkPassword
+    , ChanType (..)
+    , Notification (..)
     )
 where
 
 import Data.Text
+import Data.Time.Clock
 import Data.Data (Data, Typeable) 
 import Data.SafeCopy (SafeCopy, base, deriveSafeCopy)
 
@@ -41,3 +44,13 @@ newtype Icon = Icon { icnPath :: Text } deriving (Data, Typeable, SafeCopy)
 
 checkPassword :: Password -> Password -> Bool
 checkPassword pw pw' = pwToText pw == pwToText pw'
+
+data ChanType
+    = None
+    | Stream
+    | Conversation
+    deriving (Data, Typeable)
+
+data Notification
+    = AddedToChannel UTCTime UserId ChanId
+    deriving (Data, Typeable)

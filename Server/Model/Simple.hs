@@ -1,26 +1,30 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE TemplateHaskell #-}
+--{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+--{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE TypeOperators #-}
 
 module Model.Simple
-    ( runOp'
-    , runOp
-    , noc
-    , Operation
-    , OpContext (..)
+    ( runQuerySimple
+    --runOp
+--    , runOp'
+--    , noc
+--    , Operation
+--    , OpContext (..)
     )
 where
 
-import Control.Monad
-import Control.Applicative
+--import Control.Monad
+--import Control.Applicative
 import Control.Lens 
-import Data.Data (Data, Typeable)
+--import Data.Data (Data, Typeable)
 import qualified Data.Set as S 
-import qualified Data.IxSet as IX
-import Data.Maybe (isJust)
+--import qualified Data.IxSet as IX
+--import Data.Maybe (isJust)
 
-import Model.OpMonad
-import Model.Errors
+--import Model.OpMonad
+--import Model.Errors
+
+import Control.Eff
+
 import Model.BaseTypes
 import qualified Model.NoC as N
 import Model.NoC
@@ -30,8 +34,32 @@ import qualified Model.Channel as C
 import Model.Channel
 import qualified Model.Message as M
 import Model.Message
+import Model.Query
+import Model.Update
+import Model.Effects
 
-data OpContext = OpContext
+runQuerySimple :: NoC -> Eff (Query :> r) a -> Eff r a
+runQuerySimple noc action = go noc (admin action)
+    where
+    go _ (Val v) = return v
+    go noc (E request) = handleRelay request (go noc) (go noc . performQuery noc)
+
+performQuery noc (IsAdmin uid next) = next (uid `S.member` _admins noc)
+
+runSimple :: NoC -> Eff (Query :> Update :> r) a -> Eff r (NoC, a)
+runSimple noc action = go noc (admin action)
+    where
+    go n1 (Val v) = return (n1, v) 
+    go n1 (E request) = checkQuery n1 request
+
+    checkQuery n2 r = either (checkUpdate n2) (go n2 . performQuery n2) $ decomp r
+    checkUpdate n3 r = either (passOn n3) (performUpdate go n3) $ decomp r
+    passOn n4 r = send (flip fmap r) >>= go n4 
+            
+
+performUpdate go noc (AddAdmin uid next) = go (over admins (S.insert uid) noc) (next ())
+
+{--data OpContext = OpContext
     { _noc       :: NoC
     , _operator  :: Maybe UserId
     }
@@ -162,5 +190,5 @@ rmAdmin' uid = Operation $ \ s ->
 
 getOperatorId' :: Operation (Maybe UserId)
 getOperatorId' = Operation $ \ s -> Right (s, _operator s)
-
+--}  
 

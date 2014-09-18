@@ -37,10 +37,6 @@ instance Eq User where
 instance Ord User where
     compare u u' = compare (_id u) (_id u')
 
-data Notification
-    = AddedToChannel UTCTime UserId ChanId
-    deriving (Data, Typeable)
-
 $(deriveSafeCopy 0 'base ''Notification)
 $(deriveSafeCopy 0 'base ''User) 
 makeLenses ''User
