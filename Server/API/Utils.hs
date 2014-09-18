@@ -13,6 +13,7 @@ import Data.Text hiding (any)
 import Data.Acid ( AcidState )
 import qualified Data.HashMap.Strict as HM
 import qualified Data.ByteString.Lazy.Char8 as L 
+import qualified Data.ByteString.Lazy as BL 
 import qualified Data.ByteString.Char8 as B 
 import Data.Aeson
 import Data.Aeson.Types
@@ -190,7 +191,6 @@ queryWithJSON' :: (Monad m, MonadIO m)
                -> JSONQueryMonadT acid url session m a
                -> EitherT Error (APIMonadT url session m) ((a, Value), Maybe UserId)
 queryWithJSON' acid uid obj json = do
-    body <- getBody
     (\ m -> runQueryMonadT' m acid uid) 
         . (\ m -> runJSONMonadTWithObject m obj) 
         . runJSONQueryMonadT 
@@ -203,7 +203,7 @@ queryWithJSON :: (Monad m, MonadIO m)
 queryWithJSON acid json = do
     body <- getBody
     flip runQueryMonadT acid 
-        . flip runJSONMonadT body 
+        . flip runJSONMonadT (if BL.null body then "{}" else body) 
         . runJSONQueryMonadT 
         $ json 
 
@@ -262,7 +262,6 @@ updateWithJSON' :: (Monad m, MonadIO m)
                -> JSONUpdateMonadT acid url session m a
                -> EitherT Error (APIMonadT url session m) ((a, Value), Maybe UserId)
 updateWithJSON' acid uid obj json = do
-    body <- getBody
     (\ m -> runUpdateMonadT' m acid uid) 
         . (\ m -> runJSONMonadTWithObject m obj) 
         . runJSONUpdateMonadT 
@@ -313,6 +312,7 @@ updateWithJSONResponse acid json = do
 userInfoQ uid = do
     "id"        <: uid
     "login"     <$ getUserLoginQ uid
+    "name"      <$ getUserNameQ uid
     "icon"      <$ getUserIconQ uid
 
 channelInfoQ cid = do

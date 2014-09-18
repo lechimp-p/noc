@@ -32,6 +32,7 @@ import ACID.Update
 
 initialNoC = mkNoC (mkLogin "admin") (mkPassword "admin") 
 
+
 main :: IO ()
 main = do
     opts <- readOptions

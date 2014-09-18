@@ -1,5 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<!--[if lt IE 7]> <html lang="en" ng-app="myApp" class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]> <html lang="en" ng-app="myApp" class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]> <html lang="en" ng-app="myApp" class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html lang="en" ng-app="NoC" class="no-js"> <!--<![endif]-->
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -95,17 +98,17 @@
 
 
     <div class="container">
-      <div class="list-group">
+      <div class="list-group" ng-controller="msg-list-controller">
 
         <!-- List-item -->
-        <a href="#" class="list-group-item">
-            <img src="img/profpic.jpg" class="pull-left marginright img-circle" alt="Profilepicture">
-            <h4 class="list-group-item-heading">Max Mustermann</h4>
-            <p class="list-group-item-text pull-left marginright">14:20</p>
-            <p class="list-group-item-text">Alter guck dir mal Urbanoid an! Das ist echt supercrisp!</p>
+        <a href="#" class="list-group-item" ng-repeat="msg in msgs">
+            <img src="{{msg.author.icon}}" class="pull-left marginright img-circle" alt="Profilepicture">
+            <h4 class="list-group-item-heading">{{msg.author.name}}</h4>
+            <p class="list-group-item-text pull-left marginright">{{msg.timestamp}}</p>
+            <p class="list-group-item-text">{{msg.text}}</p>
             <!-- Textzeile soll bei statt Umbruch in "… enden, falls Text breiter als Liste" -->
         </a>
-        <a href="#" class="list-group-item">
+        <!--<a href="#" class="list-group-item">
             <img src="img/profpic.jpg" class="pull-left marginright img-circle" alt="Profilepicture">
             <h4 class="list-group-item-heading">Petra Mustermueller</h4>
             <p class="list-group-item-text pull-left marginright">14:20</p>
@@ -117,6 +120,7 @@
             <p class="list-group-item-text pull-left marginright">14:20</p>
             <p class="list-group-item-text">LOL</p>
         </a>
+        -->
 
       </div>
 
@@ -125,11 +129,15 @@
 
 
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script> -->
     <!-- Include all compiled plugins (below), or include individual files as needed -->
-    <script src="js/bootstrap.min.js"></script>
-    <script src="js/ie10-viewport-bug-workaround.js"></script>
-
+    <script src="js/angular.js"></script>
+    <script src="js/angular-route.js"></script>
+    <script src="js/ui-bootstrap.js"></script>
+    <script src="js/ui-bootstrap-tpls.js"></script>
+    <script src="js/NoC.js"></script>
+    <script src="js/msg-list-controller.js"></script>
+    <script src="js/API.js"></script>
  
   </body>
 </html>

@@ -13,6 +13,10 @@ import Happstack.Server.Monads
         , composeFilter, ServerMonad, askRq
         , localRq, mapServerPartT, UnWebT
         )
+import Happstack.Server.RqData
+        ( HasRqData, askRqEnv, localRqEnv
+        , rqDataError
+        )
 import Happstack.Server.ClientSession
         ( ClientSessionT, MonadClientSession 
         , getSession, putSession, expireSession
@@ -66,6 +70,10 @@ instance Monad m => ServerMonad (APIMonadT url session m) where
 instance Monad m => WebMonad Response (APIMonadT url session m) where
     finishWith = APIMonadT . finishWith
 
+instance MonadIO m => HasRqData (APIMonadT url session m) where
+    askRqEnv = APIMonadT $ askRqEnv
+    rqDataError = APIMonadT . rqDataError
+    localRqEnv f = APIMonadT . localRqEnv f . unAPIMonadT
 
 nestURL :: Monad m => (url1 -> url2) -> APIMonadT url1 session m a -> APIMonadT url2 session m a
 nestURL f m2 = do

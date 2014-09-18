@@ -19,6 +19,7 @@ data Config = Config
     , _acidPath             :: FilePath 
     , _imageConfig          :: ImageConfig
     , _bodyPolicy           :: BodyPolicy
+    , _serverConfig         :: ServerConfig
     }
     deriving (Show, Data, Typeable)
 
@@ -56,10 +57,16 @@ data BodyPolicy = BodyPolicy
     }
     deriving (Show, Data, Typeable)
 
+data ServerConfig = ServerConfig
+    { _numThreads           :: Int
+    }
+    deriving (Show, Data, Typeable)
+
 makeLenses ''Config
 makeLenses ''SessionConfig
 makeLenses ''SiteConfig
 makeLenses ''BodyPolicy
+makeLenses ''ServerConfig
 
 class Monad m => WithConfig m where
     config :: Getting a Config a -> m a  

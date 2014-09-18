@@ -57,20 +57,32 @@ module.exports = function (grunt) {
         , 'ng-js' : { files : [
             { expand : true
             , cwd : 'bower_components/angular'
-            , src : 'angular.min.js'
+            , src : 'angular.js'
             , dest : 'dist/js'
-            },
+            }]}/*,
             { expand : true
             , cwd : 'bower_components/angular'
             , src : 'angular.min.js.map'
             , dest : 'dist/js'
-            }]}
-        , 'ng-bs-js' :
+            }]}*/
+        , 'ng-bs-js' : { files : [
             { expand : true
             , cwd : 'bower_components/angular-bootstrap'
-            , src : '*.min.js'
+            , src : 'ui-bootstrap.js'
             , dest : 'dist/js'
-            }
+
+            },
+            { expand : true
+            , cwd : 'bower_components/angular-bootstrap'
+            , src : 'ui-bootstrap-tpls.js'
+            , dest : 'dist/js'
+            }]}
+        , 'ng-route-js' : { files : [
+            { expand : true
+            , cwd : 'bower_components/angular-route'
+            , src : 'angular-route.js'
+            , dest : 'dist/js'
+            }]}
         , 'ng-mobile-js' :
             { expand : true
             , cwd : 'bower_components/mobile-angular-ui/dist/js'
@@ -127,7 +139,7 @@ module.exports = function (grunt) {
             }
         , 'custom-js' :
             { files : ['custom/js/*.js']
-            , tasks : ['copy:custom-html', 'ftp-deploy']
+            , tasks : ['jshint:custom', 'copy:custom-js', 'ftp-deploy']
             }
         , 'custom-css' :
             { files : ['custom/*.css']
@@ -143,11 +155,18 @@ module.exports = function (grunt) {
             }
         },
 
+        jshint :
+        { options :
+            { laxcomma : true
+            }
+        , custom : [ 'custom/js/*' ]
+        },
+
         'ftp-deploy' :
         { urbanoid :
             { auth : ftp_conf
             , src : ftp_conf.src
-            , dest : ftp_conf.desct
+            , dest : ftp_conf.desc
             , authKey : ftp_conf.authKey
             }
         }
@@ -156,6 +175,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-clean');
     grunt.loadNpmTasks('grunt-contrib-copy');
     grunt.loadNpmTasks('grunt-contrib-watch');
+    grunt.loadNpmTasks('grunt-contrib-jshint');
     grunt.loadNpmTasks('grunt-ftp-deploy');
 
     // install bootstrap
@@ -209,7 +229,7 @@ module.exports = function (grunt) {
     //});
 
     // JS distribution task.
-    grunt.registerTask('dist-js', ['copy:custom-js', 'copy:ng-js', 'copy:ng-bs-js', 'copy:ng-mobile-js']);
+    grunt.registerTask('dist-js', ['copy:custom-js', 'copy:ng-js', 'copy:ng-bs-js', 'copy:ng-route-js', 'copy:ng-mobile-js']);
 
     // CSS distribution task.
     grunt.registerTask('dist-css', ['copy:bs-css', 'copy:ng-css', 'copy:custom-css', 'copy:ng-mobile-css']);
