@@ -95,6 +95,12 @@ module.exports = function (grunt) {
             , src : '*.min.css'
             , dest : 'dist/css'
             }
+        , 'ng-mobile-fonts':
+            { expand : true
+            , cwd : 'bower_components/mobile-angular-ui/dist/fonts'
+            , src : '*'
+            , dest : 'dist/fonts'
+            }
         , 'custom-css' :
             { expand : true
             , cwd : 'custom/css'
@@ -247,7 +253,7 @@ module.exports = function (grunt) {
     grunt.registerTask('dist-img', ['copy:custom-img']);
 
     // FONT distribution task.
-    grunt.registerTask('dist-fonts', ['copy:bs-fonts', 'copy:custom-fonts']);
+    grunt.registerTask('dist-fonts', ['copy:bs-fonts', 'copy:custom-fonts', 'copy:ng-mobile-fonts']);
 
     // HTML distribution task.
     grunt.registerTask('dist-html', ['copy:custom-html']);
