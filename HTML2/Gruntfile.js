@@ -162,21 +162,30 @@ module.exports = function (grunt) {
         , custom : [ 'custom/js/*' ]
         },
 
-        'ftp-deploy' :
+        /*"ftp-deploy" :
         { urbanoid :
-            { auth : ftp_conf
-            , src : ftp_conf.src
-            , dest : ftp_conf.desc
-            , authKey : ftp_conf.authKey
+            { auth : 
+                { host : 'server01.campusspeicher.de'
+                , port : 22
+                , authKey : 'nico'
+                }
+            , authPath : "./.ftppass"
+            , src : '/Users/Nico/NoC-Server/HTML2/dist'
+            , dest : '/httpdocs/noc'
             }
-        }
+        }*/
     });
 
     grunt.loadNpmTasks('grunt-contrib-clean');
     grunt.loadNpmTasks('grunt-contrib-copy');
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-contrib-jshint');
-    grunt.loadNpmTasks('grunt-ftp-deploy');
+    //grunt.loadNpmTasks('grunt-ftp-deploy');
+
+    grunt.registerTask("ftp-deploy", function() {
+        var res = this.async();
+        res();
+    })
 
     // install bootstrap
     grunt.registerTask('setup-bootstrap', function() {
