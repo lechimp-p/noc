@@ -6,7 +6,8 @@
   ],
   "dependencies" : {
     "bootstrap" : "~3.2.0",
-    "angular-bootstrap" : "~0.11.0"
+    "angular-bootstrap" : "~0.11.0",
+    "mobile-angular-ui" : ""
   },
   "ignore": [
     "**/.*",

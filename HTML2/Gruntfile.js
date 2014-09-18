@@ -71,6 +71,18 @@ module.exports = function (grunt) {
             , src : '*.min.js'
             , dest : 'dist/js'
             }
+        , 'ng-mobile-js' :
+            { expand : true
+            , cwd : 'bower_components/mobile-angular-ui/dist/js'
+            , src : '*.min.js'
+            , dest : 'dist/js'
+            }
+        , 'ng-mobile-css' :
+            { expand : true
+            , cwd : 'bower_components/mobile-angular-ui/dist/css'
+            , src : '*.min.css'
+            , dest : 'dist/css'
+            }
         , 'custom-css' :
             { expand : true
             , cwd : 'custom/css'
@@ -197,10 +209,10 @@ module.exports = function (grunt) {
     //});
 
     // JS distribution task.
-    grunt.registerTask('dist-js', ['copy:custom-js', 'copy:ng-js', 'copy:ng-bs-js']);
+    grunt.registerTask('dist-js', ['copy:custom-js', 'copy:ng-js', 'copy:ng-bs-js', 'copy:ng-mobile-js']);
 
     // CSS distribution task.
-    grunt.registerTask('dist-css', ['copy:bs-css', 'copy:ng-css', 'copy:custom-css']);
+    grunt.registerTask('dist-css', ['copy:bs-css', 'copy:ng-css', 'copy:custom-css', 'copy:ng-mobile-css']);
 
     // IMG distribution task.
     grunt.registerTask('dist-img', ['copy:custom-img']);
