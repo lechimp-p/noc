@@ -4,7 +4,6 @@ html, body {
 	height: 100%; /* fixes focus scrolling in Safari (OS X) */
 }
 
-
 .marginright {
 	margin-right:10px;
 }
