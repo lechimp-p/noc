@@ -47,16 +47,9 @@ angular.module("NoC",
 .run(['$rootScope', '$http', 'API', function($rootScope, $http, API) {
     $rootScope.deferred401 = [];
     
-    $rootScope.$on("event:login-confirmed", function() {
+    $rootScope.$on("event:login-successfull", function() {
         $http(req.config).then(function(response) {
             req.deferred.resolve(reponse);
-        }); 
-    });
-
-    $rootScope.$on("event:login-required", function() {
-        alert("login in....");
-        API.login("admin", "admin").success( function(response) {
-            $rootScope.$broadcast("event:login-confirmed");
         }); 
     });
 }])
