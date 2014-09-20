@@ -27,22 +27,21 @@
   </head>
   <body>
 
-  <div class="sidebar sidebar-left" toggleable parent-active-class="sidebar-left-in" id="mainSidebar">
+<!--  <div class="sidebar sidebar-left" toggleable parent-active-class="sidebar-left-in" id="mainSidebar">
     <h1 class="app-name">My App</h1>
 
     <div class="scrollable">
       <div class="scrollable-content">
         <div class="list-group" toggle="off" bubble target="mainSidebar">
           <a class="list-group-item" href="#/">Home <i class="fa fa-chevron-right pull-right"></i></a>
-          <!-- ... -->
         </div>
 
       </div>
     </div>
   </div>
-
+-->
     <!-- HALLO YOYOYOYO -->
-    <div class="app">
+<!--    <div class="app">
       <div class="navbar navbar-app navbar-absolute-top">
 
           <div class="navbar-brand navbar-brand-center">
@@ -68,35 +67,21 @@
           <a href="#/route2" class="btn btn-navbar btn-icon-only"><i class="fa fa-list fa-navbar"></i></a>
         </div>
       </div>
-
+-->
       <div class="app-body">
-        <div class="container">
-          <!--<div class="list-group" ng-controller="msg-list-controller">-->
-          <div class="list-group">
-            <!-- List-item -->
-            <!--<a href="#" class="list-group-item" ng-repeat="msg in msgs">
+        <ng-view></ng-view>
+<!--        <div class="container">
+          <div class="list-group" ng-controller="msg-list-controller">
+            <a href="#" class="list-group-item" ng-repeat="msg in msgs">
                 <img src="{{msg.author.icon}}" class="pull-left marginright img-circle" alt="Profilepicture">
                 <h4 class="list-group-item-heading">{{msg.author.name}}</h4>
                 <p class="list-group-item-text pull-left marginright">{{msg.timestamp}}</p>
                 <p class="list-group-item-text">{{msg.text}}</p>
-            </a>-->
-            <a href="#" class="list-group-item">
-                <img src="img/profpic.jpg" class="pull-left marginright img-circle" alt="Profilepicture">
-                <h4 class="list-group-item-heading">Petra Mustermueller</h4>
-                <p class="list-group-item-text pull-left marginright">14:20</p>
-                <p class="list-group-item-text">Hey, ich habe gestern gelesen, dass Urbanoid ein klasse Ding sein soll.</p>
-            <!-- Textzeile soll bei statt Umbruch in "… enden, falls Text breiter als Liste" -->  
             </a>
-            <a href="#" class="list-group-item">
-                <img src="img/profpic.jpg" class="pull-left marginright img-circle" alt="Profilepicture">
-                <h4 class="list-group-item-heading">Jochen Bogt</h4>
-                <p class="list-group-item-text pull-left marginright">14:20</p>
-                <p class="list-group-item-text">LOL</p>
-            </a>
-
           </div>
 
         </div>
+-->
       </div>
 
   </div>
@@ -111,8 +96,9 @@
     <script src="js/ui-bootstrap-tpls.js"></script>
     <script src="js/mobile-angular-ui.min.js"></script>
     <script src="js/NoC.js"></script>
-    <!--<script src="js/msg-list-controller.js"></script>
-    <script src="js/API.js"></script>-->
+    <script src="js/msg-list-controller.js"></script>
+    <script src="js/API.js"></script>
+    <script src="js/login-controller.js"></script>
  
   </body>
 </html>
