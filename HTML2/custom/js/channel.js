@@ -1,4 +1,4 @@
-angular.module("NoC.controllers", []).
+angular.module("NoC.channel", []).
 controller("msg-list-controller", function($scope, $interval, API) {
     "use strict";
 
@@ -19,18 +19,14 @@ controller("msg-list-controller", function($scope, $interval, API) {
         }
     };
 
-    API.login("admin", "admin")
-        .success(function(response) {
-            console.log("logged in");
-            API.messages(0, 0, 10)
-                .success(toScope)
-                .success(function(_) {
-                    $interval(function() {
-                        console.log(lastTS.value);
-                        API.messagesTill(0, lastTS.value).success(toScope);
-                    }, updateIntervalMS);
-                }); 
-        });
+    API.messages(0, 0, 10)
+        .success(toScope)
+        .success(function(_) {
+            $interval(function() {
+                console.log(lastTS.value);
+                API.messagesTill(0, lastTS.value).success(toScope);
+             }, updateIntervalMS);
+         }); 
 
     /*$scope.msgs =
         [ { author : 

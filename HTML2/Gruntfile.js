@@ -172,7 +172,7 @@ module.exports = function (grunt) {
             }
         , 'views-js' :
             { files : ['custom/views/*/*.js']
-            , tasks : ['copy:views-js']
+            , tasks : ['jshint:views', 'copy:views-js']
             }
         , 'views-html' :
             { files : ['custom/views/*/*.html']
@@ -185,7 +185,7 @@ module.exports = function (grunt) {
             { laxcomma : true
             }
         , custom : [ 'custom/js/*' ]
-        , views : [ 'views/*/*' ]
+        , views : [ 'custom/views/*/*.js' ]
         },
 
         /*'ftp-deploy' :

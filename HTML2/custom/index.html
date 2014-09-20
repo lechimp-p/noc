@@ -69,8 +69,8 @@
       </div>
 -->
       <div class="app-body">
-        <ng-view></ng-view>
-<!--        <div class="container">
+        <!--<ng-view></ng-view>-->
+        <div class="container">
           <div class="list-group" ng-controller="msg-list-controller">
             <a href="#" class="list-group-item" ng-repeat="msg in msgs">
                 <img src="{{msg.author.icon}}" class="pull-left marginright img-circle" alt="Profilepicture">
@@ -81,7 +81,6 @@
           </div>
 
         </div>
--->
       </div>
 
   </div>
@@ -96,9 +95,10 @@
     <script src="js/ui-bootstrap-tpls.js"></script>
     <script src="js/mobile-angular-ui.min.js"></script>
     <script src="js/NoC.js"></script>
-    <script src="js/msg-list-controller.js"></script>
-    <script src="js/API.js"></script>
-    <script src="js/login-controller.js"></script>
+    <script src="js/channel.js"></script>
+    <script src="js/login.js"></script>
+    <script src="js/services.js"></script>
+    <!--<script src="js/login-controller.js"></script>-->
  
   </body>
 </html>
