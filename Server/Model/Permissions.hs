@@ -1,25 +1,29 @@
+{-# LANGUAGE FlexibleContexts #-}
+
 module Model.Permissions
 where
 
 import Data.Monoid
 import qualified Data.Set as S
+import Control.Eff
 
 import Model.BaseTypes
-import Model.OpMonad
+import Model.Exec
+import Model.Query
 import Model.Errors
-import qualified Model.Channel as C
-import qualified Model.User as U
-import qualified Model.Message as M
+--import qualified Model.Channel as C
+--import qualified Model.User as U
+--import qualified Model.Message as M
 
 -- permissions abstract
 
-data Permission a m = 
+data Permission a r = 
       Permission
-        (UserId -> a -> m Bool)                   -- definition of the permission
-        (UserId -> a -> m PermissionViolation)    -- info about violation
+        (UserId -> a -> Eff r Bool)                   -- definition of the permission
+        (UserId -> a -> Eff r PermissionViolation)    -- info about violation
     | Forbidden                                 
 
-instance OpMonad m => Monoid (Permission a m) where
+instance Monoid (Permission a r) where
     mempty = Forbidden
     Forbidden `mappend` p = p
     p `mappend` Forbidden = p
@@ -29,47 +33,48 @@ instance OpMonad m => Monoid (Permission a m) where
 
 -- permission eval
 
-checkAccess :: OpMonad m => a -> Permission a m -> m b -> m b
-checkAccess cont (Permission check constr) action = ifIsLoggedIn' $ \oid -> do
-    success <- check oid cont 
+checkAccess :: (Member Exec r, Member Query r) 
+            => a -> Permission a r -> Eff r () 
+checkAccess cd (Permission ck err) = do
+    oid <- forceOperatorId
+    success <- ck oid cd 
     if not success
-        then constr oid cont >>= throw . InsufficientPermissions 
-        else action
+        then err oid cd >>= throwME . InsufficientPermissions 
+        else return ()
 
-tryAccess :: OpMonad m => a -> Permission a m -> m b -> m (Maybe b)
-tryAccess cont (Permission check _) action = do
+tryAccess :: (Member Exec r, Member Query r)
+          => a -> Permission a r -> Eff r b -> Eff r (Maybe b)
+tryAccess cd (Permission ck _) act = do
     oid <- getOperatorId
     case oid of
         Nothing -> return Nothing
         Just oid' -> do
-            success <- check oid' cont
+            success <- ck oid' cd 
             if success
                 then do
-                    res <- action
+                    res <- act 
                     return $ Just res
                 else return Nothing 
 
-ifIsLoggedIn' :: OpMonad m => (UserId -> m b) -> m b 
-ifIsLoggedIn' op = do
+forceOperatorId :: (Member Exec r)
+                => Eff r UserId
+forceOperatorId = do
     oid <- getOperatorId
     case oid of
-        Nothing  -> throw NotLoggedIn
-        Just oid -> op oid 
-
-ifIsLoggedIn :: OpMonad m => m b -> m b
-ifIsLoggedIn = ifIsLoggedIn' . const 
+        Nothing -> throwME NotLoggedIn
+        Just o -> return o
 
 -- permissions on noc
 
-isNoCAdmin uid = getAdmins >>= \as -> return (uid `S.member` as)
+--isNoCAdmin uid = getAdmins >>= \as -> return (uid `S.member` as)
 
-forNoCAdmins :: OpMonad m => Permission () m 
-forNoCAdmins = Permission 
-    (\ uid _ -> isNoCAdmin uid)  
+forAdmins :: Member Query r => Permission () r 
+forAdmins = Permission 
+    (\ uid _ -> isAdmin uid)  
     (\ uid _ -> return (NoNoCAdmin uid))
 
 -- permissions on channel
-
+{--
 isAdminOf uid _  = getAdmins >>= \as -> return (uid `S.member` as)
 
 forChanAdmins :: OpMonad m => Permission ChanId m
@@ -132,3 +137,4 @@ forUserSelfOrAdmins = mconcat [forUserSelf, forUserAdmins]
 
 forUserContactsSelfOrAdmins :: OpMonad m => Permission UserId m
 forUserContactsSelfOrAdmins = mconcat [forUsersOnContactList, forUserSelf, forUserAdmins]
+--}
