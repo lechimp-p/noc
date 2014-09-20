@@ -1,17 +1,19 @@
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE RankNTypes #-}
 
 module Model.Query where
 
 import Data.Text
 import Data.Time.Clock
 import Data.Data (Data, Typeable)
+import Control.Eff
+
 
 import Model.BaseTypes
 import Model.Message
---import Model.Channel
---import Model.User
-
 
 data Query n
     = IsAdmin UserId (Bool -> n)
@@ -19,12 +21,8 @@ data Query n
     | UserQuery UserId (UserQueryType n)
     deriving (Typeable, Functor)
 
-{--instance Functor Query where
-    fmap f (IsAdmin uid n) = IsAdmin uid (fmap f n)
-    fmap f (GetOperatorId n) = GetOperatorId (fmap f n)
-    fmap f (ChanQuery cid n) = ChanQuery cid (fmap f n)
-    fmap f (UserQuery uid n) = UserQuery uid (fmap f n)
---}
+isAdmin :: Member Query r => UserId -> Eff r Bool
+isAdmin uid = send $ \ next -> inj (IsAdmin uid next)
 
 type Offset = Int
 type Amount = Int
@@ -37,26 +35,50 @@ data ChanQueryType n
     | IsChanOwner UserId        (Bool -> n)
     | IsChanProducer UserId     (Bool -> n)
     | IsChanConsumer UserId     (Bool -> n)
-    | AmountOfDistinctUsers     (Int -> n)
+    | AmountOfSubscribedUsers   (Int -> n)
     | LastPostTimestamp         (UTCTime -> n)
     | Messages Offset Amount    ([Message] -> n) 
     | MessagesTill UTCTime      ([Message] -> n)
     deriving (Typeable, Functor)
 
-{--instance Functor ChanQueryType where
-    fmap f (GetChanName n) = GetChanName (fmap f n) 
-    fmap f (GetChanDesc n) = GetChanDesc (fmap f n)
-    fmap f (GetChanType n) = GetChanType (fmap f n)
-    fmap f (IsChanOwner uid n) = IsChanOwner uid (fmap f n)
-    fmap f (IsChanProducer uid n) = IsChanProducer uid (fmap f n)
-    fmap f (IsChanConsumer uid n) = IsChanConsumer uid (fmap f n)
-    fmap f (AmountOfDistinctUsers n) = AmountOfDistinctUsers (fmap f n)
-    fmap f (LastPostTimestamp n) = LastPostTimestamp (fmap f n)
-    fmap f (Messages o a n) = Messages o a (fmap f n)
-    fmap f (MessagesTill ts n) = MessagesTill ts (fmap f n)
---}
+chanQuery :: Member Query r 
+          => ChanId -> (forall w. ((n -> VE r w) -> ChanQueryType (VE r w))) -> Eff r n
+chanQuery cid q = send $ \ next -> inj (ChanQuery cid (q next))
 
- 
+getChanName :: Member Query r => ChanId -> Eff r Name
+getChanName cid = chanQuery cid GetChanName 
+
+getChanDesc :: Member Query r => ChanId -> Eff r Desc 
+getChanDesc cid = chanQuery cid GetChanDesc 
+
+getChanType :: Member Query r => ChanId -> Eff r ChanType 
+getChanType cid = chanQuery cid GetChanType
+
+getChanImage :: Member Query r => ChanId -> Eff r (Maybe Image)
+getChanImage cid = chanQuery cid GetChanImage
+
+isChanOwner :: Member Query r => ChanId -> UserId -> Eff r Bool
+isChanOwner cid uid = chanQuery cid (IsChanOwner uid)
+
+isChanProducer :: Member Query r => ChanId -> UserId -> Eff r Bool
+isChanProducer cid uid = chanQuery cid (IsChanProducer uid)
+
+isChanConsumer :: Member Query r => ChanId -> UserId -> Eff r Bool
+isChanConsumer cid uid = chanQuery cid (IsChanConsumer uid)
+
+amountOfSubscribedUsers :: Member Query r => ChanId -> Eff r Int
+amountOfSubscribedUsers cid = chanQuery cid AmountOfSubscribedUsers
+
+lastPostTimestamp :: Member Query r => ChanId -> Eff r UTCTime
+lastPostTimestamp cid = chanQuery cid LastPostTimestamp
+
+messages :: Member Query r => ChanId -> Offset -> Amount -> Eff r [Message]
+messages cid o a = chanQuery cid (Messages o a) 
+
+messagesTill :: Member Query r => ChanId -> UTCTime -> Eff r [Message]
+messagesTill cid ts = chanQuery cid (MessagesTill ts)
+
+
 data UserQueryType n
     = GetUserLogin (Login -> n)
     | IsUserPassword Password (Bool -> n)
@@ -67,3 +89,31 @@ data UserQueryType n
     | GetUserContacts ([UserId] -> n)
     | GetUserSubscriptions ([ChanId] -> n)
     deriving (Typeable, Functor)
+
+userQuery :: Member Query r 
+          => UserId -> (forall w. ((n -> VE r w) -> UserQueryType (VE r w))) -> Eff r n
+userQuery uid q = send $ \ next -> inj (UserQuery uid (q next))
+
+getUserLogin :: Member Query r => UserId -> Eff r Login
+getUserLogin uid = userQuery uid GetUserLogin
+
+isUserPassword :: Member Query r => UserId -> Password -> Eff r Bool
+isUserPassword uid pw = userQuery uid (IsUserPassword pw)
+
+getUserName :: Member Query r => UserId -> Eff r Name 
+getUserName uid = userQuery uid GetUserName
+
+getUserDesc :: Member Query r => UserId -> Eff r Desc 
+getUserDesc uid = userQuery uid GetUserDesc
+
+getUserIcon :: Member Query r => UserId -> Eff r Icon 
+getUserIcon uid = userQuery uid GetUserIcon
+
+getUserNotifications :: Member Query r => UserId -> Eff r [Notification] 
+getUserNotifications uid = userQuery uid GetUserNotifications
+
+getUserContacts :: Member Query r => UserId -> Eff r [UserId] 
+getUserContacts uid = userQuery uid GetUserContacts
+ 
+getUserSubscriptions :: Member Query r => UserId -> Eff r [ChanId] 
+getUserSubscriptions uid = userQuery uid GetUserSubscriptions
