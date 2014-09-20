@@ -9,6 +9,7 @@ module Model.Query where
 import Data.Text
 import Data.Time.Clock
 import Data.Data (Typeable)
+import qualified Data.Set as S
 import Control.Eff
 
 
@@ -80,14 +81,14 @@ messagesTill cid ts = chanQuery cid (MessagesTill ts)
 
 
 data UserQueryType n
-    = GetUserLogin (Login -> n)
-    | IsUserPassword Password (Bool -> n)
-    | GetUserName (Name -> n)
-    | GetUserDesc (Desc -> n)
-    | GetUserIcon (Icon -> n)
-    | GetUserNotifications ([Notification] -> n)
-    | GetUserContacts ([UserId] -> n)
-    | GetUserSubscriptions ([ChanId] -> n)
+    = GetUserLogin              (Login -> n)
+    | IsUserPassword Password   (Bool -> n)
+    | GetUserName               (Name -> n)
+    | GetUserDesc               (Desc -> n)
+    | GetUserIcon               (Icon -> n)
+    | GetUserNotifications      ([Notification] -> n)
+    | GetUserContacts           (S.Set UserId -> n)
+    | GetUserSubscriptions      (S.Set ChanId -> n)
     deriving (Typeable, Functor)
 
 userQuery :: Member Query r 
@@ -112,8 +113,8 @@ getUserIcon uid = userQuery uid GetUserIcon
 getUserNotifications :: Member Query r => UserId -> Eff r [Notification] 
 getUserNotifications uid = userQuery uid GetUserNotifications
 
-getUserContacts :: Member Query r => UserId -> Eff r [UserId] 
+getUserContacts :: Member Query r => UserId -> Eff r (S.Set UserId)
 getUserContacts uid = userQuery uid GetUserContacts
  
-getUserSubscriptions :: Member Query r => UserId -> Eff r [ChanId] 
+getUserSubscriptions :: Member Query r => UserId -> Eff r (S.Set ChanId)
 getUserSubscriptions uid = userQuery uid GetUserSubscriptions
