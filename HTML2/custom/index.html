@@ -24,63 +24,65 @@
       <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
       <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
     <![endif]-->
-  </head>
-  <body>
+    </head>
+    <body>
 
-<!--  <div class="sidebar sidebar-left" toggleable parent-active-class="sidebar-left-in" id="mainSidebar">
-    <h1 class="app-name">My App</h1>
+    <div class="sidebar sidebar-right" toggleable parent-active-class="sidebar-right-in" id="mainSidebar">
+        <h1 class="app-name">My App</h1>
 
-    <div class="scrollable">
-      <div class="scrollable-content">
-        <div class="list-group" toggle="off" bubble target="mainSidebar">
-          <a class="list-group-item" href="#/">Home <i class="fa fa-chevron-right pull-right"></i></a>
+        <div class="scrollable">
+            <div class="scrollable-content">
+                <div class="list-group" toggle="off" bubble target="mainSidebar">
+                <a class="list-group-item" href="#/">Home <i class="fa fa-chevron-left pull-left"></i></a>
+                </div>
+            </div>
         </div>
-
-      </div>
     </div>
-  </div>
--->
+
     <!-- HALLO YOYOYOYO -->
-<!--    <div class="app">
-      <div class="navbar navbar-app navbar-absolute-top">
+    <div class="app">
+        <div class="navbar navbar-app navbar-absolute-top">
 
-          <div class="navbar-brand navbar-brand-center">
-            <span>My App</span>
-          </div>
-
-          <div class="btn-group pull-left">
-            <div ng-click="toggle('mainSidebar')" class="btn btn-navbar sidebar-toggle">
-              <i class="fa fa-bars"></i> Menu
+            <div class="navbar-brand navbar-brand-center">
+                <span>My App</span>
             </div>
-          </div>
 
-          <div class="btn-group pull-right">
-            <div class="btn btn-navbar">
-              <i class="fa fa-plus"></i> New
+            <div class="btn-group pull-right">
+                <div ng-click="toggle('mainSidebar')" class="btn btn-navbar sidebar-toggle">
+                    <i class="fa fa-bars"></i> Menu
+                </div>
             </div>
-          </div>
+
+            <!--
+            <div class="btn-group pull-right">
+                <div class="btn btn-navbar">
+                    <i class="fa fa-plus"></i> New
+                </div>
+            </div>
+            -->
       </div>
 
+<!--
       <div class="navbar navbar-app navbar-absolute-bottom">
-        <div class="btn-group justified">
-          <a href="#/route1" class="btn btn-navbar btn-icon-only"><i class="fa fa-home fa-navbar"></i></a>
-          <a href="#/route2" class="btn btn-navbar btn-icon-only"><i class="fa fa-list fa-navbar"></i></a>
-        </div>
+            <div class="btn-group justified">
+                <a href="#/route1" class="btn btn-navbar btn-icon-only"><i class="fa fa-home fa-navbar"></i></a>
+                <a href="#/route2" class="btn btn-navbar btn-icon-only"><i class="fa fa-list fa-navbar"></i></a>
+            </div>
       </div>
 -->
+
       <div class="app-body">
         <!--<ng-view></ng-view>-->
-        <div class="container">
-          <div class="list-group" ng-controller="msg-list-controller">
-            <a href="#" class="list-group-item" ng-repeat="msg in msgs">
-                <img src="{{msg.author.icon}}" class="pull-left marginright img-circle" alt="Profilepicture">
-                <h4 class="list-group-item-heading">{{msg.author.name}}</h4>
-                <p class="list-group-item-text pull-left marginright">{{msg.timestamp}}</p>
-                <p class="list-group-item-text">{{msg.text}}</p>
-            </a>
-          </div>
-
-        </div>
+            <div class="container">
+                <div class="list-group" ng-controller="msg-list-controller">
+                    <a href="#" class="list-group-item" ng-repeat="msg in msgs">
+                        <img src="{{msg.author.icon}}" class="pull-left marginright img-circle" alt="Profilepicture">
+                        <h4 class="list-group-item-heading">{{msg.author.name}}</h4>
+                        <p class="list-group-item-text pull-left marginright">{{msg.timestamp}}</p>
+                        <p class="list-group-item-text">{{msg.text}}</p>
+                    </a>
+                </div>
+            </div>
       </div>
 
   </div>
