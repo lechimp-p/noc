@@ -4,6 +4,7 @@
 
 module Model.Simple
     ( runQuerySimple
+    , runSimple
     --runOp
 --    , runOp'
 --    , noc

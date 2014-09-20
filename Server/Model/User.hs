@@ -10,8 +10,6 @@ import Prelude hiding (null, words, reverse)
 import Data.Data (Data, Typeable) 
 import qualified Data.Set as S
 import Data.Text hiding (concat, filter)
-import Data.IxSet (Indexable, empty, ixSet, ixFun) 
-import Data.SafeCopy (SafeCopy, base, deriveSafeCopy)
 import Control.Lens (makeLenses)
 import Data.Time.Clock
 
@@ -37,10 +35,9 @@ instance Eq User where
 instance Ord User where
     compare u u' = compare (_id u) (_id u')
 
-$(deriveSafeCopy 0 'base ''Notification)
-$(deriveSafeCopy 0 'base ''User) 
 makeLenses ''User
 
+{--
 -- An index for words in the name.
 newtype IxName = IxName Text 
                  deriving (Eq, Ord, Data, Typeable, SafeCopy)
@@ -63,5 +60,4 @@ instance Indexable User where
         , ixFun $ fmap IxName . words . nameToText . _name
         , ixFun $ fmap IxDesc . words . descToText . _desc 
         ]
-
-
+--}

@@ -10,8 +10,6 @@ import Prelude hiding (null, words, reverse)
 import Data.Data (Data, Typeable) 
 import qualified Data.Set as S
 import Data.Text hiding (concat, filter)
-import Data.IxSet (Indexable, empty, ixSet, ixFun) 
-import Data.SafeCopy (SafeCopy, base, deriveSafeCopy)
 import Control.Lens (makeLenses)
 
 import Model.BaseTypes
@@ -35,11 +33,9 @@ instance Eq Channel where
 instance Ord Channel where
     compare c c' = compare (_id c) (_id c') 
 
-$(deriveSafeCopy 0 'base ''ChanType)
-$(deriveSafeCopy 0 'base ''Channel) 
 makeLenses ''Channel
 
-
+{--
 newtype IxExactName = IxExactName Text
                       deriving (Eq, Ord, Data, Typeable, SafeCopy) 
 -- An index for words in the name.
@@ -64,3 +60,4 @@ instance Indexable Channel where
                 . words . reverse . nameToText . _name
         , ixFun $ fmap IxDesc . words . descToText . _desc 
         ]
+--}

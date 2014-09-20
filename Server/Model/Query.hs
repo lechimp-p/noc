@@ -8,7 +8,7 @@ module Model.Query where
 
 import Data.Text
 import Data.Time.Clock
-import Data.Data (Data, Typeable)
+import Data.Data (Typeable)
 import Control.Eff
 
 

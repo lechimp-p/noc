@@ -8,7 +8,7 @@ module Model.Update where
 
 import Data.Text
 import Data.Time.Clock
-import Data.Data (Data, Typeable)
+import Data.Data (Typeable)
 import Control.Eff
 
 import Model.BaseTypes
