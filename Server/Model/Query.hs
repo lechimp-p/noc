@@ -18,12 +18,20 @@ import Model.Message
 
 data Query n
     = IsAdmin UserId (Bool -> n)
+    | CountAdmins (Int -> n)
+    | GetUserIdByLogin Login (Maybe UserId -> n)
     | ChanQuery ChanId (ChanQueryType n) 
     | UserQuery UserId (UserQueryType n)
     deriving (Typeable, Functor)
 
 isAdmin :: Member Query r => UserId -> Eff r Bool
 isAdmin uid = send $ \ next -> inj (IsAdmin uid next)
+
+countAdmins :: Member Query r => Eff r Int
+countAdmins = send $ \ next -> inj (CountAdmins next)
+
+getUserIdByLogin :: Member Query r => Login -> Eff r (Maybe UserId)
+getUserIdByLogin l = send $ \ next -> inj (GetUserIdByLogin l next)
 
 type Offset = Int
 type Amount = Int
@@ -37,7 +45,7 @@ data ChanQueryType n
     | IsChanProducer UserId     (Bool -> n)
     | IsChanConsumer UserId     (Bool -> n)
     | AmountOfSubscribedUsers   (Int -> n)
-    | LastPostTimestamp         (UTCTime -> n)
+    | LastPostTimestamp         (Maybe UTCTime -> n)
     | Messages Offset Amount    ([Message] -> n) 
     | MessagesTill UTCTime      ([Message] -> n)
     deriving (Typeable, Functor)
@@ -70,7 +78,7 @@ isChanConsumer cid uid = chanQuery cid (IsChanConsumer uid)
 amountOfSubscribedUsers :: Member Query r => ChanId -> Eff r Int
 amountOfSubscribedUsers cid = chanQuery cid AmountOfSubscribedUsers
 
-lastPostTimestamp :: Member Query r => ChanId -> Eff r UTCTime
+lastPostTimestamp :: Member Query r => ChanId -> Eff r (Maybe UTCTime)
 lastPostTimestamp cid = chanQuery cid LastPostTimestamp
 
 messages :: Member Query r => ChanId -> Offset -> Amount -> Eff r [Message]

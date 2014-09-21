@@ -1,289 +1,302 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleContexts #-}
 
-module Model.Operations
-    ( Model.Operations.getOperatorId
-    , Model.Operations.addAdmin
-    , Model.Operations.rmAdmin
-    , getChanName
-    , getChanDesc
-    , getChanType
-    , setChanName
-    , setChanDesc
-    , setChanType
-    , addChanOwner
-    , addChanProducer
-    , addChanConsumer
-    , rmChanOwner
-    , rmChanProducer
-    , rmChanConsumer
-    , amountOfDistinctUsers
-    , lastPostTimestamp
-    , subscribeToChan
-    , unsubscribeFromChan
-    , getUserByLogin
-    , getUserLogin
-    , getUserName
-    , getUserDesc
-    , getUserIcon
-    , getUserOwnedChannels
-    , getUserSubscriptions
-    , getUserContacts
-    , addUserContact
-    , rmUserContact
-    , getUserNotifications
-    , addUserNotification
-    , tryToAddUserNotification
-    , setUserLogin
-    , setUserPassword
-    , setUserName
-    , setUserDesc
-    , setUserIcon
-    , createUser
-    , createChannel
-    , post
-    , Model.Operations.messages
-    , messagesTill
-    , Offset
-    , Amount
-    )
-where
+module Model.Operations where
 
 import qualified Data.Set as S
-import qualified Data.IxSet as IX
-import Data.Text hiding (drop, take, takeWhile)
-import Control.Lens
-import Control.Lens.Prism
-import Control.Applicative ((<$>))
+import Data.Text (Text) 
 import Data.Time.Clock (UTCTime)
 import Data.Maybe (isJust)
+import Control.Eff
 
+import Model.BaseTypes
 import Model.Errors
 import Model.Permissions
-import Model.BaseTypes
-import Model.OpMonad
-import Model.NoC
-import qualified Model.NoC as N
-import qualified Model.Channel as C
-import Model.Channel
-import qualified Model.User as U
-import Model.User 
-import qualified Model.Message as M
+import Model.Exec
+import Model.Query (Query, Offset, Amount)
+import Model.Update (Update)
+import qualified Model.Query as Q
+import qualified Model.Update as U
 import Model.Message 
 
-type SimpleLens a b = Lens a a b b 
+throwOn err cond =
+    if cond
+    then throwME err
+    else return ()
 
 ---------
 -- on noc
 ---------
 
-getOperatorId :: OpMonad m => m UserId
-getOperatorId = ifIsLoggedIn' return 
+addAdmin :: (Member Update r, Member Query r, Member Exec r) 
+         => UserId -> Eff r ()
+addAdmin uid = do
+    checkAccess () forAdmins 
+    U.addAdmin uid
 
-addAdmin :: OpMonad m => UserId -> m ()
-addAdmin uid = checkAccess () forNoCAdmins $ do
-    getUser uid
-    Model.OpMonad.addAdmin uid
-
-rmAdmin :: OpMonad m => UserId -> m ()
-rmAdmin uid = checkAccess () forNoCAdmins $ do
-    n <- fmap S.size getAdmins
+rmAdmin :: (Member Update r, Member Query r, Member Exec r) 
+        => UserId -> Eff r ()
+rmAdmin uid = do
+    checkAccess () forAdmins 
+    n <- Q.countAdmins 
     OnlyOneNoCAdminLeft `throwOn` (n == 1) 
-    Model.OpMonad.rmAdmin uid
+    U.rmAdmin uid
 
 -------------------------
 -- operations on channels
 -------------------------
 
-getFromChan :: OpMonad m => SimpleLens Channel a -> ChanId -> m a
-getFromChan l cid = checkAccess cid forAllChanPeople $ do
-    chan <- getChannel cid
-    return $ chan ^. l
+getChanName :: (Member Query r, Member Exec r)
+            => ChanId -> Eff r Name
+getChanName cid = do
+    checkAccess cid forAllChanPeople
+    Q.getChanName cid
 
-setToChan :: OpMonad m => SimpleLens Channel a -> ChanId -> a -> m ()
-setToChan l cid v = checkAccess cid forChanOwnersOrAdmins $ do
-    chan <- getChannel cid
-    storeChannel (set l v chan)  
+getChanDesc :: (Member Query r, Member Exec r)
+            => ChanId -> Eff r Desc 
+getChanDesc cid = do
+    checkAccess cid forAllChanPeople
+    Q.getChanDesc cid
 
-getChanName cid = getFromChan C.name cid
-getChanDesc cid = getFromChan C.desc cid
-getChanType cid = getFromChan C.type' cid
+getChanType :: (Member Query r, Member Exec r)
+            => ChanId -> Eff r ChanType 
+getChanType cid = do
+    checkAccess cid forAllChanPeople
+    Q.getChanType cid
 
-setChanName cid v = setToChan C.name cid v
-setChanDesc cid v = setToChan C.desc cid v
-setChanType cid v = setToChan C.type' cid v
+setChanName :: (Member Update r, Member Query r, Member Exec r)
+            => ChanId -> Name -> Eff r () 
+setChanName cid v = do
+    checkAccess cid forChanOwnersOrAdmins
+    U.setChanName cid v 
 
-addChanXX :: OpMonad m 
-          => SimpleLens Channel (S.Set UserId)
-          -> ChanId -> UserId -> m ()
-addChanXX l cid uid = checkAccess cid forChanOwnersOrAdmins $ do
-    chan <- getChannel cid
-    storeChannel (over l (S.insert uid) chan)
+setChanDesc :: (Member Update r, Member Query r, Member Exec r)
+            => ChanId -> Desc -> Eff r () 
+setChanDesc cid v = do
+    checkAccess cid forChanOwnersOrAdmins
+    U.setChanDesc cid v 
 
-rmChanXX :: OpMonad m 
-         => SimpleLens Channel (S.Set UserId)
-         -> ChanId -> UserId -> m ()
-rmChanXX l cid uid = checkAccess cid forChanOwnersOrAdmins $ do
-    chan <- getChannel cid
-    storeChannel (over l (S.delete uid) chan)
+setChanType :: (Member Update r, Member Query r, Member Exec r)
+            => ChanId -> ChanType -> Eff r () 
+setChanType cid v = do
+    checkAccess cid forChanOwnersOrAdmins
+    U.setChanType cid v 
 
-addChanOwner cid uid = addChanXX C.owners cid uid
-addChanProducer cid uid = addChanXX C.producers cid uid
-addChanConsumer cid uid = addChanXX C.consumers cid uid
+addChanOwner :: (Member Update r, Member Query r, Member Exec r)
+             => ChanId -> UserId -> Eff r ()
+addChanOwner cid uid = do
+    checkAccess cid forChanOwnersOrAdmins
+    U.addChanOwner cid uid
 
-rmChanOwner cid uid = checkAccess cid forChanOwnersOrAdmins $ do
-    chan <- getChannel cid
-    OnlyOneChannelOwnerLeft cid `throwOn` (S.size (chan ^. owners) == 0)
-    storeChannel (over C.owners (S.delete uid) chan)
-rmChanProducer cid uid = rmChanXX C.producers cid uid
-rmChanConsumer cid uid = rmChanXX C.consumers cid uid
+rmChanOwner :: (Member Update r, Member Query r, Member Exec r)
+            => ChanId -> UserId -> Eff r ()
+rmChanOwner cid uid = do
+    checkAccess cid forChanOwnersOrAdmins
+    U.rmChanOwner cid uid
 
-amountOfDistinctUsers :: OpMonad m => ChanId -> m Int
-amountOfDistinctUsers cid = checkAccess cid forAllChanPeople $ do
-    chan <- getChannel cid
-    return . S.size . S.unions $ fmap (chan &) [_owners, _producers, _consumers]    
+addChanProducer :: (Member Update r, Member Query r, Member Exec r)
+             => ChanId -> UserId -> Eff r ()
+addChanProducer cid uid = do
+    checkAccess cid forChanOwnersOrAdmins
+    U.addChanProducer cid uid
 
-lastPostTimestamp :: OpMonad m => ChanId -> m (Maybe UTCTime)
+rmChanProducer :: (Member Update r, Member Query r, Member Exec r)
+            => ChanId -> UserId -> Eff r ()
+rmChanProducer cid uid = do
+    checkAccess cid forChanOwnersOrAdmins
+    U.rmChanProducer cid uid
+
+addChanConsumer :: (Member Update r, Member Query r, Member Exec r)
+             => ChanId -> UserId -> Eff r ()
+addChanConsumer cid uid = do
+    checkAccess cid forChanOwnersOrAdmins
+    U.addChanConsumer cid uid
+
+rmChanConsumer :: (Member Update r, Member Query r, Member Exec r)
+            => ChanId -> UserId -> Eff r ()
+rmChanConsumer cid uid = do
+    checkAccess cid forChanOwnersOrAdmins
+    U.rmChanConsumer cid uid
+
+amountOfSubscribedUsers :: (Member Query r, Member Exec r)
+                        => ChanId -> Eff r Int
+amountOfSubscribedUsers cid = do
+    checkAccess cid forAllChanPeople 
+    Q.amountOfSubscribedUsers cid
+
+lastPostTimestamp :: (Member Query r, Member Exec r)
+                  => ChanId -> Eff r (Maybe UTCTime)
 lastPostTimestamp cid = do
-    chan <- getChannel cid
-    let mids = C._messages chan
-    msg <- head' . IX.toDescList (IX.Proxy :: IX.Proxy UTCTime) <$> getMessages @= cid
-    return $ fmap _timestamp msg
+    checkAccess cid forAllChanPeople
+    Q.lastPostTimestamp cid
 
-subscribeToChan :: OpMonad m => UserId -> ChanId -> m () 
-subscribeToChan uid cid = checkAccess cid forAllChanPeople $
-    checkAccess uid forUserSelfOrAdmins $ do
-        user <- getUser uid
-        storeUser (over U.subscriptions (S.insert cid) user)  
+subscribeToChan :: (Member Update r, Member Query r, Member Exec r)
+                => UserId -> ChanId -> Eff r () 
+subscribeToChan uid cid = do
+    checkAccess cid forAllChanPeople 
+    checkAccess uid forUserSelfOrAdmins 
+    U.addUserSubscription uid cid
       
-unsubscribeFromChan :: OpMonad m => UserId -> ChanId -> m ()
-unsubscribeFromChan uid cid = checkAccess uid forUserSelfOrAdmins $ do
-        user <- getUser uid
-        storeUser (over U.subscriptions (S.delete cid) user)
+unsubscribeFromChan :: (Member Update r, Member Query r, Member Exec r) 
+                    => UserId -> ChanId -> Eff r ()
+unsubscribeFromChan uid cid = do
+        checkAccess uid forUserSelfOrAdmins 
+        U.rmUserSubscription uid cid
 
 ----------------------
 -- operations on users
 ----------------------
 
-getFromUser :: OpMonad m => SimpleLens User a -> UserId -> m a
-getFromUser l uid = ifIsLoggedIn $ do
-    user <- getUser uid
-    return $ user ^. l 
+getUserLogin :: (Member Query r, Member Exec r)
+             => UserId -> Eff r Login 
+getUserLogin uid = do
+    forceOperatorId
+    Q.getUserLogin uid
 
-setToUser :: OpMonad m => SimpleLens User a -> UserId -> a -> m ()
-setToUser l uid v = checkAccess uid forUserSelfOrAdmins $ do
-    user <- getUser uid
-    storeUser (set l v user) 
+getUserName :: (Member Query r, Member Exec r)
+             => UserId -> Eff r Name 
+getUserName uid = do
+    forceOperatorId
+    Q.getUserName uid
 
-overInUser :: OpMonad m => SimpleLens User a -> UserId -> (a -> a) -> m ()
-overInUser l uid fun = checkAccess uid forUserSelfOrAdmins $ do
-    user <- getUser uid
-    storeUser (over l fun user)
+getUserDesc :: (Member Query r, Member Exec r)
+             => UserId -> Eff r Desc 
+getUserDesc uid = do
+    forceOperatorId
+    Q.getUserDesc uid
 
-getUserLogin uid = getFromUser U.login uid
-getUserName uid = getFromUser U.name uid
-getUserDesc uid = getFromUser U.desc uid
-getUserIcon uid = getFromUser U.icon uid
-getUserOwnedChannels uid = checkAccess uid forUserSelfOrAdmins
-    $ getFromUser U.ownedChannels uid
-getUserSubscriptions uid = checkAccess uid forUserSelfOrAdmins
-    $ getFromUser U.subscriptions uid
-getUserContacts uid = checkAccess uid forUserSelfOrAdmins
-    $ getFromUser U.contacts uid
-getUserNotifications uid offs amo = checkAccess uid forUserSelfOrAdmins
-    $ do
-        res <- getFromUser U.notifications uid
-        return . take amo . drop offs $ res
+getUserIcon :: (Member Query r, Member Exec r)
+             => UserId -> Eff r Icon 
+getUserIcon uid = do
+    forceOperatorId
+    Q.getUserIcon uid
 
-addUserNotification uid notf = checkAccess uid forUserContactsSelfOrAdmins $ do
-    user <- getUser uid
-    storeUser (over U.notifications (notf :) user)
+getUserSubscriptions :: (Member Query r, Member Exec r)
+                     => UserId -> Eff r (S.Set ChanId)
+getUserSubscriptions uid = do
+    checkAccess uid forUserSelfOrAdmins
+    Q.getUserSubscriptions uid
 
-tryToAddUserNotification uid notf = tryAccess uid forUserContactsSelfOrAdmins $ do
-    user <- getUser uid
-    storeUser (over U.notifications (notf :) user)
+getUserContacts :: (Member Query r, Member Exec r)
+                     => UserId -> Eff r (S.Set UserId)
+getUserContacts uid = do
+    checkAccess uid forUserSelfOrAdmins
+    Q.getUserContacts uid
 
-addUserContact uid other = overInUser U.contacts uid (S.insert other)  
-rmUserContact uid other = overInUser U.contacts uid (S.delete other)  
+getUserNotifications :: (Member Query r, Member Exec r)
+                     => UserId -> Eff r [Notification] 
+getUserNotifications uid = do
+    checkAccess uid forUserSelfOrAdmins
+    Q.getUserNotifications uid
 
+setUserLogin :: (Member Update r, Member Query r, Member Exec r)
+             => UserId -> Login -> Eff r ()
 setUserLogin uid l = do
-    oid <- Model.Operations.getOperatorId
-    l' <- getUserLogin oid
-    if uid == oid && l == l'
+    checkAccess uid forUserSelfOrAdmins
+    l' <- getUserLogin uid
+    if l == l'
         then return ()
         else do
             checkDuplicateLogin l
-            setToUser U.login uid l
-setUserName uid v = setToUser U.name uid v
-setUserPassword uid v = setToUser U.password uid v
-setUserDesc uid v = setToUser U.desc uid v
-setUserIcon uid v = setToUser U.icon uid v
+            U.setUserLogin uid l
 
-getUserByLogin :: OpMonad m => Text -> m UserId
-getUserByLogin l = ifIsLoggedIn $ do
-    user <- IX.getOne <$> getUsers @= (Login l)
-    case user of
-        (Just user) -> return $ U._id user
-        otherwise -> throw $ UnknownLogin l 
+setUserName :: (Member Update r, Member Query r, Member Exec r)
+            => UserId -> Name -> Eff r ()
+setUserName uid v = do
+    checkAccess uid forUserSelfOrAdmins
+    U.setUserName uid v
+
+setUserDesc :: (Member Update r, Member Query r, Member Exec r)
+            => UserId -> Desc -> Eff r ()
+setUserDesc uid v = do
+    checkAccess uid forUserSelfOrAdmins
+    U.setUserDesc uid v
+
+addUserContact :: (Member Update r, Member Query r, Member Exec r)
+               => UserId -> UserId -> Eff r ()
+addUserContact uid other = do
+    checkAccess uid forUserSelfOrAdmins
+    U.addUserContact uid other
+
+rmUserContact :: (Member Update r, Member Query r, Member Exec r)
+              => UserId -> UserId -> Eff r ()
+rmUserContact uid other = do
+    checkAccess uid forUserSelfOrAdmins
+    U.rmUserContact uid other
+
+addUserNotification :: (Member Update r, Member Query r, Member Exec r)
+                    => UserId -> Notification -> Eff r ()
+addUserNotification uid notf = do
+    checkAccess uid forUserContactsSelfOrAdmins
+    U.addUserNotification uid notf
+
+tryToAddUserNotification :: (Member Update r, Member Query r, Member Exec r)
+                         => UserId -> Notification -> Eff r ()
+tryToAddUserNotification uid notf = do
+    tryAccess uid forUserContactsSelfOrAdmins $ do
+        U.addUserNotification uid notf
+    return ()
+
+getUserIdByLogin :: (Member Query r, Member Exec r)
+               => Login -> Eff r UserId
+getUserIdByLogin l = do
+    forceOperatorId
+    res <- Q.getUserIdByLogin l
+    case res of
+        (Just user) -> return $ user
+        otherwise -> throwME $ UnknownLogin l 
 
 --------------------
 -- creation of users
 --------------------
 
-createUser :: OpMonad m => Login -> Password -> m UserId
-createUser l pw = checkAccess () forNoCAdmins $ do
-    uid <- newUserId
-    storeUser $ User uid l pw (mkName "") (mkDesc "") Nothing S.empty S.empty S.empty []
-    return uid
+createUser :: (Member Update r, Member Query r, Member Exec r)
+           => Login -> Password -> Eff r UserId
+createUser l pw = do
+    checkAccess () forAdmins
+    U.createUser l pw
 
 -----------------------
 -- creation of channels
 -----------------------
 
-createChannel :: OpMonad m => Name -> Desc -> m ChanId
-createChannel n d = ifIsLoggedIn $ do
-    cid <- newChanId
-    oid <- Model.Operations.getOperatorId
-    user <- getUser oid
-    storeChannel $ Channel cid n d None (S.insert oid S.empty) S.empty S.empty S.empty
-    storeUser $ over U.ownedChannels (S.insert cid) user
-    return cid
+createChannel :: (Member Update r, Member Query r, Member Exec r)
+              => Name -> Eff r ChanId
+createChannel n = do
+    forceOperatorId
+    U.createChan n
 
 ----------------------
 -- posting of messages
 ----------------------
 
-post :: OpMonad m => ChanId -> UTCTime -> Text -> Maybe Image -> m MsgId
-post cid ts txt img = checkAccess cid forProducersOrOwners $ do
-    mid <- newMsgId 
-    oid <- Model.Operations.getOperatorId
-    chan <- getChannel cid
-    storeChannel $ over C.messages (S.insert mid) chan
-    storeMessage $ Message mid cid img txt oid ts
-    return mid
+post :: (Member Update r, Member Query r, Member Exec r)
+     => ChanId -> UTCTime -> Text -> Maybe Image -> Eff r MsgId
+post cid ts txt img = do
+    checkAccess cid forProducersOrOwners
+    U.post cid ts txt img
 
 ----------------------
 -- reading of messages
 ----------------------
 
-type Offset = Int
-type Amount = Int
+messages :: (Member Query r, Member Exec r)
+         => ChanId -> Offset -> Amount -> Eff r [Message]
+messages cid ofs am = do
+    checkAccess cid forConsumersOrOwners
+    Q.messages cid ofs am
 
-messages :: OpMonad m => ChanId -> Offset -> Amount -> m [Message]
-messages cid ofs am = checkAccess cid forConsumersOrOwners $ do
-    take am . drop ofs . IX.toDescList (IX.Proxy :: IX.Proxy UTCTime) <$> getMessages @= cid  
-
-messagesTill :: OpMonad m => ChanId -> UTCTime -> m [Message]
-messagesTill cid ts = checkAccess cid forConsumersOrOwners $ do
-    takeWhile ((<=) ts . _timestamp) . IX.toDescList (IX.Proxy :: IX.Proxy UTCTime) <$> getMessages @= cid
+messagesTill :: (Member Query r, Member Exec r) 
+             => ChanId -> UTCTime -> Eff r [Message]
+messagesTill cid ts = do
+    checkAccess cid forConsumersOrOwners
+    Q.messagesTill cid ts
 
 ----------
 -- helpers
 ----------
 
 checkDuplicateLogin l = do
-    n <- IX.size <$> getUsers @= l 
-    DuplicateLogin l `throwOn` (n >= 1) 
-
-head' []     = Nothing
-head' (x:_)  = Just x
+    uid <- Q.getUserIdByLogin l
+    DuplicateLogin l `throwOn` (isJust uid) 

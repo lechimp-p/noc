@@ -44,7 +44,7 @@ data ChanUpdateType n
     | RmChanProducer UserId (() -> n) 
     | AddChanConsumer UserId (() -> n) 
     | RmChanConsumer UserId (() -> n) 
-    | Post UTCTime Text (Maybe Image) (() -> n) 
+    | Post UTCTime Text (Maybe Image) (MsgId -> n) 
     deriving (Typeable, Functor)
 
 chanUpdate :: Member Update r 
@@ -78,7 +78,7 @@ addChanConsumer cid uid = chanUpdate cid (AddChanConsumer uid)
 rmChanConsumer :: Member Update r => ChanId -> UserId -> Eff r ()
 rmChanConsumer cid uid = chanUpdate cid (RmChanConsumer uid)
 
-post :: Member Update r => ChanId -> UTCTime -> Text -> Maybe Image -> Eff r ()
+post :: Member Update r => ChanId -> UTCTime -> Text -> Maybe Image -> Eff r MsgId 
 post cid ts t img = chanUpdate cid (Post ts t img)
 
 data UserUpdateType n

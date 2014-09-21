@@ -31,7 +31,7 @@ data Error =
       InsufficientPermissions PermissionViolation 
     | UnknownChannel ChanId
     | UnknownUser UserId
-    | UnknownLogin Text 
+    | UnknownLogin Login 
     | UnknownMessage MsgId
     | OnlyOneChannelOwnerLeft ChanId
     | OnlyOneNoCAdminLeft
