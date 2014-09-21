@@ -3,15 +3,16 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module Model.User
+module Model.Simple.User
 where
 
-import Prelude hiding (null, words, reverse)
 import Data.Data (Data, Typeable) 
 import qualified Data.Set as S
-import Data.Text hiding (concat, filter)
+import Data.Text (Text)
+import qualified Data.Text as T
 import Control.Lens (makeLenses)
 import Data.Time.Clock
+import Data.IxSet (Indexable, empty, IxSet, ixSet, ixFun) 
 
 import Model.BaseTypes
 
@@ -37,27 +38,25 @@ instance Ord User where
 
 makeLenses ''User
 
-{--
 -- An index for words in the name.
 newtype IxName = IxName Text 
-                 deriving (Eq, Ord, Data, Typeable, SafeCopy)
+                 deriving (Eq, Ord, Data, Typeable)
 -- An index for words an heads of words in the name
 newtype IxAutoComplete = IxAutoComplete Text
-                 deriving (Eq, Ord, Data, Typeable, SafeCopy)
+                 deriving (Eq, Ord, Data, Typeable)
 -- An index for words in the description
 newtype IxDesc = IxDesc Text
-                 deriving (Eq, Ord, Data, Typeable, SafeCopy)
+                 deriving (Eq, Ord, Data, Typeable)
                   
 instance Indexable User where
     empty = ixSet
         [ ixFun $ (:[]) . _id
         , ixFun $ (:[]) . _login
-        , ixFun $ fmap ( IxAutoComplete . reverse )  
-                . filter (not . null)
+        , ixFun $ fmap ( IxAutoComplete . T.reverse )  
+                . filter (not . T.null)
                 . concat
-                . fmap tails
-                . words . reverse . nameToText . _name 
-        , ixFun $ fmap IxName . words . nameToText . _name
-        , ixFun $ fmap IxDesc . words . descToText . _desc 
+                . fmap T.tails
+                . T.words . T.reverse . nameToText . _name 
+        , ixFun $ fmap IxName . T.words . nameToText . _name
+        , ixFun $ fmap IxDesc . T.words . descToText . _desc 
         ]
---}

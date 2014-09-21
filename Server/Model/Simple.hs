@@ -3,13 +3,10 @@
 {-# LANGUAGE TypeOperators #-}
 
 module Model.Simple
-    ( runQuerySimple
+    ( runQuery
+    , runQueryAndUpdate
     , runSimple
-    --runOp
---    , runOp'
---    , noc
---    , Operation
---    , OpContext (..)
+    , run
     )
 where
 
@@ -27,38 +24,57 @@ import qualified Data.Set as S
 import Control.Eff
 
 import Model.BaseTypes
-import qualified Model.NoC as N
-import Model.NoC
-import qualified Model.User as U
-import Model.User
-import qualified Model.Channel as C
-import Model.Channel
-import qualified Model.Message as M
-import Model.Message
+import Model.Errors
 import Model.Query
 import Model.Update
-import Model.Effects
+import Model.Exec
 
-runQuerySimple :: NoC -> Eff (Query :> r) a -> Eff r a
-runQuerySimple noc action = go noc (admin action)
+import qualified Model.Simple.NoC as N
+import Model.Simple.NoC
+import qualified Model.Simple.User as U
+import Model.Simple.User
+import qualified Model.Simple.Channel as C
+import Model.Simple.Channel
+import qualified Model.Simple.Message as M
+import Model.Simple.Message
+
+runQuery :: NoC -> Eff (Query :> r) a -> Eff r a
+runQuery noc action = go noc (admin action)
     where
     go _ (Val v) = return v
     go noc (E request) = handleRelay request (go noc) (go noc . performQuery noc)
 
 performQuery noc (IsAdmin uid next) = next (uid `S.member` _admins noc)
 
-runSimple :: NoC -> Eff (Query :> Update :> r) a -> Eff r (NoC, a)
-runSimple noc action = go noc (admin action)
+
+runQueryAndUpdate :: NoC -> Eff (Query :> Update :> r) a -> Eff r (NoC, a)
+runQueryAndUpdate noc action = go noc (admin action)
     where
-    go n1 (Val v) = return (n1, v) 
-    go n1 (E request) = checkQuery n1 request
+    go n (Val v) = return (n, v) 
+    go n (E request) = checkQuery n request
 
-    checkQuery n2 r = either (checkUpdate n2) (go n2 . performQuery n2) $ decomp r
-    checkUpdate n3 r = either (passOn n3) (performUpdate go n3) $ decomp r
-    passOn n4 r = send (flip fmap r) >>= go n4 
+    checkQuery n r = either (checkUpdate n) (go n . performQuery n) $ decomp r
+    checkUpdate n r = either (passOn n) (performUpdate go n) $ decomp r
+    passOn n r = send (flip fmap r) >>= go n 
             
-
 performUpdate go noc (AddAdmin uid next) = go (over admins (S.insert uid) noc) (next ())
+
+
+runSimple :: NoC -> Maybe UserId -> Eff (Query :> Update :> Exec :> r) a -> Eff r (Either Error (NoC, a))
+runSimple noc uid action = go noc uid (admin action)
+    where
+    go n _ (Val v) = return . Right $ (n, v)
+    go n u (E request) = checkQuery n u request
+
+    checkQuery n u r = either (checkUpdate n u) (go n u . performQuery n) $ decomp r
+    checkUpdate n u r = either (checkExec n u) (performUpdate (flip go u) n) $ decomp r
+    checkExec n u r = either (passOn n u) (performExec go n u) $ decomp r
+    passOn n u r = send (flip fmap r) >>= go n u
+
+performExec go noc uid (GetOperatorId next)     = undefined 
+performExec go noc uid (ThrowME err next)       = undefined
+performExec go noc uid (DoLogin l pw next)      = undefined
+performExec go noc uid (DoLogout next)          = go noc Nothing (next ())
 
 {--data OpContext = OpContext
     { _noc       :: NoC

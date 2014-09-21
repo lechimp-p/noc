@@ -30,17 +30,3 @@ instance Eq Message where
 instance Ord Message where
     compare m m' = compare (_id m) (_id m')
 
-{--
--- An index for words in the text of the message.
-newtype IxText = IxText Text 
-                 deriving (Eq, Ord, Data, Typeable, SafeCopy)
-                  
-instance Indexable Message where
-    empty = ixSet
-        [ ixFun $ (:[]) . _id
-        , ixFun $ (:[]) . _chan
-        , ixFun $ (:[]) . _author
-        , ixFun $ (:[]) . _timestamp
-        , ixFun $ fmap IxText . words . _text
-        ]
---}
