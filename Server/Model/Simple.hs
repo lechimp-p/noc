@@ -1,6 +1,7 @@
 --{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 --{-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Model.Simple
     ( runQuery
@@ -15,7 +16,7 @@ where
 import Control.Lens 
 --import Data.Data (Data, Typeable)
 import qualified Data.Set as S 
---import qualified Data.IxSet as IX
+import qualified Data.IxSet as IX
 --import Data.Maybe (isJust)
 
 --import Model.OpMonad
@@ -57,10 +58,18 @@ runQueryAndUpdate noc action = go noc (admin action)
     checkUpdate n r = either (passOn n) (performUpdate go n) $ decomp r
     passOn n r = send (flip fmap r) >>= go n 
             
-performUpdate go noc (AddAdmin uid next) = go (over admins (S.insert uid) noc) (next ())
+performUpdate go noc (AddAdmin uid next) = 
+    go (over admins (S.insert uid) noc) (next ())
+performUpdate go noc (CreateUser l pw next) = 
+    go (over users (IX.insert user) (set nextUserId nuid noc)) (next uid)
+    where
+    user = User uid l pw (mkName "") (mkDesc "") Nothing S.empty S.empty S.empty []
+    uid  = _nextUserId noc
+    nuid = UserId (uiToInt uid + 1)
 
 
-runSimple :: NoC -> Maybe UserId -> Eff (Query :> Update :> Exec :> r) a -> Eff r (Either Error (NoC, a))
+runSimple :: NoC -> Maybe UserId -> Eff (Query :> Update :> Exec :> r) a 
+          -> Eff r (Either Error (NoC, a))
 runSimple noc uid action = go noc uid (admin action)
     where
     go n _ (Val v) = return . Right $ (n, v)
@@ -71,10 +80,20 @@ runSimple noc uid action = go noc uid (admin action)
     checkExec n u r = either (passOn n u) (performExec go n u) $ decomp r
     passOn n u r = send (flip fmap r) >>= go n u
 
-performExec go noc uid (GetOperatorId next)     = undefined 
-performExec go noc uid (ThrowME err next)       = undefined
-performExec go noc uid (DoLogin l pw next)      = undefined
+performExec go noc uid (GetOperatorId next)     = go noc uid (next uid) 
+performExec go noc uid (ThrowME err next)       = return . Left $ err 
 performExec go noc uid (DoLogout next)          = go noc Nothing (next ())
+performExec go noc (Just _) (DoLogin l pw next) = return . Left $ AlreadyLoggedIn
+performExec go noc uid (DoLogin l pw next)      =
+    case res of
+        Nothing -> return . Left $ CantLogin l 
+        Just id -> go noc res (next id)
+    where 
+    res = do
+        user <- IX.getOne (_users noc IX.@= l)
+        if checkPassword pw (U._password user)
+            then return (U._id user)
+            else fail "password mismatch"
 
 {--data OpContext = OpContext
     { _noc       :: NoC
