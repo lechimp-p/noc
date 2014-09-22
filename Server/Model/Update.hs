@@ -14,10 +14,10 @@ import Control.Eff
 import Model.BaseTypes
 
 data Update n
-    = CreateChan Name (ChanId -> n)
-    | CreateUser Login Password (UserId -> n) 
-    | AddAdmin UserId (() -> n)
-    | RmAdmin UserId (() -> n)
+    = CreateChan Name               (ChanId -> n)
+    | CreateUser Login Password     (UserId -> n) 
+    | AddAdmin UserId               (() -> n)
+    | RmAdmin UserId                (() -> n)
     | ChanUpdate ChanId (ChanUpdateType n)
     | UserUpdate UserId (UserUpdateType n)
     deriving (Typeable, Functor)
