@@ -1,8 +1,8 @@
-{ "host" : "host"
+{ "host" : "server01.campusspeicher.de"
 , "port" : 21
 , "authKey" : 
     { "username" : ""
-    , "password" : ""
+    , "password" : "BzE!583dRp7E"
     } 
 , "src" : "/dist"
 , "dest" : "dest"

@@ -7,16 +7,16 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>.: NOC :.</title>
+    <title>.:! NOC !:.</title>
 
     <!-- Bootstrap -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/mobile-angular-ui-hover.min.css" />
+    <link rel="stylesheet" href="css/mobile-angular-ui-base.min.css" />
+    <link rel="stylesheet" href="css/mobile-angular-ui-desktop.min.css" />
     
     <!-- miscellaneous Custom styles -->
     <link href="css/sheet.css" rel="stylesheet">
-
-    <!-- Custom styles for this template -->
-    <link href="css/offcanvas.css" rel="stylesheet">
 
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -27,119 +27,92 @@
   </head>
   <body>
 
-    <div class="navbar navbar-fixed-top navbar-inverse" role="navigation">
-      <div class="container">
+  <div class="sidebar sidebar-left" toggleable parent-active-class="sidebar-left-in" id="mainSidebar">
+    <h1 class="app-name">My App</h1>
 
-        <div class="navbar-header">
-          <a class="navbar-brand" href="#">urbanoid</a>
-
-          <div class="visible-xs">
-          <!-- Offcanvas Trigger Button -->
-          <div class="pull-right" style="width:70px;">
-            <button type="button" class="navbar-account navbar-toggle collapsed pull-left button-xs" data-toggle="collapse" data-target=".navbar-collapse">
-              <img src="img/profilepic.png" class="img-circle" alt="Profilepicture">
-              <span class="sr-only">Toggle navigation</span>
-            </button>
-          </div>
-
-          </div>
-
+    <div class="scrollable">
+      <div class="scrollable-content">
+        <div class="list-group" toggle="off" bubble target="mainSidebar">
+          <a class="list-group-item" href="#/">Home <i class="fa fa-chevron-right pull-right"></i></a>
+          <!-- ... -->
         </div>
-
-        <!-- ============== Small Screens ============== -->
-
-        <div class="visible-xs">
-
-          <!-- Personal Navigation -->
-          <div class="collapse navbar-collapse">
-
-            <ul class="nav navbar-nav navbar-right text-right">
-              <li><a href="#">Max Mustermann</a></li>
-              <li><a href="#">Notifications
-              <span class="glyphicon glyphicon-bullhorn marginleft"></span></a></li>
-              <li><a href="#">Contacts
-              <span class="glyphicon glyphicon-user marginleft"></span></a></li>
-            </ul>
-
-          </div><!--/Collapse-->
-
-        </div>
-
-        <!-- ============== Large Screens ============== -->
-
-        <div class="visible-sm visible-md visible-lg visible-xl">
-
-          <!-- Site Navigation -->
-          <ul class="nav navbar-nav">
-            <li class="active"><a href="#about">Chats</a></li>
-            <li><a href="#contact">Channels</a></li>
-          </ul>
-
-          <!-- Personal Navigation -->
-          <ul class="nav navbar-nav pull-right">
-            <li><a href="#"><span class="glyphicon glyphicon-bullhorn marginright"></span>Notifications</a></li>
-            <li><a href="#"><span class="glyphicon glyphicon-user marginright"></span>Contacts</a></li>
-            <li><button type="button" class="btn btn-default navbar-account">
-                    <img src="img/profilepic.png" class="marginright img-circle" alt="Profilepicture">
-                  Max Mustermann
-                </button>
-            </li>
-          </ul>
-
-        </div>
-
-        <!-- ============== Until here ============== -->
 
       </div>
     </div>
+  </div>
 
+    <!-- HALLO YOYOYOYO -->
+    <div class="app">
+      <div class="navbar navbar-app navbar-absolute-top">
 
+          <div class="navbar-brand navbar-brand-center">
+            <span>My App</span>
+          </div>
 
-    <div class="container">
-      <div class="list-group" ng-controller="msg-list-controller">
+          <div class="btn-group pull-left">
+            <div ng-click="toggle('mainSidebar')" class="btn btn-navbar sidebar-toggle">
+              <i class="fa fa-bars"></i> Menu
+            </div>
+          </div>
 
-        <!-- List-item -->
-        <a href="#" class="list-group-item" ng-repeat="msg in msgs">
-            <img src="{{msg.author.icon}}" class="pull-left marginright img-circle" alt="Profilepicture">
-            <h4 class="list-group-item-heading">{{msg.author.name}}</h4>
-            <p class="list-group-item-text pull-left marginright">{{msg.timestamp}}</p>
-            <p class="list-group-item-text">{{msg.text}}</p>
-            <!-- Textzeile soll bei statt Umbruch in "… enden, falls Text breiter als Liste" -->
-        </a>
-        <!--<a href="#" class="list-group-item">
-            <img src="img/profpic.jpg" class="pull-left marginright img-circle" alt="Profilepicture">
-            <h4 class="list-group-item-heading">Petra Mustermueller</h4>
-            <p class="list-group-item-text pull-left marginright">14:20</p>
-            <p class="list-group-item-text">Hey, ich habe gestern gelesen, dass Urbanoid ein klasse Ding sein soll.</p>
-        </a>
-        <a href="#" class="list-group-item">
-            <img src="img/profpic.jpg" class="pull-left marginright img-circle" alt="Profilepicture">
-            <h4 class="list-group-item-heading">Jochen Bogt</h4>
-            <p class="list-group-item-text pull-left marginright">14:20</p>
-            <p class="list-group-item-text">LOL</p>
-        </a>
-        -->
-
+          <div class="btn-group pull-right">
+            <div class="btn btn-navbar">
+              <i class="fa fa-plus"></i> New
+            </div>
+          </div>
       </div>
 
-    </div>
+      <div class="navbar navbar-app navbar-absolute-bottom">
+        <div class="btn-group justified">
+          <a href="#/route1" class="btn btn-navbar btn-icon-only"><i class="fa fa-home fa-navbar"></i></a>
+          <a href="#/route2" class="btn btn-navbar btn-icon-only"><i class="fa fa-list fa-navbar"></i></a>
+        </div>
+      </div>
 
+      <div class="app-body">
+        <div class="container">
+          <!--<div class="list-group" ng-controller="msg-list-controller">-->
+          <div class="list-group">
+            <!-- List-item -->
+            <!--<a href="#" class="list-group-item" ng-repeat="msg in msgs">
+                <img src="{{msg.author.icon}}" class="pull-left marginright img-circle" alt="Profilepicture">
+                <h4 class="list-group-item-heading">{{msg.author.name}}</h4>
+                <p class="list-group-item-text pull-left marginright">{{msg.timestamp}}</p>
+                <p class="list-group-item-text">{{msg.text}}</p>
+            </a>-->
+            <a href="#" class="list-group-item">
+                <img src="img/profpic.jpg" class="pull-left marginright img-circle" alt="Profilepicture">
+                <h4 class="list-group-item-heading">Petra Mustermueller</h4>
+                <p class="list-group-item-text pull-left marginright">14:20</p>
+                <p class="list-group-item-text">Hey, ich habe gestern gelesen, dass Urbanoid ein klasse Ding sein soll.</p>
+            <!-- Textzeile soll bei statt Umbruch in "… enden, falls Text breiter als Liste" -->  
+            </a>
+            <a href="#" class="list-group-item">
+                <img src="img/profpic.jpg" class="pull-left marginright img-circle" alt="Profilepicture">
+                <h4 class="list-group-item-heading">Jochen Bogt</h4>
+                <p class="list-group-item-text pull-left marginright">14:20</p>
+                <p class="list-group-item-text">LOL</p>
+            </a>
+
+          </div>
+
+        </div>
+      </div>
+
+  </div>
 
 
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script> -->
     <!-- Include all compiled plugins (below), or include individual files as needed -->
-    <!--<script src="js/bootstrap.min.js"></script>
-    <script src="js/offcanvas.js"></script>
-    <script src="js/ie10-viewport-bug-workaround.js"></script>
-    -->
     <script src="js/angular.js"></script>
     <script src="js/angular-route.js"></script>
     <script src="js/ui-bootstrap.js"></script>
     <script src="js/ui-bootstrap-tpls.js"></script>
+    <script src="js/mobile-angular-ui.min.js"></script>
     <script src="js/NoC.js"></script>
-    <script src="js/msg-list-controller.js"></script>
-    <script src="js/API.js"></script>
+    <!--<script src="js/msg-list-controller.js"></script>
+    <script src="js/API.js"></script>-->
  
   </body>
 </html>

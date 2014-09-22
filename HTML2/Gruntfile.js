@@ -70,6 +70,7 @@ module.exports = function (grunt) {
             , cwd : 'bower_components/angular-bootstrap'
             , src : 'ui-bootstrap.js'
             , dest : 'dist/js'
+
             },
             { expand : true
             , cwd : 'bower_components/angular-bootstrap'
@@ -82,6 +83,24 @@ module.exports = function (grunt) {
             , src : 'angular-route.js'
             , dest : 'dist/js'
             }]}
+        , 'ng-mobile-js' :
+            { expand : true
+            , cwd : 'bower_components/mobile-angular-ui/dist/js'
+            , src : '*.min.js'
+            , dest : 'dist/js'
+            }
+        , 'ng-mobile-css' :
+            { expand : true
+            , cwd : 'bower_components/mobile-angular-ui/dist/css'
+            , src : '*.min.css'
+            , dest : 'dist/css'
+            }
+        , 'ng-mobile-fonts':
+            { expand : true
+            , cwd : 'bower_components/mobile-angular-ui/dist/fonts'
+            , src : '*'
+            , dest : 'dist/fonts'
+            }
         , 'custom-css' :
             { expand : true
             , cwd : 'custom/css'
@@ -149,21 +168,30 @@ module.exports = function (grunt) {
         , custom : [ 'custom/js/*' ]
         },
 
-        'ftp-deploy' :
+        /*"ftp-deploy" :
         { urbanoid :
-            { auth : ftp_conf
-            , src : ftp_conf.src
-            , dest : ftp_conf.desc
-            , authKey : ftp_conf.authKey
+            { auth : 
+                { host : 'server01.campusspeicher.de'
+                , port : 22
+                , authKey : 'nico'
+                }
+            , authPath : "./.ftppass"
+            , src : '/Users/Nico/NoC-Server/HTML2/dist'
+            , dest : '/httpdocs/noc'
             }
-        }
+        }*/
     });
 
     grunt.loadNpmTasks('grunt-contrib-clean');
     grunt.loadNpmTasks('grunt-contrib-copy');
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-contrib-jshint');
-    grunt.loadNpmTasks('grunt-ftp-deploy');
+    //grunt.loadNpmTasks('grunt-ftp-deploy');
+
+    grunt.registerTask("ftp-deploy", function() {
+        var res = this.async();
+        res();
+    })
 
     // install bootstrap
     grunt.registerTask('setup-bootstrap', function() {
@@ -216,16 +244,16 @@ module.exports = function (grunt) {
     //});
 
     // JS distribution task.
-    grunt.registerTask('dist-js', ['copy:custom-js', 'copy:ng-js', 'copy:ng-bs-js', 'copy:ng-route-js']);
+    grunt.registerTask('dist-js', ['copy:custom-js', 'copy:ng-js', 'copy:ng-bs-js', 'copy:ng-route-js', 'copy:ng-mobile-js']);
 
     // CSS distribution task.
-    grunt.registerTask('dist-css', ['copy:bs-css', 'copy:ng-css', 'copy:custom-css']);
+    grunt.registerTask('dist-css', ['copy:bs-css', 'copy:ng-css', 'copy:custom-css', 'copy:ng-mobile-css']);
 
     // IMG distribution task.
     grunt.registerTask('dist-img', ['copy:custom-img']);
 
     // FONT distribution task.
-    grunt.registerTask('dist-fonts', ['copy:bs-fonts', 'copy:custom-fonts']);
+    grunt.registerTask('dist-fonts', ['copy:bs-fonts', 'copy:custom-fonts', 'copy:ng-mobile-fonts']);
 
     // HTML distribution task.
     grunt.registerTask('dist-html', ['copy:custom-html']);
