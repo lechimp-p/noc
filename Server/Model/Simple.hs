@@ -1,5 +1,6 @@
 --{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 --{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE OverloadedStrings #-}
 
@@ -39,34 +40,107 @@ import Model.Simple.Channel
 import qualified Model.Simple.Message as M
 import Model.Simple.Message
 
-runQuery :: NoC -> Eff (Query :> r) a -> Eff r a
+runQuery :: NoC -> Eff (Query :> Exec :> r) a -> Eff (Exec :> r) a
 runQuery noc action = go noc (admin action)
     where
     go _ (Val v) = return v
-    go noc (E request) = handleRelay request (go noc) (go noc . performQuery noc)
+    go noc (E request) = case of
+        Right (next, nocfun
+        Left err -> throwME err
+        handleRelay request (go noc) (performQuery throwME go noc)
 
-performQuery noc (IsAdmin uid next) = next (uid `S.member` _admins noc)
+performQuery :: (Error -> Eff r a) 
+             -> (NoC -> (VE (Query :> r) a) -> Eff r a) 
+             -> NoC 
+             -> Query (VE (Query :> r) a) 
+             -> Eff r a
+performQuery throw go noc (IsAdmin uid next) 
+    = go noc $ next (uid `S.member` _admins noc)
+performQuery throw go noc (CountAdmins next)
+    = go noc $ next (S.size . _admins $ noc)
+performQuery throw go noc (GetUserIdByLogin l next)
+    = go noc $ next . fmap U._id . IX.getOne $ _users noc IX.@= l 
+performQuery throw go noc (ChanQuery cid q) 
+    = performChanQuery q throw go noc cid
+performQuery throw go noc (UserQuery uid q) 
+    = performUserQuery q throw go noc uid
 
+performChanQuery :: ChanQueryType (VE (Query :> r) a)
+                 -> (Error -> Eff r a) 
+                 -> (NoC -> (VE (Query :> r) a) -> Eff r a) 
+                 -> NoC 
+                 -> ChanId
+                 -> Eff r a
+performChanQuery (GetChanName next) = queryOnChan C._name next
+performChanQuery (GetChanDesc next) = undefined
+performChanQuery (GetChanType next) = undefined
+performChanQuery (GetChanImage next) = undefined
+performChanQuery (IsChanOwner uid next) = undefined
+performChanQuery (IsChanProducer uid next) = undefined
+performChanQuery (IsChanConsumer uid next) = undefined
+performChanQuery (AmountOfSubscribedUsers next) = undefined
+performChanQuery (LastPostTimestamp next) = undefined
+performChanQuery (Messages ofs am next) = undefined
+performChanQuery (MessagesTill ts next) = undefined
 
-runQueryAndUpdate :: NoC -> Eff (Query :> Update :> r) a -> Eff r (NoC, a)
+queryOnChan :: (Channel -> b)
+            -> (b -> (VE (Query :> r) a)) 
+            -> (Error -> Eff r a) 
+            -> (NoC -> (VE (Query :> r) a) -> Eff r a) 
+            -> NoC 
+            -> ChanId
+            -> Eff r a
+queryOnChan fun next throw go noc cid = 
+    let chan = IX.getOne (_channels noc IX.@= cid)
+    in case chan of
+        Nothing -> throw $ UnknownChannel cid
+        Just c -> go noc $ next (fun c)
+
+performUserQuery :: UserQueryType (VE (Query :> r) a)
+                 -> (Error -> Eff r a) 
+                 -> (NoC -> (VE (Query :> r) a) -> Eff r a) 
+                 -> NoC 
+                 -> UserId 
+                 -> Eff r a
+performUserQuery (GetUserName next) = undefined
+
+runQueryAndUpdate :: NoC -> Eff (Query :> Update :> Exec :> r) a -> Eff (Exec :> r) (NoC, a)
 runQueryAndUpdate noc action = go noc (admin action)
     where
     go n (Val v) = return (n, v) 
     go n (E request) = checkQuery n request
 
-    checkQuery n r = either (checkUpdate n) (go n . performQuery n) $ decomp r
-    checkUpdate n r = either (passOn n) (performUpdate go n) $ decomp r
+    checkQuery n r = either (checkUpdate n) (performQuery throwME go n) $ decomp r
+    checkUpdate n r = either (passOn n) (performUpdate throwME go n) $ decomp r
     passOn n r = send (flip fmap r) >>= go n 
             
-performUpdate go noc (AddAdmin uid next) = 
+performUpdate :: (Error -> Eff r a) 
+              -> (NoC -> (VE (Update :> r) a) -> Eff r a) 
+              -> NoC 
+              -> Update (VE (Update :> r) a) 
+              -> Eff r a
+performUpdate throw go noc (AddAdmin uid next) = 
     go (over admins (S.insert uid) noc) (next ())
-performUpdate go noc (CreateUser l pw next) = 
+performUpdate throw go noc (CreateUser l pw next) = 
     go (over users (IX.insert user) (set nextUserId nuid noc)) (next uid)
     where
     user = User uid l pw (mkName "") (mkDesc "") Nothing S.empty S.empty S.empty []
     uid  = _nextUserId noc
     nuid = UserId (uiToInt uid + 1)
+performUpdate throw go noc (ChanUpdate cid q) 
+    = performChanUpdate q
+performUpdate throw go noc (UserUpdate uid q) 
+    = performUserUpdate q
 
+performChanUpdate (SetChanName n next) = updateOnChan (set C.name n) 
+performUserUpdate (SetUserLogin l next) = undefined 
+
+updateOnChan fun throw go noc cid next = 
+    let chan = IX.getOne (_channels noc IX.@= cid)
+    in case chan of
+        Nothing -> throw $ UnknownChannel cid
+        Just c -> go (over _channels (IX.updateIx cid (fun c) noc)) $ next ()
+ 
 
 runSimple :: NoC -> Maybe UserId -> Eff (Query :> Update :> Exec :> r) a 
           -> Eff r (Either Error (NoC, a))
@@ -75,8 +149,8 @@ runSimple noc uid action = go noc uid (admin action)
     go n _ (Val v) = return . Right $ (n, v)
     go n u (E request) = checkQuery n u request
 
-    checkQuery n u r = either (checkUpdate n u) (go n u . performQuery n) $ decomp r
-    checkUpdate n u r = either (checkExec n u) (performUpdate (flip go u) n) $ decomp r
+    checkQuery n u r = either (checkUpdate n u) (performQuery (return . Left) (flip go u) n) $ decomp r
+    checkUpdate n u r = either (checkExec n u) (performUpdate (return . Left) (flip go u) n) $ decomp r
     checkExec n u r = either (passOn n u) (performExec go n u) $ decomp r
     passOn n u r = send (flip fmap r) >>= go n u
 
