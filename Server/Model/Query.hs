@@ -90,7 +90,7 @@ messagesTill cid ts = chanQuery cid (MessagesTill ts)
 
 data UserQueryType n
     = GetUserLogin              (Login -> n)
-    | IsUserPassword Password   (Bool -> n)
+--    | IsUserPassword Password   (Bool -> n)
     | GetUserName               (Name -> n)
     | GetUserDesc               (Desc -> n)
     | GetUserIcon               (Icon -> n)
@@ -106,8 +106,8 @@ userQuery uid q = send $ \ next -> inj (UserQuery uid (q next))
 getUserLogin :: Member Query r => UserId -> Eff r Login
 getUserLogin uid = userQuery uid GetUserLogin
 
-isUserPassword :: Member Query r => UserId -> Password -> Eff r Bool
-isUserPassword uid pw = userQuery uid (IsUserPassword pw)
+--isUserPassword :: Member Query r => UserId -> Password -> Eff r Bool
+--isUserPassword uid pw = userQuery uid (IsUserPassword pw)
 
 getUserName :: Member Query r => UserId -> Eff r Name 
 getUserName uid = userQuery uid GetUserName
