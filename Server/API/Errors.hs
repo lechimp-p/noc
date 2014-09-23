@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module API.Errors
 where
@@ -11,6 +12,7 @@ import Happstack.Server
         , toResponse, ServerMonad
         , setFilter, getFilter, composeFilter
         , askRq, localRq, badRequest
+        , unauthorized
         )
 import Happstack.Server.ClientSession
         ( MonadClientSession, getSession
@@ -35,6 +37,8 @@ data Error
     = ModelError' ME.Error
     | JSONError' JSONError
     | ImageError' ImageError
+    | QueryParamNotFound String
+    | QueryParamNotConverted String String
     | Abort
     deriving (Show)
 
@@ -51,10 +55,22 @@ handleError op = runEitherT op >>= \ res ->
     case res of
         Left err -> respondError err
         Right res -> return res
+
+defaultResponse :: (Monad m, MonadIO m, FilterMonad Response m, Show a)
+               => a -> m Response
+defaultResponse = badRequest . toResponse . T.pack . show 
             
 respondError :: (Monad m, MonadIO m, FilterMonad Response m)
              => Error -> m Response
-respondError = badRequest . toResponse . T.pack . show 
+respondError (ModelError' e) = respondModelError e
+respondError e = defaultResponse e
+
+respondModelError :: (Monad m, MonadIO m, FilterMonad Response m)
+                  => ME.Error -> m Response
+respondModelError ME.NotLoggedIn = unauthorized . toResponse . T.pack $ "You are not logged in." 
+responeModelError e = defaultResponse e 
+
+throwAPIError e = left e
 
 instance Monad m => MonadJSONError (EitherT Error m) where
     throwJSONError = left . JSONError'

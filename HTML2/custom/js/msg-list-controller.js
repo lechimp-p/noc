@@ -1,23 +1,36 @@
 angular.module("NoC.controllers", []).
-controller("msg-list-controller", function($scope, API) {
+controller("msg-list-controller", function($scope, $interval, API) {
     "use strict";
+
+    var lastTS = {};
+    var updateIntervalMS = 5000;
+    
+    var toScope = function(response) {
+        console.log("received messages");
+        console.log(response);
+        if (response.messages.length > 0) {
+            lastTS.value = response.messages[0].timestamp;
+        }
+        if ($scope.msgs) {
+            $scope.msgs = response.messages.concat($scope.msgs);
+        }
+        else {
+            $scope.msgs = response.messages;
+        }
+    };
 
     API.login("admin", "admin")
         .success(function(response) {
+            console.log("logged in");
             API.messages(0, 0, 10)
-                .success(function(response) {
-                    $scope.msgs = response.messages;   
-                })
-                .error(function(data, status, headers, config) {
-                    console.log("API.messages not reachable?");
-                    console.log(data);
-                })
-                ;
-        })
-        .error(function(data, status, headers, config) {
-            console.log("API.login not reachable?");
-        })
-        ;
+                .success(toScope)
+                .success(function(_) {
+                    $interval(function() {
+                        console.log(lastTS.value);
+                        API.messagesTill(0, lastTS.value).success(toScope);
+                    }, updateIntervalMS);
+                }); 
+        });
 
     /*$scope.msgs =
         [ { author : 

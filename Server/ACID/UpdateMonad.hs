@@ -45,6 +45,7 @@ module ACID.UpdateMonad
     , tryToAddUserNotificationU
     , getUserByLoginU
     , messagesU
+    , messagesTillU
     , createUserU
     , createChannelU
     , postU
@@ -120,6 +121,7 @@ class MonadUpdateError m => MonadUpdate m where
     createChannelU      :: Name -> Desc -> m ChanId
     postU               :: ChanId -> UTCTime -> Text -> Maybe Image -> m MsgId
     messagesU           :: ChanId -> Offset -> Amount -> m [Message]
+    messagesTillU       :: ChanId -> UTCTime -> m [Message]
 
 
 
@@ -229,6 +231,7 @@ instance MonadUpdateError m => MonadUpdate (UpdateMonadT NoC m) where
     createChannelU n d = DoUpdate $ \ o -> CreateChannelU o n d
     postU c ts t i = DoUpdate $ \ o -> PostU o c ts t i
     messagesU c o a = DoUpdate $ \ u -> MessagesU u c o a
+    messagesTillU c ts = DoUpdate $ \ u -> MessagesTillU u c ts 
 
 setOperatorIdU :: Monad m => Maybe UserId -> UpdateMonadT acid m ()
 setOperatorIdU = SetOperatorId

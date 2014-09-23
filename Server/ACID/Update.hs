@@ -184,3 +184,6 @@ postU oid cid ts t = getUpdate oid . O.post cid ts t
 
 messagesU :: Maybe UserId -> ChanId -> Offset -> Amount -> Update NoC (Either Error [Message], Maybe UserId)
 messagesU oid c o = getUpdate oid . O.messages c o
+
+messagesTillU :: Maybe UserId -> ChanId -> UTCTime -> Update NoC (Either Error [Message], Maybe UserId)
+messagesTillU oid c = getUpdate oid . O.messagesTill c

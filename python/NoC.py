@@ -124,6 +124,9 @@ class channel(object):
     def messages(self, op, offset, amount):
         return op.getR(self.messages_path % self.id, { "offset" : offset, "amount" : amount })
 
+    def messagesTill(self, op, ts):
+        return op.getR(self.messages_path % self.id, { "timestamp" : ts })
+
     def post(self, op, text, image = None):
         data = { "text" : text}
         if not image is None:

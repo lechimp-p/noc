@@ -43,6 +43,7 @@ module Model.Operations
     , createChannel
     , post
     , Model.Operations.messages
+    , messagesTill
     , Offset
     , Amount
     )
@@ -50,7 +51,7 @@ where
 
 import qualified Data.Set as S
 import qualified Data.IxSet as IX
-import Data.Text hiding (drop, take)
+import Data.Text hiding (drop, take, takeWhile)
 import Control.Lens
 import Control.Lens.Prism
 import Control.Applicative ((<$>))
@@ -271,6 +272,10 @@ type Amount = Int
 messages :: OpMonad m => ChanId -> Offset -> Amount -> m [Message]
 messages cid ofs am = checkAccess cid forConsumersOrOwners $ do
     take am . drop ofs . IX.toDescList (IX.Proxy :: IX.Proxy UTCTime) <$> getMessages @= cid  
+
+messagesTill :: OpMonad m => ChanId -> UTCTime -> m [Message]
+messagesTill cid ts = checkAccess cid forConsumersOrOwners $ do
+    takeWhile ((<) ts . _timestamp) . IX.toDescList (IX.Proxy :: IX.Proxy UTCTime) <$> getMessages @= cid
 
 ----------
 -- helpers

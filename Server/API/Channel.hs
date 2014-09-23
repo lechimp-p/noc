@@ -4,6 +4,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module API.Channel
 where
@@ -91,12 +92,19 @@ setHandler acid cid = handleError $
         "type"          ?> setChanTypeU cid
         noContent'
 
-getMessagesHandler acid cid = do
-    o <- maybe 0 id . readMaybe <$> look "offset"
-    a <- maybe 10 id . readMaybe <$> look "amount"
-    handleError $ queryWithJSONResponse acid $ do
+getMessagesHandler acid cid = handleError $ do
+    o <- maybe 0 id <$> maybeQueryParam "offset"
+    a <- maybe 10 id <$> maybeQueryParam "amount"
+    ts' <- maybeQueryParam' "timestamp"
+    let ts = join . fmap convertTimestamp $ ts' 
+    queryWithJSONResponse acid $ do
         trySessionLoginQ
-        msgs <- messagesQ cid o a
+        msgs <- case ts of
+            Nothing -> messagesQ cid o a
+            -- use a little offset to the delivered time here
+            -- since precision of utc time is lost during 
+            -- json-serialization/deserialization
+            Just ts -> messagesTillQ cid (0.01 `addUTCTime` ts)
         "messages" <$: flip fmap msgs .$ \ msg -> do
             "image"     <: view image msg
             "text"      <: view text msg

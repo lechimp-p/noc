@@ -78,3 +78,4 @@ instance Monad m => MonadQuery (JSONQueryMonadT NoC url session m) where
     getUserContactsQ = JSONQueryMonadT . lift . getUserContactsQ
     getUserByLoginQ = JSONQueryMonadT . lift . getUserByLoginQ
     messagesQ c o = JSONQueryMonadT . lift . messagesQ c o
+    messagesTillQ c = JSONQueryMonadT . lift . messagesTillQ c

@@ -105,3 +105,6 @@ getUserByLoginQ oid = getQuery oid . O.getUserByLogin
 
 messagesQ :: Maybe UserId -> ChanId -> Offset -> Amount -> Query NoC (Either Error [Message], Maybe UserId)
 messagesQ oid c o = getQuery oid . O.messages c o
+
+messagesTillQ :: Maybe UserId -> ChanId -> UTCTime -> Query NoC (Either Error [Message], Maybe UserId)
+messagesTillQ oid c = getQuery oid . O.messagesTill c

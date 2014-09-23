@@ -39,8 +39,8 @@
 
           <a href="#" class="list-group-item">
               <img src="img/profpic.jpg" class="pull-left marginright img-circle" alt="Profilepicture">
-              <h3 class="list-group-item-heading">Grillen in Kölle</h3>
-              <p class="list-group-item-text">Urbanoid ist einfach slick.</p>
+              <h4 class="list-group-item-text">Grillen in Kölle</h4>
+              <p class="list-group-item-text greytext">Channel-Meta-Information</p>
           </a>
 
         </div>
@@ -88,12 +88,12 @@
     <div class="navbar navbar-app navbar-absolute-top">
 
         <div class="navbar-brand navbar-brand-center">
-          Urbanoid
+          <img src="img/urbanoid.svg" style="height:20px;" alt="Urbanoid-Logo">
         </div>
 
         <div class="btn-group pull-left">
           <div ng-click="toggle('mainSidebar')" class="btn btn-navbar sidebar-toggle">
-            <i class="fa fa-bars"></i> Menu
+            <i class="fa fa-bars"></i>
           </div>
         </div>
 
@@ -107,13 +107,77 @@
   <!-- ========= APP-BODY ========= -->
 
     <div class="app-body">
-      <div class="container-fluid">
+      <div class="container-fluid nopadding">
+        <div class="scrollable-content">
 
-        <div class="row pushbottom">
+          <ul class="list-group pushbottom chatcontent">
+            <li class="list-group-item">
+              <img src="img/profpic.jpg" class="pull-left marginright img-circle" alt="Profilepicture">
+              <p class="list-group-item-text greytext"><small>Melanie, 2 hours ago</small></p>
+              <p class="list-group-item-text">Was meinst du?</p>
+              <p class="list-group-item-text">Ich würde da sogar noch weiter gehen und das einfach mal bestimmen.</p>
+              <p class="list-group-item-text">Eigentlich soll der Text hier nicht das Bild umfließen.</p>
+            </li>
+            <li class="list-group-item">
+              <img src="img/profpic.jpg" class="pull-left marginright img-circle" alt="Profilepicture">
+                <p class="list-group-item-text greytext"><small>You, just now</small></p>
+                <p class="list-group-item-text">Jo, das würde ich auch sagen!</p>
+                <p class="list-group-item-text">Was meinst du?</p>
+                <p class="list-group-item-text">Eigentlich soll der Text hier nicht das Bild umfließen.</p>
+                <p class="list-group-item-text">Das muss dringend geändert werden.</p>
+            </li>
+            <li class="list-group-item">
+              <img src="img/profpic.jpg" class="pull-left marginright img-circle" alt="Profilepicture">
+              <p class="list-group-item-text greytext"><small>Melanie, 2 hours ago</small></p>
+              <p class="list-group-item-text">Was meinst du?</p>
+              <p class="list-group-item-text">Ich würde da sogar noch weiter gehen und das einfach mal bestimmen.</p>
+              <p class="list-group-item-text">Eigentlich soll der Text hier nicht das Bild umfließen.</p>
+            </li>
+            <li class="list-group-item">
+              <img src="img/profpic.jpg" class="pull-left marginright img-circle" alt="Profilepicture">
+                <p class="list-group-item-text greytext"><small>You, just now</small></p>
+                <p class="list-group-item-text">Jo, das würde ich auch sagen!</p>
+                <p class="list-group-item-text">Was meinst du?</p>
+                <p class="list-group-item-text">Eigentlich soll der Text hier nicht das Bild umfließen.</p>
+                <p class="list-group-item-text">Das muss dringend geändert werden.</p>
+            </li>
+            <li class="list-group-item">
+              <img src="img/profpic.jpg" class="pull-left marginright img-circle" alt="Profilepicture">
+              <p class="list-group-item-text greytext"><small>Melanie, 2 hours ago</small></p>
+              <p class="list-group-item-text">Was meinst du?</p>
+              <p class="list-group-item-text">Ich würde da sogar noch weiter gehen und das einfach mal bestimmen.</p>
+              <p class="list-group-item-text">Eigentlich soll der Text hier nicht das Bild umfließen.</p>
+            </li>
+            <li class="list-group-item">
+              <img src="img/profpic.jpg" class="pull-left marginright img-circle" alt="Profilepicture">
+                <p class="list-group-item-text greytext"><small>You, just now</small></p>
+                <p class="list-group-item-text">Jo, das würde ich auch sagen!</p>
+                <p class="list-group-item-text">Was meinst du?</p>
+                <p class="list-group-item-text">Eigentlich soll der Text hier nicht das Bild umfließen.</p>
+                <p class="list-group-item-text">Das muss dringend geändert werden.</p>
+            </li>
+            <li class="list-group-item">
+              <img src="img/profpic.jpg" class="pull-left marginright img-circle" alt="Profilepicture">
+              <p class="list-group-item-text greytext"><small>Melanie, 2 hours ago</small></p>
+              <p class="list-group-item-text">Was meinst du?</p>
+              <p class="list-group-item-text">Ich würde da sogar noch weiter gehen und das einfach mal bestimmen.</p>
+              <p class="list-group-item-text">Eigentlich soll der Text hier nicht das Bild umfließen.</p>
+            </li>
+            <li class="list-group-item">
+              <img src="img/profpic.jpg" class="pull-left marginright img-circle" alt="Profilepicture">
+                <p class="list-group-item-text greytext"><small>You, just now</small></p>
+                <p class="list-group-item-text">Jo, das würde ich auch sagen!</p>
+                <p class="list-group-item-text">Was meinst du?</p>
+                <p class="list-group-item-text">Eigentlich soll der Text hier nicht das Bild umfließen.</p>
+                <p class="list-group-item-text">Das muss dringend geändert werden.</p>
+            </li>
+          </ul>
+        </div>
+        <div class="row pushbottom chatinput lightBar">
           <div class="input-group">
             <input type="text" class="form-control">
             <span class="input-group-btn">
-              <button class="btn btn-default" type="button"><i class="fa fa-send fa-lg"></i></button>
+              <button class="btn btn-default" type="button"><i class="fa fa-send"></i></button>
             </span>
           </div>
         </div>

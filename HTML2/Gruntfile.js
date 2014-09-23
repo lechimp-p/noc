@@ -18,9 +18,6 @@ module.exports = function (grunt) {
     var sys = require('sys');
     var exec = require('child_process').exec;
 
-    // FTP config
-    var ftp_conf = JSON.parse(fs.readFileSync('./ftp.json', 'utf-8'));
-
     // Project configuration.
     grunt.initConfig({
         // Metadata.

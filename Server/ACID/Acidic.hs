@@ -28,6 +28,7 @@ $(makeAcidic ''NoC  [ 'doLoginQ
                     , 'getUserNotificationsQ
                     , 'getUserByLoginQ
                     , 'messagesQ
+                    , 'messagesTillQ
                     , 'doLoginU
                     , 'getOperatorIdU
                     , 'addAdminU
@@ -70,4 +71,5 @@ $(makeAcidic ''NoC  [ 'doLoginQ
                     , 'createChannelU
                     , 'postU
                     , 'messagesU 
+                    , 'messagesTillU
                     ])
