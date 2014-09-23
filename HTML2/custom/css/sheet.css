@@ -36,6 +36,15 @@ html, body {
 	color:#fff;
 }
 
+.pushbottom {
+	position:absolute;
+	bottom:20px;
+}
+
+.app-body, .lightBar {
+	background:#f9f9f9;
+}
+
 
 
 
