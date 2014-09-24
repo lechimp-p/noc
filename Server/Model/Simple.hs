@@ -6,9 +6,9 @@
 
 module Model.Simple
     ( runQuery
-    , runQueryAndUpdate
-    , runSimple
-    , run
+    --, runQueryAndUpdate
+    --, runSimple
+    --, run
     )
 where
 
@@ -44,65 +44,77 @@ runQuery :: NoC -> Eff (Query :> Exec :> r) a -> Eff (Exec :> r) a
 runQuery noc action = go noc (admin action)
     where
     go _ (Val v) = return v
-    go noc (E request) = case of
-        Right (next, nocfun
-        Left err -> throwME err
-        handleRelay request (go noc) (performQuery throwME go noc)
+    go noc (E request) = handleRelay request (go noc) 
+        $ \ req -> case evalQuery noc req of 
+            Right next -> go noc next 
+            Left err -> throwME err
 
-performQuery :: (Error -> Eff r a) 
-             -> (NoC -> (VE (Query :> r) a) -> Eff r a) 
-             -> NoC 
-             -> Query (VE (Query :> r) a) 
-             -> Eff r a
-performQuery throw go noc (IsAdmin uid next) 
-    = go noc $ next (uid `S.member` _admins noc)
-performQuery throw go noc (CountAdmins next)
-    = go noc $ next (S.size . _admins $ noc)
-performQuery throw go noc (GetUserIdByLogin l next)
-    = go noc $ next . fmap U._id . IX.getOne $ _users noc IX.@= l 
-performQuery throw go noc (ChanQuery cid q) 
-    = performChanQuery q throw go noc cid
-performQuery throw go noc (UserQuery uid q) 
-    = performUserQuery q throw go noc uid
+evalQuery :: (Member Query r)
+          => NoC -> Query (VE r w) -> Either Error (VE r w) 
+evalQuery noc (IsAdmin uid next) = Right . next . S.member uid . _admins $ noc
+evalQuery noc (CountAdmins next) = Right . next . S.size . _admins $ noc
+evalQuery noc (GetUserIdByLogin l next) = Right . next . fmap U._id . IX.getOne $ _users noc IX.@= l 
+evalQuery noc (ChanQuery cid q) = evalChanQuery noc q cid
+evalQuery noc (UserQuery uid q) = evalUserQuery noc q uid
 
-performChanQuery :: ChanQueryType (VE (Query :> r) a)
-                 -> (Error -> Eff r a) 
-                 -> (NoC -> (VE (Query :> r) a) -> Eff r a) 
-                 -> NoC 
-                 -> ChanId
-                 -> Eff r a
-performChanQuery (GetChanName next) = queryOnChan C._name next
-performChanQuery (GetChanDesc next) = undefined
-performChanQuery (GetChanType next) = undefined
-performChanQuery (GetChanImage next) = undefined
-performChanQuery (IsChanOwner uid next) = undefined
-performChanQuery (IsChanProducer uid next) = undefined
-performChanQuery (IsChanConsumer uid next) = undefined
-performChanQuery (AmountOfSubscribedUsers next) = undefined
-performChanQuery (LastPostTimestamp next) = undefined
-performChanQuery (Messages ofs am next) = undefined
-performChanQuery (MessagesTill ts next) = undefined
+--fmap' :: (a -> b) -> Either c a -> Either c b
+--fmap' _ (Left v) = Left v
+--fmap' f (Right v) = Right (f v) 
+
+evalChanQuery :: (Member Query r)
+              => NoC -> ChanQueryType (VE r a) -> ChanId -> Either Error (VE r a) 
+evalChanQuery noc (GetChanName next) 
+    = fmap next . queryOnChan C._name noc
+evalChanQuery noc (GetChanDesc next) 
+    = fmap next . queryOnChan C._desc noc 
+evalChanQuery noc (GetChanType next) 
+    = fmap next . queryOnChan C._type' noc 
+evalChanQuery noc (GetChanImage next) 
+    = fmap next . queryOnChan C._image noc 
+evalChanQuery noc (IsChanOwner uid next) 
+    = fmap next . queryOnChan (S.member uid . C._owners) noc
+evalChanQuery noc (IsChanProducer uid next) 
+    = fmap next . queryOnChan (S.member uid . C._producers) noc 
+evalChanQuery noc (IsChanConsumer uid next) 
+    = fmap next . queryOnChan (S.member uid . C._consumers) noc
+evalChanQuery noc (AmountOfSubscribedUsers next) 
+    = fmap next . queryOnChan (S.size . C._subscribers) noc  
+evalChanQuery noc (LastPostTimestamp next) 
+    = undefined
+evalChanQuery noc (Messages ofs am next) 
+    = undefined 
+evalChanQuery noc (MessagesTill ts next) 
+    = undefined 
 
 queryOnChan :: (Channel -> b)
-            -> (b -> (VE (Query :> r) a)) 
-            -> (Error -> Eff r a) 
-            -> (NoC -> (VE (Query :> r) a) -> Eff r a) 
             -> NoC 
             -> ChanId
-            -> Eff r a
-queryOnChan fun next throw go noc cid = 
+            -> Either Error b 
+queryOnChan fun noc cid = 
     let chan = IX.getOne (_channels noc IX.@= cid)
     in case chan of
-        Nothing -> throw $ UnknownChannel cid
-        Just c -> go noc $ next (fun c)
+        Nothing -> Left $ UnknownChannel cid
+        Just c -> Right $ fun c
 
-performUserQuery :: UserQueryType (VE (Query :> r) a)
-                 -> (Error -> Eff r a) 
-                 -> (NoC -> (VE (Query :> r) a) -> Eff r a) 
-                 -> NoC 
-                 -> UserId 
-                 -> Eff r a
-performUserQuery (GetUserName next) = undefined
+evalUserQuery :: (Member Query r)
+              => NoC -> UserQueryType (VE r a) -> UserId -> Either Error (VE r a) 
+evalUserQuery noc (GetUserLogin next) 
+    = fmap next . queryOnUser U._login noc
+evalUserQuery noc (GetUserName next) 
+    = fmap next . queryOnUser U._name noc
+evalUserQuery noc (GetUserDesc next) 
+    = fmap next . queryOnUser U._desc noc
+
+queryOnUser :: (User -> b)
+            -> NoC 
+            -> UserId
+            -> Either Error b 
+queryOnUser fun noc uid = 
+    let user = IX.getOne (_users noc IX.@= uid)
+    in case user of
+        Nothing -> Left $ UnknownUser uid
+        Just u -> Right $ fun u
+
 
 runQueryAndUpdate :: NoC -> Eff (Query :> Update :> Exec :> r) a -> Eff (Exec :> r) (NoC, a)
 runQueryAndUpdate noc action = go noc (admin action)
@@ -110,37 +122,41 @@ runQueryAndUpdate noc action = go noc (admin action)
     go n (Val v) = return (n, v) 
     go n (E request) = checkQuery n request
 
-    checkQuery n r = either (checkUpdate n) (performQuery throwME go n) $ decomp r
-    checkUpdate n r = either (passOn n) (performUpdate throwME go n) $ decomp r
+    checkQuery n r = flip (either (checkUpdate n)) (decomp r)
+                        $ \ req -> case evalQuery n req of 
+                            Right next -> go n next
+                            Left err -> throwME err
+    checkUpdate n r = flip (either (passOn n)) (decomp r) 
+                        $ \ req -> case evalUpdate n req of
+                            Right (next, noc') -> go noc' next
+                            Left err -> throwME err
     passOn n r = send (flip fmap r) >>= go n 
-            
-performUpdate :: (Error -> Eff r a) 
-              -> (NoC -> (VE (Update :> r) a) -> Eff r a) 
-              -> NoC 
-              -> Update (VE (Update :> r) a) 
-              -> Eff r a
-performUpdate throw go noc (AddAdmin uid next) = 
-    go (over admins (S.insert uid) noc) (next ())
-performUpdate throw go noc (CreateUser l pw next) = 
-    go (over users (IX.insert user) (set nextUserId nuid noc)) (next uid)
+
+evalUpdate :: (Member Update r)
+           => NoC -> Update (VE r w) => Either Error ((VE r w), NoC)
+evalUpdate noc (AddAdmin uid next) = Right (next (), over admins (S.insert uid) noc) 
+evalUpdate noc (CreateUser l pw next) = Right (next uid, noc')
     where
+    noc' = over users (IX.insert user) (set nextUserId nuid noc)
     user = User uid l pw (mkName "") (mkDesc "") Nothing S.empty S.empty S.empty []
     uid  = _nextUserId noc
     nuid = UserId (uiToInt uid + 1)
-performUpdate throw go noc (ChanUpdate cid q) 
-    = performChanUpdate q
-performUpdate throw go noc (UserUpdate uid q) 
-    = performUserUpdate q
+evalUpdate noc (ChanUpdate cid q) = evalChanUpdate q noc cid
+evalUpdate noc (UserUpdate uid q) = evalUserUpdate q noc uid
 
-performChanUpdate (SetChanName n next) = updateOnChan (set C.name n) 
-performUserUpdate (SetUserLogin l next) = undefined 
+evalChanUpdate (SetChanName n next) = updateOnChan (set C.name n) (next ())
+evalUserUpdate (SetUserLogin l next) = undefined 
 
-updateOnChan fun throw go noc cid next = 
+updateOnChan :: (Channel -> Channel)
+             -> a
+             -> NoC
+             -> ChanId
+             -> Either Error (a, NoC)
+updateOnChan mod v noc cid = 
     let chan = IX.getOne (_channels noc IX.@= cid)
     in case chan of
-        Nothing -> throw $ UnknownChannel cid
-        Just c -> go (over _channels (IX.updateIx cid (fun c) noc)) $ next ()
- 
+        Nothing -> Left $ UnknownChannel cid
+        Just c -> Right (v, over channels (IX.updateIx cid (mod c)) noc)
 
 runSimple :: NoC -> Maybe UserId -> Eff (Query :> Update :> Exec :> r) a 
           -> Eff r (Either Error (NoC, a))
@@ -149,19 +165,28 @@ runSimple noc uid action = go noc uid (admin action)
     go n _ (Val v) = return . Right $ (n, v)
     go n u (E request) = checkQuery n u request
 
-    checkQuery n u r = either (checkUpdate n u) (performQuery (return . Left) (flip go u) n) $ decomp r
-    checkUpdate n u r = either (checkExec n u) (performUpdate (return . Left) (flip go u) n) $ decomp r
-    checkExec n u r = either (passOn n u) (performExec go n u) $ decomp r
+    checkQuery n u r = flip (either (checkUpdate n u)) (decomp r)
+                        $ \ req -> case evalQuery n req of 
+                            Right next -> go n u next
+                            Left err -> return . Left $ err
+    checkUpdate n u r = flip (either (checkExec n u)) (decomp r) 
+                        $ \ req -> case evalUpdate n req of
+                            Right (next, noc') -> go noc' u next
+                            Left err -> return . Left $ err
+    checkExec n u r = flip (either (passOn n u)) (decomp r)
+                        $ \ req -> case evalExec n u req of
+                            Right (next, noc', uid') -> go noc' uid' next 
+                            Left err -> return . Left $ err
     passOn n u r = send (flip fmap r) >>= go n u
 
-performExec go noc uid (GetOperatorId next)     = go noc uid (next uid) 
-performExec go noc uid (ThrowME err next)       = return . Left $ err 
-performExec go noc uid (DoLogout next)          = go noc Nothing (next ())
-performExec go noc (Just _) (DoLogin l pw next) = return . Left $ AlreadyLoggedIn
-performExec go noc uid (DoLogin l pw next)      =
+evalExec noc uid (GetOperatorId next)     = Right (next uid, noc, uid) 
+evalExec noc uid (ThrowME err next)       = Left $ err 
+evalExec noc uid (DoLogout next)          = Right (next (), noc, uid)
+evalExec noc (Just _) (DoLogin l pw next) = Left $ AlreadyLoggedIn
+evalExec noc uid (DoLogin l pw next)      = 
     case res of
-        Nothing -> return . Left $ CantLogin l 
-        Just id -> go noc res (next id)
+        Nothing -> Left $ CantLogin l 
+        Just id -> Right (next id, noc, res)
     where 
     res = do
         user <- IX.getOne (_users noc IX.@= l)

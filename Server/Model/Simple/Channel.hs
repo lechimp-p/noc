@@ -24,6 +24,7 @@ data Channel = Channel
     , _owners       :: S.Set UserId
     , _producers    :: S.Set UserId
     , _consumers    :: S.Set UserId
+    , _subscribers  :: S.Set UserId
     , _messages     :: S.Set MsgId
     } 
     deriving (Data, Typeable)
