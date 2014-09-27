@@ -2,7 +2,16 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
 
-module Model.Operations where
+module Model.Operations 
+    ( module Model.Operations
+    , module Control.Eff 
+    , E.Exec
+    , Q.Query
+    , Q.Offset
+    , Q.Amount
+    , U.Update
+    )
+where
 
 import qualified Data.Set as S
 import Data.Text (Text) 
