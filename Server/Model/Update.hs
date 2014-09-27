@@ -82,16 +82,16 @@ post :: Member Update r => ChanId -> UTCTime -> Text -> Maybe Image -> Eff r Msg
 post cid ts t img = chanUpdate cid (Post ts t img)
 
 data UserUpdateType n
-    = SetUserLogin Login (() -> n) 
-    | SetUserPassword Password (() -> n) 
-    | SetUserName Name (() -> n) 
-    | SetUserDesc Desc (() -> n) 
-    | SetUserIcon Icon (() -> n) 
-    | AddUserNotification Notification (() -> n) 
-    | AddUserContact UserId (() -> n) 
-    | RmUserContact UserId (() -> n) 
-    | AddUserSubscription ChanId (() -> n) 
-    | RmUserSubscription ChanId (() -> n) 
+    = SetUserLogin Login                (() -> n) 
+    | SetUserPassword Password          (() -> n) 
+    | SetUserName Name                  (() -> n) 
+    | SetUserDesc Desc                  (() -> n) 
+    | SetUserIcon (Maybe Icon)          (() -> n) 
+    | AddUserNotification Notification  (() -> n) 
+    | AddUserContact UserId             (() -> n) 
+    | RmUserContact UserId              (() -> n) 
+    | AddUserSubscription ChanId        (() -> n) 
+    | RmUserSubscription ChanId         (() -> n) 
     deriving (Typeable, Functor)
 
 userUpdate :: Member Update r 

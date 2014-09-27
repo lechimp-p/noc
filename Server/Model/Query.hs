@@ -93,7 +93,7 @@ data UserQueryType n
 --    | IsUserPassword Password   (Bool -> n)
     | GetUserName               (Name -> n)
     | GetUserDesc               (Desc -> n)
-    | GetUserIcon               (Icon -> n)
+    | GetUserIcon               (Maybe Icon -> n)
     | GetUserNotifications      ([Notification] -> n)
     | GetUserContacts           (S.Set UserId -> n)
     | GetUserSubscriptions      (S.Set ChanId -> n)
@@ -115,7 +115,7 @@ getUserName uid = userQuery uid GetUserName
 getUserDesc :: Member Query r => UserId -> Eff r Desc 
 getUserDesc uid = userQuery uid GetUserDesc
 
-getUserIcon :: Member Query r => UserId -> Eff r Icon 
+getUserIcon :: Member Query r => UserId -> Eff r (Maybe Icon) 
 getUserIcon uid = userQuery uid GetUserIcon
 
 getUserNotifications :: Member Query r => UserId -> Eff r [Notification] 
