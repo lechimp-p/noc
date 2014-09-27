@@ -51,7 +51,7 @@ evalQuery noc q = case q of
     CountAdmins next 
         -> Right . next . S.size . _admins $ noc
     GetUserIdByLogin l next 
-        -> Right . next . fmap U._id . IX.getOne $ _users noc IX.@= l 
+        -> Right . next . fmap U._id . IX.getOne $ _users noc IX.@= (Login l) 
     ChanQuery cid q 
         -> evalChanQuery noc q cid
     UserQuery uid q 
@@ -151,11 +151,11 @@ runQueryAndUpdate noc action = go noc (admin action)
 evalUpdate :: (Member Update r)
            => NoC -> Update (VE r w) => Either Error ((VE r w), NoC)
 evalUpdate noc q = case q of
-    CreateChan name next
+    CreateChan uid name next
         -> Right (next cid, noc')
             where
             noc' = over channels (IX.insert chan) (set nextChanId ncid noc)
-            chan = Channel cid name (mkDesc "") None Nothing S.empty S.empty S.empty S.empty S.empty  
+            chan = Channel cid name (mkDesc "") None Nothing (S.insert uid S.empty) S.empty S.empty S.empty S.empty  
             cid = _nextChanId noc
             ncid = ChanId(ciToInt cid + 1) 
     CreateUser l pw next
@@ -282,8 +282,8 @@ evalExec noc uid q = case q of
     _login l pw = do
         user <- IX.getOne (_users noc IX.@= l)
         if checkPassword pw (U._password user)
-        then return (U._id user)
-        else fail "password mismatch"
+            then return (U._id user)
+            else fail "password mismatch"
     
 head' []     = Nothing
 head' (x:_)  = Just x

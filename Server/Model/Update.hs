@@ -14,16 +14,16 @@ import Control.Eff
 import Model.BaseTypes
 
 data Update n
-    = CreateChan Name               (ChanId -> n)
-    | CreateUser Login Password     (UserId -> n) 
-    | AddAdmin UserId               (() -> n)
-    | RmAdmin UserId                (() -> n)
+    = CreateChan UserId Name            (ChanId -> n)
+    | CreateUser Login Password         (UserId -> n) 
+    | AddAdmin UserId                   (() -> n)
+    | RmAdmin UserId                    (() -> n)
     | ChanUpdate ChanId (ChanUpdateType n)
     | UserUpdate UserId (UserUpdateType n)
     deriving (Typeable, Functor)
 
-createChan :: Member Update r => Name -> Eff r ChanId
-createChan n = send $ \ next -> inj (CreateChan n next)
+createChan :: Member Update r => UserId -> Name -> Eff r ChanId
+createChan uid n = send $ \ next -> inj (CreateChan uid n next)
 
 createUser :: Member Update r => Login -> Password -> Eff r UserId
 createUser l pw = send $ \ next -> inj (CreateUser l pw next)

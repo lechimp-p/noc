@@ -49,6 +49,7 @@ addAdmin :: (Member Update r, Member Query r, Member Exec r)
          => UserId -> Eff r ()
 addAdmin uid = do
     checkAccess () forAdmins 
+    getUserLogin uid -- to raise if user not exists
     U.addAdmin uid
 
 rmAdmin :: (Member Update r, Member Query r, Member Exec r) 
@@ -323,8 +324,8 @@ createUser l pw = do
 createChannel :: (Member Update r, Member Query r, Member Exec r)
               => Name -> Eff r ChanId
 createChannel n = do
-    forceOperatorId
-    U.createChan n
+    oid <- forceOperatorId
+    U.createChan oid n
 
 ----------------------
 -- posting of messages
