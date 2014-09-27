@@ -26,6 +26,7 @@ import qualified Model.Simple.Channel as C
 import Model.Simple.Channel
 import qualified Model.Simple.Message as M
 import Model.Simple.Message
+import Model.Simple.Operations
 
 import Control.Lens 
 import Control.Eff
@@ -47,11 +48,11 @@ evalQuery :: (Member Query r)
           => NoC -> Query (VE r w) -> Either Error (VE r w) 
 evalQuery noc q = case q of
     IsAdmin uid next 
-        -> Right . next . S.member uid . _admins $ noc
+        -> Right . next . isAdminR noc $ uid
     CountAdmins next 
-        -> Right . next . S.size . _admins $ noc
+        -> Right . next . countAdminsR $ noc
     GetUserIdByLogin l next 
-        -> Right . next . fmap U._id . IX.getOne $ _users noc IX.@= (Login l) 
+        -> Right . next . getUserIdByLoginR noc $ l
     ChanQuery cid q 
         -> evalChanQuery noc q cid
     UserQuery uid q 
@@ -61,47 +62,28 @@ evalChanQuery :: (Member Query r)
               => NoC -> ChanQueryType (VE r a) -> ChanId -> Either Error (VE r a) 
 evalChanQuery noc q cid = case q of
     GetChanName next 
-        -> fmap next . queryChan C._name noc $ cid
+        -> fmap next . getChanNameR noc $ cid
     GetChanDesc next 
-        -> fmap next . queryChan C._desc noc $ cid
+        -> fmap next . getChanDescR noc $ cid
     GetChanType next 
-        -> fmap next . queryChan C._type' noc $ cid
+        -> fmap next . getChanTypeR noc $ cid
     GetChanImage next 
-        -> fmap next . queryChan C._image noc $ cid
+        -> fmap next . getChanImageR noc $ cid
     IsChanOwner uid next 
-        -> fmap next . queryChan (S.member uid . C._owners) noc $ cid
+        -> fmap next . isChanOwnerR noc cid $ uid
     IsChanProducer uid next 
-        -> fmap next . queryChan (S.member uid . C._producers) noc $ cid 
+        -> fmap next . isChanProducerR noc cid $ uid 
     IsChanConsumer uid next 
-        -> fmap next . queryChan (S.member uid . C._consumers) noc $ cid
+        -> fmap next . isChanConsumerR noc cid $ uid
     AmountOfSubscribedUsers next 
-        -> fmap next . queryChan (S.size . C._subscribers) noc $ cid
+        -> fmap next . amountOfSubscribedUsersR noc $ cid
     LastPostTimestamp next 
-        -> fmap next . queryChan (lastPostTimestamp' cid) noc $ cid 
+        -> fmap next . lastPostTimestampR noc $ cid 
     Messages ofs am next 
-        -> fmap next . queryChan (messages' ofs am cid) noc $ cid
+        -> fmap next . messagesR noc cid ofs $ am
     MessagesTill ts next 
-        -> fmap next . queryChan (messagesTill' ts cid) noc $ cid
-    where
-    lastPostTimestamp' cid _ = do
-        msg <- head' . IX.toDescList (IX.Proxy :: IX.Proxy UTCTime) $ N._messages noc IX.@= cid
-        return $ _timestamp msg
-    messages' ofs am cid _ = 
-        take am . drop ofs 
-        . IX.toDescList (IX.Proxy :: IX.Proxy UTCTime) $ N._messages noc IX.@= cid
-    messagesTill' ts cid _ = 
-        takeWhile ((<=) ts . _timestamp) 
-        . IX.toDescList (IX.Proxy :: IX.Proxy UTCTime) $ N._messages noc IX.@= cid
+        -> fmap next . messagesTillR noc cid $ ts
         
-queryChan :: (Channel -> b)
-          -> NoC 
-          -> ChanId
-          -> Either Error b 
-queryChan fun noc cid = 
-    let chan = IX.getOne (_channels noc IX.@= cid)
-    in case chan of
-        Nothing -> Left $ UnknownChannel cid
-        Just c -> Right $ fun c
 
 evalUserQuery :: (Member Query r)
               => NoC -> UserQueryType (VE r a) -> UserId -> Either Error (VE r a) 
