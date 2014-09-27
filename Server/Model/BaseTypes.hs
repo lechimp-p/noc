@@ -53,4 +53,4 @@ data ChanType
 
 data Notification
     = AddedToChannel UTCTime UserId ChanId
-    deriving (Data, Typeable)
+    deriving (Eq, Data, Typeable)
