@@ -13,21 +13,28 @@ import Control.Eff
 import Model.BaseTypes
 import Model.Errors
 import Model.Permissions
-import Model.Exec
+import Model.Exec (Exec)
 import Model.Query (Query, Offset, Amount)
 import Model.Update (Update)
+import qualified Model.Exec as E
 import qualified Model.Query as Q
 import qualified Model.Update as U
 import Model.Message 
 
 throwOn err cond =
     if cond
-    then throwME err
+    then E.throwME err
     else return ()
 
 ---------
 -- on noc
 ---------
+
+isAdmin :: (Member Query r, Member Exec r)
+        => UserId -> Eff r Bool
+isAdmin uid = do
+    checkAccess () forAdmins 
+    Q.isAdmin uid 
 
 addAdmin :: (Member Update r, Member Query r, Member Exec r) 
          => UserId -> Eff r ()
@@ -42,6 +49,25 @@ rmAdmin uid = do
     n <- Q.countAdmins 
     OnlyOneNoCAdminLeft `throwOn` (n == 1) 
     U.rmAdmin uid
+
+------------
+-- execution
+------------
+
+getOperatorId :: (Member Exec r)
+              => Eff r (Maybe UserId)
+getOperatorId = E.getOperatorId 
+
+doLogin :: (Member Exec r)
+        => Login -> Password -> Eff r UserId
+doLogin l pw = do
+    oid <- getOperatorId
+    AlreadyLoggedIn `throwOn` (isJust oid)
+    E.doLogin l pw
+
+doLogout :: (Member Exec r)
+         => Eff r ()
+doLogout = E.doLogout 
 
 -------------------------
 -- operations on channels
@@ -167,7 +193,7 @@ getUserDesc uid = do
     Q.getUserDesc uid
 
 getUserIcon :: (Member Query r, Member Exec r)
-             => UserId -> Eff r Icon 
+             => UserId -> Eff r (Maybe Icon) 
 getUserIcon uid = do
     forceOperatorId
     Q.getUserIcon uid
@@ -245,7 +271,7 @@ getUserIdByLogin l = do
     res <- Q.getUserIdByLogin l
     case res of
         (Just user) -> return $ user
-        otherwise -> throwME $ UnknownLogin l 
+        otherwise -> E.throwME $ UnknownLogin l 
 
 --------------------
 -- creation of users
@@ -272,10 +298,10 @@ createChannel n = do
 ----------------------
 
 post :: (Member Update r, Member Query r, Member Exec r)
-     => ChanId -> UTCTime -> Text -> Maybe Image -> Eff r MsgId
-post cid ts txt img = do
+     => ChanId -> UserId -> UTCTime -> Text -> Maybe Image -> Eff r MsgId
+post cid uid ts txt img = do
     checkAccess cid forProducersOrOwners
-    U.post cid ts txt img
+    U.post cid uid ts txt img
 
 ----------------------
 -- reading of messages
