@@ -93,7 +93,6 @@ evalChanQuery noc q cid = case q of
         takeWhile ((<=) ts . _timestamp) 
         . IX.toDescList (IX.Proxy :: IX.Proxy UTCTime) $ N._messages noc IX.@= cid
         
-
 queryChan :: (Channel -> b)
           -> NoC 
           -> ChanId
@@ -201,9 +200,18 @@ evalChanUpdate noc cid q = case q of
             msg = Message mid cid img txt uid ts
             mid = N._nextMsgId noc
             nmid = MsgId (miToInt mid + 1)
-            
-            
-
+     
+updateChan :: (Channel -> Channel)
+           -> a
+           -> NoC
+           -> ChanId
+           -> Either Error (a, NoC)
+updateChan mod v noc cid = 
+    let chan = IX.getOne (_channels noc IX.@= cid)
+    in case chan of
+        Nothing -> Left $ UnknownChannel cid
+        Just c -> Right (v, over channels (IX.updateIx cid (mod c)) noc)
+       
 evalUserUpdate noc uid q = case q of
     SetUserLogin l next
         -> updateUser (set login l) (next ()) noc uid
@@ -225,17 +233,6 @@ evalUserUpdate noc uid q = case q of
         -> updateUser (over subscriptions (S.insert cid)) (next ()) noc uid
     RmUserSubscription cid next
         -> updateUser (over subscriptions (S.delete cid)) (next ()) noc uid
-
-updateChan :: (Channel -> Channel)
-           -> a
-           -> NoC
-           -> ChanId
-           -> Either Error (a, NoC)
-updateChan mod v noc cid = 
-    let chan = IX.getOne (_channels noc IX.@= cid)
-    in case chan of
-        Nothing -> Left $ UnknownChannel cid
-        Just c -> Right (v, over channels (IX.updateIx cid (mod c)) noc)
 
 updateUser :: (User -> User)
            -> a
