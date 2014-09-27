@@ -35,16 +35,16 @@ rmAdmin :: Member Update r => UserId -> Eff r ()
 rmAdmin uid = send $ \ next -> inj (RmAdmin uid next)
 
 data ChanUpdateType n
-    = SetChanName Name                  (() -> n) 
-    | SetChanDesc Desc                  (() -> n)
-    | SetChanType ChanType              (() -> n) 
-    | AddChanOwner UserId               (() -> n) 
-    | RmChanOwner UserId                (() -> n) 
-    | AddChanProducer UserId            (() -> n) 
-    | RmChanProducer UserId             (() -> n) 
-    | AddChanConsumer UserId            (() -> n) 
-    | RmChanConsumer UserId             (() -> n) 
-    | Post UTCTime Text (Maybe Image)   (MsgId -> n) 
+    = SetChanName Name                          (() -> n) 
+    | SetChanDesc Desc                          (() -> n)
+    | SetChanType ChanType                      (() -> n) 
+    | AddChanOwner UserId                       (() -> n) 
+    | RmChanOwner UserId                        (() -> n) 
+    | AddChanProducer UserId                    (() -> n) 
+    | RmChanProducer UserId                     (() -> n) 
+    | AddChanConsumer UserId                    (() -> n) 
+    | RmChanConsumer UserId                     (() -> n) 
+    | Post UserId UTCTime Text (Maybe Image)    (MsgId -> n) 
     deriving (Typeable, Functor)
 
 chanUpdate :: Member Update r 
@@ -78,8 +78,8 @@ addChanConsumer cid uid = chanUpdate cid (AddChanConsumer uid)
 rmChanConsumer :: Member Update r => ChanId -> UserId -> Eff r ()
 rmChanConsumer cid uid = chanUpdate cid (RmChanConsumer uid)
 
-post :: Member Update r => ChanId -> UTCTime -> Text -> Maybe Image -> Eff r MsgId 
-post cid ts t img = chanUpdate cid (Post ts t img)
+post :: Member Update r => ChanId -> UserId -> UTCTime -> Text -> Maybe Image -> Eff r MsgId 
+post cid uid ts t img = chanUpdate cid (Post uid ts t img)
 
 data UserUpdateType n
     = SetUserLogin Login                (() -> n) 
