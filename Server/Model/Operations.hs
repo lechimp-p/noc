@@ -109,6 +109,12 @@ setChanType cid v = do
     checkAccess cid forChanOwnersOrAdmins
     U.setChanType cid v 
 
+isChanOwner :: (Member Query r, Member Exec r)
+            => ChanId -> UserId -> Eff r Bool
+isChanOwner cid uid = do
+    checkAccess cid forChanOwnersOrAdmins
+    Q.isChanOwner cid uid
+
 addChanOwner :: (Member Update r, Member Query r, Member Exec r)
              => ChanId -> UserId -> Eff r ()
 addChanOwner cid uid = do
@@ -121,6 +127,12 @@ rmChanOwner cid uid = do
     checkAccess cid forChanOwnersOrAdmins
     U.rmChanOwner cid uid
 
+isChanProducer :: (Member Query r, Member Exec r)
+            => ChanId -> UserId -> Eff r Bool
+isChanProducer cid uid = do
+    checkAccess cid forChanOwnersOrAdmins
+    Q.isChanProducer cid uid
+
 addChanProducer :: (Member Update r, Member Query r, Member Exec r)
              => ChanId -> UserId -> Eff r ()
 addChanProducer cid uid = do
@@ -132,6 +144,12 @@ rmChanProducer :: (Member Update r, Member Query r, Member Exec r)
 rmChanProducer cid uid = do
     checkAccess cid forChanOwnersOrAdmins
     U.rmChanProducer cid uid
+
+isChanConsumer :: (Member Query r, Member Exec r)
+            => ChanId -> UserId -> Eff r Bool
+isChanConsumer cid uid = do
+    checkAccess cid forChanOwnersOrAdmins
+    Q.isChanConsumer cid uid
 
 addChanConsumer :: (Member Update r, Member Query r, Member Exec r)
              => ChanId -> UserId -> Eff r ()
@@ -238,6 +256,12 @@ setUserDesc :: (Member Update r, Member Query r, Member Exec r)
 setUserDesc uid v = do
     checkAccess uid forUserSelfOrAdmins
     U.setUserDesc uid v
+
+setUserIcon :: (Member Update r, Member Query r, Member Exec r)
+            => UserId -> Maybe Icon -> Eff r ()
+setUserIcon uid v = do
+    checkAccess uid forUserSelfOrAdmins
+    U.setUserIcon uid v
 
 addUserContact :: (Member Update r, Member Query r, Member Exec r)
                => UserId -> UserId -> Eff r ()
