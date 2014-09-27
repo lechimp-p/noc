@@ -6,12 +6,13 @@
 
 module Model.Simple
     ( runQuery
-    --, runQueryAndUpdate
-    --, runSimple
+    , runQueryAndUpdate
+    , runSimple
     --, run
     )
 where
 
+import Model.Operations
 import Model.BaseTypes
 import Model.Errors
 import Model.Query
