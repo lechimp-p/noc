@@ -12,7 +12,6 @@ module Model.Simple
     )
 where
 
-import Model.Operations
 import Model.BaseTypes
 import Model.Errors
 import Model.Query
@@ -276,11 +275,9 @@ evalExec noc uid q = case q of
     DoLogout next
         -> Right (next (), noc, uid)
     DoLogin l pw next
-        -> case uid of 
-            (Just _) -> Left $ AlreadyLoggedIn
-            Nothing -> case _login l pw of
-                Nothing -> Left $ CantLogin l 
-                Just id -> Right (next id, noc, Just id)
+        -> case _login l pw of
+            Nothing -> Left $ CantLogin l 
+            Just id -> Right (next id, noc, Just id)
     where 
     _login l pw = do
         user <- IX.getOne (_users noc IX.@= l)
