@@ -110,7 +110,7 @@ setUserName uid l = userUpdate uid (SetUserName l)
 setUserDesc :: Member Update r => UserId -> Desc -> Eff r ()
 setUserDesc uid l = userUpdate uid (SetUserDesc l)
 
-setUserIcon :: Member Update r => UserId -> Icon -> Eff r ()
+setUserIcon :: Member Update r => UserId -> (Maybe Icon) -> Eff r ()
 setUserIcon uid l = userUpdate uid (SetUserIcon l)
 
 addUserNotification :: Member Update r => UserId -> Notification -> Eff r ()
