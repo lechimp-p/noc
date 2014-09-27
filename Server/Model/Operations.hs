@@ -298,7 +298,7 @@ tryToAddUserNotification uid notf = do
     return ()
 
 getUserIdByLogin :: (Member Query r, Member Exec r)
-               => Login -> Eff r UserId
+               => Text -> Eff r UserId
 getUserIdByLogin l = do
     forceOperatorId
     res <- Q.getUserIdByLogin l
@@ -357,5 +357,5 @@ messagesTill cid ts = do
 ----------
 
 checkDuplicateLogin l = do
-    uid <- Q.getUserIdByLogin l
+    uid <- Q.getUserIdByLogin . loginToText $ l
     DuplicateLogin l `throwOn` (isJust uid) 

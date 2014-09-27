@@ -19,7 +19,7 @@ import Model.Message
 data Query n
     = IsAdmin UserId (Bool -> n)
     | CountAdmins (Int -> n)
-    | GetUserIdByLogin Login (Maybe UserId -> n)
+    | GetUserIdByLogin Text (Maybe UserId -> n)
     | ChanQuery ChanId (ChanQueryType n) 
     | UserQuery UserId (UserQueryType n)
     deriving (Typeable, Functor)
@@ -30,7 +30,7 @@ isAdmin uid = send $ \ next -> inj (IsAdmin uid next)
 countAdmins :: Member Query r => Eff r Int
 countAdmins = send $ \ next -> inj (CountAdmins next)
 
-getUserIdByLogin :: Member Query r => Login -> Eff r (Maybe UserId)
+getUserIdByLogin :: Member Query r => Text -> Eff r (Maybe UserId)
 getUserIdByLogin l = send $ \ next -> inj (GetUserIdByLogin l next)
 
 type Offset = Int
