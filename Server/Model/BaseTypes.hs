@@ -2,7 +2,9 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 
 module Model.BaseTypes
-    ( UserId (..)
+    ( Offset
+    , Amount
+    , UserId (..)
     , ChanId (..)
     , MsgId (..)
     , Login (..)
@@ -24,6 +26,9 @@ where
 import Data.Text
 import Data.Time.Clock
 import Data.Data (Data, Typeable) 
+
+type Offset = Int
+type Amount = Int
 
 newtype UserId = UserId { uiToInt :: Int } deriving (Show, Read, Eq, Ord, Data, Typeable)
 newtype ChanId = ChanId { ciToInt :: Int } deriving (Show, Read, Eq, Ord, Data, Typeable)

@@ -33,9 +33,6 @@ countAdmins = send $ \ next -> inj (CountAdmins next)
 getUserIdByLogin :: Member Query r => Text -> Eff r (Maybe UserId)
 getUserIdByLogin l = send $ \ next -> inj (GetUserIdByLogin l next)
 
-type Offset = Int
-type Amount = Int
-
 data ChanQueryType n
     = GetChanName               (Name -> n)
     | GetChanDesc               (Desc -> n)
