@@ -106,6 +106,7 @@ evalChanUpdate noc cid q = case q of
     SetChanName n next -> fmap (fmap next) . setChanNameR noc cid $ n
     SetChanDesc d next -> fmap (fmap next) . setChanDescR noc cid $ d
     SetChanType t next -> fmap (fmap next) . setChanTypeR noc cid $ t
+    SetChanImage t next -> fmap (fmap next) . setChanImageR noc cid $ t
     AddChanOwner uid next -> fmap (fmap next) . addChanOwnerR noc cid $ uid
     RmChanOwner uid next -> fmap (fmap next) . rmChanOwnerR noc cid $ uid
     AddChanProducer uid next -> fmap (fmap next) . addChanOwnerR noc cid $ uid

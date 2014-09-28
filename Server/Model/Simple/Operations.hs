@@ -107,6 +107,7 @@ updateChan mod v noc cid =
 setChanNameR n c n' = updateChan (set C.name n') () n c
 setChanDescR n c d = updateChan (set C.desc d) () n c
 setChanTypeR n c t = updateChan (set C.type' t) () n c
+setChanImageR n c img = updateChan (set C.image img) () n c
 addChanOwnerR n c uid = updateChan (over C.owners (S.insert uid)) () n c
 rmChanOwnerR n c uid = updateChan (over C.owners (S.delete uid)) () n c
 addChanProducerR n c uid = updateChan (over C.producers (S.insert uid)) () n c
