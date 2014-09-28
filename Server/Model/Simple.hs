@@ -152,12 +152,6 @@ evalExec noc uid q = case q of
     GetOperatorId next -> Right (next uid, noc, uid) 
     ThrowME err next -> Left $ err 
     DoLogout next -> Right (next (), noc, uid)
-    DoLogin l pw next -> case _login l pw of
+    DoLogin l pw next -> case doLoginR noc l pw of
             Nothing -> Left $ CantLogin l 
             Just id -> Right (next id, noc, Just id)
-    where 
-    _login l pw = do
-        user <- IX.getOne (_users noc IX.@= l)
-        if checkPassword pw (U._password user)
-            then return (U._id user)
-            else fail "password mismatch"

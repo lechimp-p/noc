@@ -19,6 +19,12 @@ import qualified Data.Set as S
 import qualified Data.IxSet as IX
 import Data.Time.Clock (UTCTime)
 
+doLoginR noc l pw = do
+    user <- IX.getOne (_users noc IX.@= l)
+    if checkPassword pw (U._password user)
+        then return (U._id user)
+        else fail "password mismatch"
+
 isAdminR noc uid = S.member uid . _admins $ noc
 countAdminsR noc = S.size . _admins $ noc
 getUserIdByLoginR noc l = fmap U._id . IX.getOne $ _users noc IX.@= (Login l) 
