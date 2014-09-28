@@ -2,7 +2,6 @@
 --{-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE OverloadedStrings #-}
 
 module Model.Simple
     ( runQuery
@@ -28,11 +27,8 @@ import qualified Model.Simple.Message as M
 import Model.Simple.Message
 import Model.Simple.Operations
 
-import Control.Lens 
 import Control.Eff
-import qualified Data.Set as S 
 import qualified Data.IxSet as IX
-import Data.Time.Clock (UTCTime)
 
 
 runQuery :: NoC -> Eff (Query :> Exec :> r) a -> Eff (Exec :> r) a
@@ -47,71 +43,37 @@ runQuery noc action = go noc (admin action)
 evalQuery :: (Member Query r)
           => NoC -> Query (VE r w) -> Either Error (VE r w) 
 evalQuery noc q = case q of
-    IsAdmin uid next 
-        -> Right . next . isAdminR noc $ uid
-    CountAdmins next 
-        -> Right . next . countAdminsR $ noc
-    GetUserIdByLogin l next 
-        -> Right . next . getUserIdByLoginR noc $ l
-    ChanQuery cid q 
-        -> evalChanQuery noc q cid
-    UserQuery uid q 
-        -> evalUserQuery noc q uid
+    IsAdmin uid next -> Right . next . isAdminR noc $ uid
+    CountAdmins next -> Right . next . countAdminsR $ noc
+    GetUserIdByLogin l next -> Right . next . getUserIdByLoginR noc $ l
+    ChanQuery cid q -> evalChanQuery noc q cid
+    UserQuery uid q -> evalUserQuery noc q uid
 
 evalChanQuery :: (Member Query r)
               => NoC -> ChanQueryType (VE r a) -> ChanId -> Either Error (VE r a) 
 evalChanQuery noc q cid = case q of
-    GetChanName next 
-        -> fmap next . getChanNameR noc $ cid
-    GetChanDesc next 
-        -> fmap next . getChanDescR noc $ cid
-    GetChanType next 
-        -> fmap next . getChanTypeR noc $ cid
-    GetChanImage next 
-        -> fmap next . getChanImageR noc $ cid
-    IsChanOwner uid next 
-        -> fmap next . isChanOwnerR noc cid $ uid
-    IsChanProducer uid next 
-        -> fmap next . isChanProducerR noc cid $ uid 
-    IsChanConsumer uid next 
-        -> fmap next . isChanConsumerR noc cid $ uid
-    AmountOfSubscribedUsers next 
-        -> fmap next . amountOfSubscribedUsersR noc $ cid
-    LastPostTimestamp next 
-        -> fmap next . lastPostTimestampR noc $ cid 
-    Messages ofs am next 
-        -> fmap next . messagesR noc cid ofs $ am
-    MessagesTill ts next 
-        -> fmap next . messagesTillR noc cid $ ts
-        
+    GetChanName next -> fmap next . getChanNameR noc $ cid
+    GetChanDesc next -> fmap next . getChanDescR noc $ cid
+    GetChanType next -> fmap next . getChanTypeR noc $ cid
+    GetChanImage next -> fmap next . getChanImageR noc $ cid
+    IsChanOwner uid next -> fmap next . isChanOwnerR noc cid $ uid
+    IsChanProducer uid next -> fmap next . isChanProducerR noc cid $ uid 
+    IsChanConsumer uid next -> fmap next . isChanConsumerR noc cid $ uid
+    AmountOfSubscribedUsers next -> fmap next . amountOfSubscribedUsersR noc $ cid
+    LastPostTimestamp next -> fmap next . lastPostTimestampR noc $ cid 
+    Messages ofs am next -> fmap next . messagesR noc cid ofs $ am
+    MessagesTill ts next -> fmap next . messagesTillR noc cid $ ts
 
 evalUserQuery :: (Member Query r)
               => NoC -> UserQueryType (VE r a) -> UserId -> Either Error (VE r a) 
-evalUserQuery noc q = case q of
-    GetUserLogin next
-        -> fmap next . queryUser U._login noc
-    GetUserName next
-        -> fmap next . queryUser U._name noc
-    GetUserDesc next 
-        -> fmap next . queryUser U._desc noc
-    GetUserIcon next
-        -> fmap next . queryUser U._icon noc
-    GetUserNotifications next
-        -> fmap next . queryUser U._notifications noc
-    GetUserContacts next
-        -> fmap next . queryUser U._contacts noc
-    GetUserSubscriptions next
-        -> fmap next . queryUser U._subscriptions noc
-
-queryUser :: (User -> b)
-          -> NoC 
-          -> UserId
-          -> Either Error b 
-queryUser fun noc uid = 
-    let user = IX.getOne (_users noc IX.@= uid)
-    in case user of
-        Nothing -> Left $ UnknownUser uid
-        Just u -> Right $ fun u
+evalUserQuery noc q uid = case q of
+    GetUserLogin next -> fmap next . getUserLoginR noc $ uid
+    GetUserName next -> fmap next . getUserNameR noc $ uid
+    GetUserDesc next -> fmap next . getUserDescR noc $ uid
+    GetUserIcon next -> fmap next . getUserIconR noc $ uid
+    GetUserNotifications next -> fmap next . getUserNotificationsR noc $ uid
+    GetUserContacts next -> fmap next . getUserContactsR noc $ uid
+    GetUserSubscriptions next -> fmap next . getUserSubscriptionsR noc $ uid
 
 
 runQueryAndUpdate :: NoC -> Eff (Query :> Update :> Exec :> r) a -> Eff (Exec :> r) (NoC, a)
@@ -126,107 +88,43 @@ runQueryAndUpdate noc action = go noc (admin action)
                             Left err -> throwME err
     checkUpdate n r = flip (either (passOn n)) (decomp r) 
                         $ \ req -> case evalUpdate n req of
-                            Right (next, noc') -> go noc' next
+                            Right (noc', next) -> go noc' next
                             Left err -> throwME err
     passOn n r = send (flip fmap r) >>= go n 
 
 evalUpdate :: (Member Update r)
-           => NoC -> Update (VE r w) => Either Error ((VE r w), NoC)
+           => NoC -> Update (VE r w) -> Either Error (NoC, (VE r w))
 evalUpdate noc q = case q of
-    CreateChan uid name next
-        -> Right (next cid, noc')
-            where
-            noc' = over channels (IX.insert chan) (set nextChanId ncid noc)
-            chan = Channel cid name (mkDesc "") None Nothing (S.insert uid S.empty) S.empty S.empty S.empty S.empty  
-            cid = _nextChanId noc
-            ncid = ChanId(ciToInt cid + 1) 
-    CreateUser l pw next
-        -> Right (next uid, noc')
-            where
-            noc' = over users (IX.insert user) (set nextUserId nuid noc)
-            user = User uid l pw (mkName "") (mkDesc "") Nothing S.empty S.empty S.empty []
-            uid  = _nextUserId noc
-            nuid = UserId (uiToInt uid + 1)
-    AddAdmin uid next 
-        -> Right (next (), over admins (S.insert uid) noc) 
-    RmAdmin uid next 
-        -> Right (next (), over admins (S.delete uid) noc) 
-    ChanUpdate cid q 
-        -> evalChanUpdate noc cid q 
-    UserUpdate uid q
-        -> evalUserUpdate noc uid q
+    CreateChan uid name next -> Right . fmap next . createChanR noc uid $ name 
+    CreateUser l pw next -> Right . fmap next . createUserR noc l $ pw
+    AddAdmin uid next -> Right . fmap next . addAdminR noc $ uid
+    RmAdmin uid next -> Right . fmap next . rmAdminR noc $ uid
+    ChanUpdate cid q -> evalChanUpdate noc cid q 
+    UserUpdate uid q -> evalUserUpdate noc uid q
 
 evalChanUpdate noc cid q = case q of
-    SetChanName n next
-        -> updateChan (set C.name n) (next ()) noc cid
-    SetChanDesc d next
-        -> updateChan (set C.desc d) (next ()) noc cid
-    SetChanType t next
-        -> updateChan (set C.type' t) (next ()) noc cid
-    AddChanOwner uid next
-        -> updateChan (over C.owners (S.insert uid)) (next ()) noc cid
-    RmChanOwner uid next
-        -> updateChan (over C.owners (S.delete uid)) (next ()) noc cid
-    AddChanProducer uid next
-        -> updateChan (over C.producers (S.insert uid)) (next ()) noc cid
-    RmChanProducer uid next
-        -> updateChan (over C.producers (S.delete uid)) (next ()) noc cid
-    AddChanConsumer uid next
-        -> updateChan (over C.consumers (S.insert uid)) (next ()) noc cid
-    RmChanConsumer uid next
-        -> updateChan (over C.consumers (S.delete uid)) (next ()) noc cid
-    Post uid ts txt img next
-        -> updateChan (over C.messages (S.insert mid)) (next mid) noc' cid
-            where
-            noc' = over N.messages (IX.insert msg) (set nextMsgId nmid noc)
-            msg = Message mid cid img txt uid ts
-            mid = N._nextMsgId noc
-            nmid = MsgId (miToInt mid + 1)
-     
-updateChan :: (Channel -> Channel)
-           -> a
-           -> NoC
-           -> ChanId
-           -> Either Error (a, NoC)
-updateChan mod v noc cid = 
-    let chan = IX.getOne (_channels noc IX.@= cid)
-    in case chan of
-        Nothing -> Left $ UnknownChannel cid
-        Just c -> Right (v, over channels (IX.updateIx cid (mod c)) noc)
-       
+    SetChanName n next -> fmap (fmap next) . setChanNameR noc cid $ n
+    SetChanDesc d next -> fmap (fmap next) . setChanDescR noc cid $ d
+    SetChanType t next -> fmap (fmap next) . setChanTypeR noc cid $ t
+    AddChanOwner uid next -> fmap (fmap next) . addChanOwnerR noc cid $ uid
+    RmChanOwner uid next -> fmap (fmap next) . rmChanOwnerR noc cid $ uid
+    AddChanProducer uid next -> fmap (fmap next) . addChanOwnerR noc cid $ uid
+    RmChanProducer uid next -> fmap (fmap next) . rmChanOwnerR noc cid $ uid
+    AddChanConsumer uid next -> fmap (fmap next) . addChanConsumerR noc cid $ uid
+    RmChanConsumer uid next -> fmap (fmap next) . rmChanConsumerR noc cid $ uid
+    Post uid ts txt img next -> fmap (fmap next) . postR noc cid uid ts txt $ img
+      
 evalUserUpdate noc uid q = case q of
-    SetUserLogin l next
-        -> updateUser (set login l) (next ()) noc uid
-    SetUserPassword pw next
-        -> updateUser (set password pw) (next ()) noc uid
-    SetUserName n next
-        -> updateUser (set U.name n) (next ()) noc uid
-    SetUserDesc d next
-        -> updateUser (set U.desc d) (next ()) noc uid
-    SetUserIcon i next
-        -> updateUser (set icon i) (next ()) noc uid
-    AddUserNotification n next
-        -> updateUser (over notifications ((:) n)) (next ()) noc uid
-    AddUserContact uid next
-        -> updateUser (over contacts (S.insert uid)) (next ()) noc uid
-    RmUserContact uid next
-        -> updateUser (over contacts (S.delete uid)) (next ()) noc uid
-    AddUserSubscription cid next
-        -> updateUser (over subscriptions (S.insert cid)) (next ()) noc uid
-    RmUserSubscription cid next
-        -> updateUser (over subscriptions (S.delete cid)) (next ()) noc uid
-
-updateUser :: (User -> User)
-           -> a
-           -> NoC
-           -> UserId
-           -> Either Error (a, NoC)
-updateUser mod v noc uid =
-    let user = IX.getOne (_users noc IX.@= uid)
-    in case user of
-        Nothing -> Left $ UnknownUser uid
-        Just u -> Right (v, over users (IX.updateIx uid (mod u)) noc)
-
+    SetUserLogin l next -> fmap (fmap next) . setUserLoginR noc uid $ l 
+    SetUserPassword pw next -> fmap (fmap next) . setUserPasswordR noc uid $ pw
+    SetUserName n next -> fmap (fmap next) . setUserNameR noc uid $ n
+    SetUserDesc d next -> fmap (fmap next) . setUserDescR noc uid $ d
+    SetUserIcon i next -> fmap (fmap next) . setUserIconR noc uid $ i
+    AddUserNotification n next -> fmap (fmap next) . addUserNotificationR noc uid $ n
+    AddUserContact uid' next -> fmap (fmap next) . addUserContactR noc uid $ uid'
+    RmUserContact uid' next -> fmap (fmap next) . rmUserContactR noc uid $ uid'
+    AddUserSubscription cid next -> fmap (fmap next) . addUserSubscriptionR noc uid $ cid
+    RmUserSubscription cid next -> fmap (fmap next) . rmUserSubscriptionR noc uid $ cid
 
 runSimple :: NoC -> Maybe UserId -> Eff (Query :> Update :> Exec :> r) a 
           -> Eff r (Either Error (NoC, a))
@@ -241,7 +139,7 @@ runSimple noc uid action = go noc uid (admin action)
                             Left err -> return . Left $ err
     checkUpdate n u r = flip (either (checkExec n u)) (decomp r) 
                         $ \ req -> case evalUpdate n req of
-                            Right (next, noc') -> go noc' u next
+                            Right (noc', next) -> go noc' u next
                             Left err -> return . Left $ err
     checkExec n u r = flip (either (passOn n u)) (decomp r)
                         $ \ req -> case evalExec n u req of
@@ -266,6 +164,3 @@ evalExec noc uid q = case q of
         if checkPassword pw (U._password user)
             then return (U._id user)
             else fail "password mismatch"
-    
-head' []     = Nothing
-head' (x:_)  = Just x

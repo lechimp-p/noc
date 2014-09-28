@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Model.Simple.Operations where
 
 import Model.Errors
@@ -12,6 +14,7 @@ import Model.Simple.Channel
 import qualified Model.Simple.Message as M
 import Model.Simple.Message
 
+import Control.Lens 
 import qualified Data.Set as S 
 import qualified Data.IxSet as IX
 import Data.Time.Clock (UTCTime)
@@ -54,6 +57,91 @@ messagesTillR n c ts = queryChan (messagesTill' ts c) n c
         takeWhile ((<=) ts . _timestamp) 
         . IX.toDescList (IX.Proxy :: IX.Proxy UTCTime) $ N._messages n IX.@= cid
  
+
+queryUser :: (User -> b)
+          -> NoC 
+          -> UserId
+          -> Either Error b 
+queryUser fun noc uid = 
+    let user = IX.getOne (_users noc IX.@= uid)
+    in case user of
+        Nothing -> Left $ UnknownUser uid
+        Just u -> Right $ fun u
+
+getUserLoginR = queryUser U._login
+getUserNameR = queryUser U._name
+getUserDescR = queryUser U._desc
+getUserIconR = queryUser U._icon
+getUserNotificationsR = queryUser U._notifications
+getUserContactsR = queryUser U._contacts
+getUserSubscriptionsR = queryUser U._subscriptions
+
+
+createChanR noc uid name = (noc', cid)
+    where
+    noc' = over channels (IX.insert chan) (set nextChanId ncid noc)
+    chan = Channel cid name (mkDesc "") None Nothing (S.insert uid S.empty) S.empty S.empty S.empty S.empty  
+    cid = _nextChanId noc
+    ncid = ChanId(ciToInt cid + 1) 
+createUserR noc l pw = (noc', uid)
+    where
+    noc' = over users (IX.insert user) (set nextUserId nuid noc)
+    user = User uid l pw (mkName "") (mkDesc "") Nothing S.empty S.empty S.empty []
+    uid  = _nextUserId noc
+    nuid = UserId (uiToInt uid + 1)
+addAdminR noc uid = (over admins (S.insert uid) noc, ()) 
+rmAdminR noc uid = (over admins (S.delete uid) noc, ()) 
+ 
+     
+updateChan :: (Channel -> Channel)
+           -> a
+           -> NoC
+           -> ChanId
+           -> Either Error (NoC, a)
+updateChan mod v noc cid = 
+    let chan = IX.getOne (_channels noc IX.@= cid)
+    in case chan of
+        Nothing -> Left $ UnknownChannel cid
+        Just c -> Right (over channels (IX.updateIx cid (mod c)) noc, v)
+
+setChanNameR n c n' = updateChan (set C.name n') () n c
+setChanDescR n c d = updateChan (set C.desc d) () n c
+setChanTypeR n c t = updateChan (set C.type' t) () n c
+addChanOwnerR n c uid = updateChan (over C.owners (S.insert uid)) () n c
+rmChanOwnerR n c uid = updateChan (over C.owners (S.delete uid)) () n c
+addChanProducerR n c uid = updateChan (over C.producers (S.insert uid)) () n c
+rmChanProducerR n c uid = updateChan (over C.producers (S.delete uid)) () n c
+addChanConsumerR n c uid = updateChan (over C.consumers (S.insert uid)) () n c
+rmChanConsumerR n c uid = updateChan (over C.consumers (S.delete uid)) () n c
+postR n c uid ts txt img = updateChan (over C.messages (S.insert mid)) mid noc' c
+    where
+    noc' = over N.messages (IX.insert msg) (set nextMsgId nmid n)
+    msg = Message mid c img txt uid ts
+    mid = N._nextMsgId n
+    nmid = MsgId (miToInt mid + 1)
+ 
+
+updateUser :: (User -> User)
+           -> a
+           -> NoC
+           -> UserId
+           -> Either Error (NoC, a)
+updateUser mod v noc uid =
+    let user = IX.getOne (_users noc IX.@= uid)
+    in case user of
+        Nothing -> Left $ UnknownUser uid
+        Just u -> Right (over users (IX.updateIx uid (mod u)) noc, v)
+
+setUserLoginR n u l = updateUser (set login l) () n u
+setUserPasswordR n u pw = updateUser (set password pw) () n u
+setUserNameR n u n' = updateUser (set U.name n') () n u
+setUserDescR n u d = updateUser (set U.desc d) () n u
+setUserIconR n u i = updateUser (set icon i) () n u
+addUserNotificationR n u n' = updateUser (over notifications ((:) n')) () n u
+addUserContactR n u uid = updateUser (over contacts (S.insert uid)) () n u
+rmUserContactR n u uid = updateUser (over contacts (S.delete uid)) () n u
+addUserSubscriptionR n u cid = updateUser (over subscriptions (S.insert cid)) () n u
+rmUserSubscriptionR n u cid = updateUser (over subscriptions (S.delete cid)) () n u
 
     
 head' []     = Nothing
