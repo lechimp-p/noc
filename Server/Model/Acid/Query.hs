@@ -17,6 +17,10 @@ import qualified Data.Set as S
 import Control.Monad.Reader (ask)
 import Data.Time.Clock (UTCTime)
 
+
+doLogin :: Login -> Password -> Query NoC (Maybe UserId)
+doLogin l pw = ask >>= \ noc -> return $ doLoginR noc l pw
+
 isAdmin :: UserId -> Query NoC (Either Error Bool)
 isAdmin uid = ask >>= \ noc -> return . Right $ isAdminR noc uid
 
@@ -80,7 +84,8 @@ getUserContacts uid = ask >>= \ noc -> return $ getUserContactsR noc uid
 getUserSubscriptions :: UserId -> Query NoC (Either Error (S.Set ChanId))
 getUserSubscriptions uid = ask >>= \ noc -> return $ getUserSubscriptionsR noc uid
 
-$(makeAcidic ''NoC  [ 'isAdmin
+$(makeAcidic ''NoC  [ 'doLogin
+                    , 'isAdmin
                     , 'countAdmins
                     , 'getUserIdByLogin
                     , 'getChanName

@@ -1,5 +1,6 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Model.Acid
     ( runQuery
@@ -146,8 +147,6 @@ evalUserUpdate state uid q = case q of
     where
     ffu n = fmap (fmap n) . AA.update' state
 
-
-
 runSimple :: (Typeable1 m, Functor m, MonadIO m, SetMember Lift (Lift m) r)
           => A.AcidState NoC -> Maybe UserId -> Eff (Query :> Update :> Exec :> r) a -> Eff r (Either Error a)
 runSimple state uid action = go uid (admin action)
@@ -172,5 +171,13 @@ runSimple state uid action = go uid (admin action)
 evalExec :: (Functor m, MonadIO m, Member Query r)
           => A.AcidState NoC -> Maybe UserId 
           -> Exec (VE r w) -> m (Either Error (Maybe UserId , (VE r w)))
-evalExec state uid q = undefined
+evalExec state uid q = case q of 
+    GetOperatorId next -> return $ Right (uid, next uid) 
+    ThrowME err next -> return $ Left $ err 
+    DoLogout next -> return $ Right (uid, next ())
+    DoLogin l pw next -> do
+            res <- AA.query' state (AQ.DoLogin l pw)
+            case res of
+                Nothing -> return . Left $ CantLogin l 
+                Just id -> return $ Right (Just id, next id)
 
