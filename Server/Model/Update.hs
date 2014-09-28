@@ -38,6 +38,7 @@ data ChanUpdateType n
     = SetChanName Name                          (() -> n) 
     | SetChanDesc Desc                          (() -> n)
     | SetChanType ChanType                      (() -> n) 
+    | SetChanImage (Maybe Image)                (() -> n)
     | AddChanOwner UserId                       (() -> n) 
     | RmChanOwner UserId                        (() -> n) 
     | AddChanProducer UserId                    (() -> n) 
@@ -59,6 +60,9 @@ setChanDesc cid n = chanUpdate cid (SetChanDesc n)
 
 setChanType :: Member Update r => ChanId -> ChanType -> Eff r ()
 setChanType cid n = chanUpdate cid (SetChanType n)
+
+setChanImage :: Member Update r => ChanId -> Maybe Image -> Eff r ()
+setChanImage cid img = chanUpdate cid (SetChanImage img)
 
 addChanOwner :: Member Update r => ChanId -> UserId -> Eff r ()
 addChanOwner cid uid = chanUpdate cid (AddChanOwner uid)
