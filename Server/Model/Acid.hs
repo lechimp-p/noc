@@ -16,6 +16,7 @@ import Model.Exec
 
 import Model.Simple.NoC (NoC)
 import qualified Model.Acid.Query as AQ
+import qualified Model.Acid.Update as AU
 
 import Control.Lens 
 import Control.Eff
@@ -45,11 +46,40 @@ evalQuery state q = case q of
     IsAdmin uid next -> ffq next (AQ.IsAdmin uid)
     CountAdmins next -> ffq next AQ.CountAdmins
     GetUserIdByLogin l next -> ffq next (AQ.GetUserIdByLogin l)
-    {--ChanQuery cid q 
-        -> evalChanQuery noc q cid
+    ChanQuery cid q 
+        -> evalChanQuery state q cid
     UserQuery uid q 
-        -> evalUserQuery noc q uid
-    --}
+        -> evalUserQuery state q uid
+    where
+    ffq n = fmap (fmap n) . AA.query' state
+
+evalChanQuery :: (Functor m, MonadIO m, Member Query r)
+              => A.AcidState NoC -> ChanQueryType (VE r w) -> ChanId -> m (Either Error (VE r w))
+evalChanQuery state q cid = case q of
+    GetChanName next -> ffq next (AQ.GetChanName cid)
+    GetChanDesc next -> ffq next (AQ.GetChanDesc cid)
+    GetChanType next -> ffq next (AQ.GetChanType cid)
+    GetChanImage next -> ffq next (AQ.GetChanImage cid)
+    IsChanOwner uid next -> ffq next (AQ.IsChanOwner cid uid)
+    IsChanProducer uid next -> ffq next (AQ.IsChanProducer cid uid)
+    IsChanConsumer uid next -> ffq next (AQ.IsChanConsumer cid uid)
+    AmountOfSubscribedUsers next -> ffq next (AQ.AmountOfSubscribedUsers cid)
+    LastPostTimestamp next ->  ffq next (AQ.LastPostTimestamp cid)
+    Messages ofs am next -> ffq next (AQ.Messages cid ofs am) 
+    MessagesTill ts next -> ffq next (AQ.MessagesTill cid ts)
+    where
+    ffq n = fmap (fmap n) . AA.query' state
+
+evalUserQuery :: (Functor m, MonadIO m, Member Query r)
+              => A.AcidState NoC -> UserQueryType (VE r w) -> UserId -> m (Either Error (VE r w))
+evalUserQuery state q uid = case q of
+    GetUserLogin next -> ffq next (AQ.GetUserLogin uid)
+    GetUserName next -> ffq next (AQ.GetUserName uid)
+    GetUserDesc next -> ffq next (AQ.GetUserDesc uid)
+    GetUserIcon next -> ffq next (AQ.GetUserIcon uid)
+    GetUserNotifications next -> ffq next (AQ.GetUserNotifications uid)
+    GetUserContacts next -> ffq next (AQ.GetUserContacts uid)
+    GetUserSubscriptions next -> ffq next (AQ.GetUserSubscriptions uid)
     where
     ffq n = fmap (fmap n) . AA.query' state
 
@@ -73,7 +103,49 @@ runQueryAndUpdate state action = go (admin action)
 
 evalUpdate :: (Functor m, MonadIO m, Member Query r)
           => A.AcidState NoC -> Update (VE r w) -> m (Either Error (VE r w))
-evalUpdate state q = undefined
+evalUpdate state q = case q of
+    CreateChan uid name next -> ffu next (AU.CreateChan uid name)
+    CreateUser l pw next -> ffu next (AU.CreateUser l pw)
+    AddAdmin uid next -> ffu next (AU.AddAdmin uid)
+    RmAdmin uid next -> ffu next (AU.RmAdmin uid)
+    ChanUpdate cid q -> evalChanUpdate state cid q
+    UserUpdate uid q -> evalUserUpdate state uid q 
+    where
+    ffu n = fmap (fmap n) . AA.update' state
+
+evalChanUpdate :: (Functor m, MonadIO m, Member Query r)
+               => A.AcidState NoC -> ChanId -> ChanUpdateType (VE r w) -> m (Either Error (VE r w))
+evalChanUpdate state cid q = case q of
+    SetChanName n next -> ffu next (AU.SetChanName cid n)
+    SetChanDesc d next -> ffu next (AU.SetChanDesc cid d)
+    SetChanType t next -> ffu next (AU.SetChanType cid t)
+    SetChanImage i next -> ffu next (AU.SetChanImage cid i)
+    AddChanOwner uid next -> ffu next (AU.AddChanOwner cid uid)
+    RmChanOwner uid next -> ffu next (AU.RmChanOwner cid uid)
+    AddChanProducer uid next -> ffu next (AU.AddChanProducer cid uid)
+    RmChanProducer uid next -> ffu next (AU.RmChanProducer cid uid)
+    AddChanConsumer uid next -> ffu next (AU.AddChanConsumer cid uid)
+    RmChanConsumer uid next -> ffu next (AU.RmChanConsumer cid uid)
+    Post uid ts txt img next -> ffu next (AU.Post cid uid ts txt img)
+    where
+    ffu n = fmap (fmap n) . AA.update' state
+ 
+evalUserUpdate :: (Functor m, MonadIO m, Member Query r)
+               => A.AcidState NoC -> UserId -> UserUpdateType (VE r w) -> m (Either Error (VE r w))
+evalUserUpdate state uid q = case q of
+    SetUserLogin l next -> ffu next (AU.SetUserLogin uid l)
+    SetUserPassword pw next -> ffu next (AU.SetUserPassword uid pw)
+    SetUserName n next -> ffu next (AU.SetUserName uid n)
+    SetUserDesc d next -> ffu next (AU.SetUserDesc uid d)
+    SetUserIcon i next -> ffu next (AU.SetUserIcon uid i)
+    AddUserNotification n next -> ffu next (AU.AddUserNotification uid n)
+    AddUserContact uid' next -> ffu next (AU.AddUserContact uid uid')
+    RmUserContact uid' next -> ffu next (AU.RmUserContact uid uid')
+    AddUserSubscription cid next -> ffu next (AU.AddUserSubscription uid cid)
+    RmUserSubscription cid next -> ffu next (AU.RmUserSubscription uid cid)
+    where
+    ffu n = fmap (fmap n) . AA.update' state
+
 
 
 runSimple :: (Typeable1 m, Functor m, MonadIO m, SetMember Lift (Lift m) r)
