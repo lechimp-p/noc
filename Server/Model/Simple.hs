@@ -148,14 +148,10 @@ runSimple noc uid action = go noc uid (admin action)
     passOn n u r = send (flip fmap r) >>= go n u
 
 evalExec noc uid q = case q of
-    GetOperatorId next
-        -> Right (next uid, noc, uid) 
-    ThrowME err next
-        -> Left $ err 
-    DoLogout next
-        -> Right (next (), noc, uid)
-    DoLogin l pw next
-        -> case _login l pw of
+    GetOperatorId next -> Right (next uid, noc, uid) 
+    ThrowME err next -> Left $ err 
+    DoLogout next -> Right (next (), noc, uid)
+    DoLogin l pw next -> case _login l pw of
             Nothing -> Left $ CantLogin l 
             Just id -> Right (next id, noc, Just id)
     where 
