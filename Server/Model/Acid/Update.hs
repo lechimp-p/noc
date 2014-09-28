@@ -1,189 +1,127 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TypeFamilies #-}
 
-module ACID.Update
+module Model.Acid.Update
 where
 
-import Control.Monad.State.Strict
-import Control.Monad.Reader (ask)
-import Control.Monad.Trans.Class
-import Control.Monad.Error.Class hiding (Error)
-import Control.Monad.Reader.Class
-import Control.Monad.State.Class
-import Control.Monad.Trans.Either
-import Control.Applicative
-import Data.Acid ( Update )
-import Data.Text ( Text )
-import Data.Set ( Set )
-import Data.Time.Clock
-
-import Model 
-import qualified Model.Operations as O
-import Model.OpMonad 
-import Model.Simple (runOp', _operator, _noc)
+import Model.BaseTypes
+import Model.Message
 import Model.Errors
+import Model.Simple.Operations
+import Model.Acid.Safecopy
 
-newtype OpUpdate a = OpUpdate { runOpUpdate :: EitherT Error (StateT (Maybe UserId) (Update NoC)) a }
-                    deriving (Functor, Applicative, Monad, MonadError Error)
+import Data.Acid
+import Data.Text (Text)
+import qualified Data.Set as S
+import Control.Monad.State (get, put)
+import Data.Time.Clock (UTCTime)
 
-getUpdate :: Maybe UserId -> OpUpdate a -> Update NoC (Either Error a, Maybe UserId)
-getUpdate oid = flip runStateT oid . runEitherT . runOpUpdate
+modify :: (NoC -> Either Error (NoC, a)) -> Update NoC (Either Error a)
+modify f = do
+    noc <- get 
+    case f noc of
+        Left err -> return . Left $ err
+        Right (noc, res) -> put noc >> return (Right res)
 
-instance OpMonad OpUpdate where
-    throw = throwError
-    getChannels = onSimple getChannels 
-    storeChannel = onSimple . storeChannel 
-    newChanId = onSimple newChanId 
-    getUsers = onSimple getUsers
-    storeUser = onSimple . storeUser
-    newUserId = onSimple newUserId 
-    getMessages = onSimple getMessages 
-    storeMessage = onSimple . storeMessage 
-    newMsgId = onSimple newMsgId
-    getAdmins = onSimple getAdmins
-    addAdmin = onSimple . Model.OpMonad.addAdmin 
-    rmAdmin = onSimple . Model.OpMonad.rmAdmin
-    getOperatorId = OpUpdate . lift $ get 
-    doLogin l p = onSimple $ doLogin l p
-    doLogout = onSimple doLogout 
+createChan :: UserId -> Name -> Update NoC (Either Error ChanId)
+createChan uid name = modify $ \ noc -> Right $ createChanR noc uid name
 
-onSimple op = OpUpdate $ do
-    noc <- lift . lift $ get 
-    oid <- lift $ get 
-    case runOp' noc oid op of
-        Left err -> left err
-        Right (context, v) -> do
-            lift . put . _operator $ context
-            lift . lift . put . _noc $ context
-            return v
+createUser :: Login -> Password -> Update NoC (Either Error UserId)
+createUser l pw = modify $ \ noc -> Right $ createUserR noc l pw
 
-doLoginU :: Login -> Password -> Update NoC (Either Error UserId, Maybe UserId)
-doLoginU l = getUpdate Nothing . doLogin l
+addAdmin :: UserId -> Update NoC (Either Error ())
+addAdmin uid = modify $ \ noc -> Right $ addAdminR noc uid
 
-getOperatorIdU :: Maybe UserId -> Update NoC (Either Error UserId, Maybe UserId) 
-getOperatorIdU oid = getUpdate oid O.getOperatorId
+rmAdmin :: UserId -> Update NoC (Either Error ())
+rmAdmin uid = modify $ \ noc -> Right $ rmAdminR noc uid
 
-addAdminU :: Maybe UserId -> UserId -> Update NoC (Either Error (), Maybe UserId)
-addAdminU oid = getUpdate oid . O.addAdmin 
+setChanName :: ChanId -> Name -> Update NoC (Either Error ())
+setChanName cid n = modify $ \ noc -> setChanNameR noc cid n
 
-rmAdminU :: Maybe UserId -> UserId -> Update NoC (Either Error (), Maybe UserId)
-rmAdminU oid = getUpdate oid . O.rmAdmin 
+setChanDesc :: ChanId -> Desc -> Update NoC (Either Error ())
+setChanDesc cid d = modify $ \ noc -> setChanDescR noc cid d
 
+setChanType :: ChanId -> ChanType -> Update NoC (Either Error ())
+setChanType cid t = modify $ \ noc -> setChanTypeR noc cid t
 
-getChanNameU :: Maybe UserId -> ChanId -> Update NoC (Either Error Name, Maybe UserId)
-getChanNameU oid = getUpdate oid . O.getChanName 
+setChanImage :: ChanId -> Maybe Image -> Update NoC (Either Error ())
+setChanImage cid img = modify $ \ noc -> setChanImageR noc cid img 
 
-getChanDescU :: Maybe UserId -> ChanId -> Update NoC (Either Error Desc, Maybe UserId) 
-getChanDescU oid = getUpdate oid . O.getChanDesc
+addChanOwner :: ChanId -> UserId -> Update NoC (Either Error ())
+addChanOwner cid uid = modify $ \ noc -> addChanOwnerR noc cid uid
 
-getChanTypeU :: Maybe UserId -> ChanId -> Update NoC (Either Error ChanType, Maybe UserId)
-getChanTypeU oid = getUpdate oid . O.getChanType
+rmChanOwner :: ChanId -> UserId -> Update NoC (Either Error ())
+rmChanOwner cid uid = modify $ \ noc -> rmChanOwnerR noc cid uid
 
-setChanNameU :: Maybe UserId -> ChanId -> Name -> Update NoC (Either Error (), Maybe UserId)
-setChanNameU oid cid = getUpdate oid . O.setChanName cid
+addChanProducer :: ChanId -> UserId -> Update NoC (Either Error ())
+addChanProducer cid uid = modify $ \ noc -> addChanProducerR noc cid uid
 
-setChanDescU :: Maybe UserId -> ChanId -> Desc -> Update NoC (Either Error (), Maybe UserId) 
-setChanDescU oid cid = getUpdate oid . O.setChanDesc cid
+rmChanProducer :: ChanId -> UserId -> Update NoC (Either Error ())
+rmChanProducer cid uid = modify $ \ noc -> rmChanProducerR noc cid uid
 
-setChanTypeU :: Maybe UserId -> ChanId -> ChanType -> Update NoC (Either Error (), Maybe UserId)
-setChanTypeU oid cid = getUpdate oid . O.setChanType cid
+addChanConsumer :: ChanId -> UserId -> Update NoC (Either Error ())
+addChanConsumer cid uid = modify $ \ noc -> addChanConsumerR noc cid uid
 
-addChanOwnerU :: Maybe UserId -> ChanId -> UserId -> Update NoC (Either Error (), Maybe UserId)
-addChanOwnerU oid cid = getUpdate oid . O.addChanOwner cid
+rmChanConsumer :: ChanId -> UserId -> Update NoC (Either Error ())
+rmChanConsumer cid uid = modify $ \ noc -> rmChanConsumerR noc cid uid
 
-addChanProducerU :: Maybe UserId -> ChanId -> UserId -> Update NoC (Either Error (), Maybe UserId)
-addChanProducerU oid cid = getUpdate oid . O.addChanProducer cid
+post :: ChanId -> UserId -> UTCTime -> Text -> Maybe Image -> Update NoC (Either Error MsgId)
+post cid uid ts txt img = modify $ \ noc -> postR noc cid uid ts txt img
 
-addChanConsumerU :: Maybe UserId -> ChanId -> UserId -> Update NoC (Either Error (), Maybe UserId)
-addChanConsumerU oid cid = getUpdate oid . O.addChanConsumer cid
+setUserLogin :: UserId -> Login -> Update NoC (Either Error ())
+setUserLogin uid l = modify $ \ noc -> setUserLoginR noc uid l
 
-rmChanOwnerU :: Maybe UserId -> ChanId -> UserId -> Update NoC (Either Error (), Maybe UserId)
-rmChanOwnerU oid cid = getUpdate oid . O.rmChanOwner cid
+setUserPassword :: UserId -> Password -> Update NoC (Either Error ())
+setUserPassword uid l = modify $ \ noc -> setUserPasswordR noc uid l
 
-rmChanProducerU :: Maybe UserId -> ChanId -> UserId -> Update NoC (Either Error (), Maybe UserId)
-rmChanProducerU oid cid = getUpdate oid . O.rmChanProducer cid
+setUserName :: UserId -> Name -> Update NoC (Either Error ())
+setUserName uid l = modify $ \ noc -> setUserNameR noc uid l
 
-rmChanConsumerU :: Maybe UserId -> ChanId -> UserId -> Update NoC (Either Error (), Maybe UserId)
-rmChanConsumerU oid cid = getUpdate oid . O.rmChanConsumer cid
+setUserDesc :: UserId -> Desc -> Update NoC (Either Error ())
+setUserDesc uid l = modify $ \ noc -> setUserDescR noc uid l
 
-amountOfDistinctUsersU :: Maybe UserId -> ChanId -> Update NoC (Either Error Int, Maybe UserId)
-amountOfDistinctUsersU oid = getUpdate oid . O.amountOfDistinctUsers
+setUserIcon :: UserId -> Maybe Icon -> Update NoC (Either Error ())
+setUserIcon uid l = modify $ \ noc -> setUserIconR noc uid l
 
-lastPostTimestampU :: Maybe UserId -> ChanId -> Update NoC (Either Error (Maybe UTCTime), Maybe UserId)
-lastPostTimestampU oid = getUpdate oid . O.lastPostTimestamp
+addUserNotification :: UserId -> Notification -> Update NoC (Either Error ())
+addUserNotification uid n = modify $ \ noc -> addUserNotificationR noc uid n
 
-subscribeToChanU :: Maybe UserId -> UserId -> ChanId -> Update NoC (Either Error (), Maybe UserId)
-subscribeToChanU oid uid = getUpdate oid . O.subscribeToChan uid 
+addUserContact :: UserId -> UserId -> Update NoC (Either Error ())
+addUserContact uid c = modify $ \ noc -> addUserContactR noc uid c
 
-unsubscribeFromChanU :: Maybe UserId -> UserId -> ChanId -> Update NoC (Either Error (), Maybe UserId)
-unsubscribeFromChanU oid uid = getUpdate oid . O.unsubscribeFromChan uid 
+rmUserContact :: UserId -> UserId -> Update NoC (Either Error ())
+rmUserContact uid c = modify $ \ noc -> rmUserContactR noc uid c
 
-getUserLoginU :: Maybe UserId -> UserId -> Update NoC (Either Error Login, Maybe UserId)
-getUserLoginU oid = getUpdate oid . O.getUserLogin 
+addUserSubscription :: UserId -> ChanId -> Update NoC (Either Error ())
+addUserSubscription uid c = modify $ \ noc -> addUserSubscriptionR noc uid c
 
-getUserNameU :: Maybe UserId -> UserId -> Update NoC (Either Error Name, Maybe UserId)
-getUserNameU oid = getUpdate oid . O.getUserName
+rmUserSubscription :: UserId -> ChanId -> Update NoC (Either Error ())
+rmUserSubscription uid c = modify $ \ noc -> rmUserSubscriptionR noc uid c
 
-getUserDescU :: Maybe UserId -> UserId -> Update NoC (Either Error Desc, Maybe UserId)
-getUserDescU oid = getUpdate oid . O.getUserDesc
-
-getUserIconU :: Maybe UserId -> UserId -> Update NoC (Either Error (Maybe Icon), Maybe UserId)
-getUserIconU oid = getUpdate oid . O.getUserIcon
-
-setUserLoginU :: Maybe UserId -> UserId -> Login -> Update NoC (Either Error (), Maybe UserId)
-setUserLoginU oid uid = getUpdate oid . O.setUserLogin uid
-
-setUserPasswordU :: Maybe UserId -> UserId -> Password -> Update NoC (Either Error (), Maybe UserId)
-setUserPasswordU oid uid = getUpdate oid . O.setUserPassword uid
-
-setUserNameU :: Maybe UserId -> UserId -> Name -> Update NoC (Either Error (), Maybe UserId)
-setUserNameU oid uid = getUpdate oid . O.setUserName uid
-
-setUserDescU :: Maybe UserId -> UserId -> Desc -> Update NoC (Either Error (), Maybe UserId)
-setUserDescU oid uid = getUpdate oid . O.setUserDesc uid
-
-setUserIconU :: Maybe UserId -> UserId -> Maybe Icon -> Update NoC (Either Error (), Maybe UserId)
-setUserIconU oid uid = getUpdate oid . O.setUserIcon uid
-
-getUserOwnedChannelsU :: Maybe UserId -> UserId -> Update NoC (Either Error (Set ChanId), Maybe UserId)
-getUserOwnedChannelsU oid = getUpdate oid . O.getUserOwnedChannels
-
-getUserSubscriptionsU :: Maybe UserId -> UserId -> Update NoC (Either Error (Set ChanId), Maybe UserId)
-getUserSubscriptionsU oid = getUpdate oid . O.getUserSubscriptions
-
-getUserContactsU :: Maybe UserId -> UserId -> Update NoC (Either Error (Set UserId), Maybe UserId)
-getUserContactsU oid = getUpdate oid . O.getUserContacts
-
-addUserContactU :: Maybe UserId -> UserId -> UserId -> Update NoC (Either Error (), Maybe UserId)
-addUserContactU oid uid = getUpdate oid . O.addUserContact uid
-
-rmUserContactU :: Maybe UserId -> UserId -> UserId -> Update NoC (Either Error (), Maybe UserId)
-rmUserContactU oid uid = getUpdate oid . O.rmUserContact uid
-
-getUserNotificationsU :: Maybe UserId -> UserId -> Offset -> Amount -> Update NoC (Either Error [Notification], Maybe UserId)
-getUserNotificationsU oid uid offs = getUpdate oid . O.getUserNotifications uid offs
-
-addUserNotificationU :: Maybe UserId -> UserId -> Notification -> Update NoC (Either Error (), Maybe UserId)
-addUserNotificationU oid uid = getUpdate oid . O.addUserNotification uid  
-
-tryToAddUserNotificationU :: Maybe UserId -> UserId -> Notification -> Update NoC (Either Error (Maybe ()), Maybe UserId)
-tryToAddUserNotificationU oid uid = getUpdate oid . O.tryToAddUserNotification uid  
-
-getUserByLoginU :: Maybe UserId -> Text -> Update NoC (Either Error UserId, Maybe UserId)
-getUserByLoginU oid = getUpdate oid . O.getUserByLogin
-
-
-
-createUserU :: Maybe UserId -> Login -> Password -> Update NoC (Either Error UserId, Maybe UserId)
-createUserU oid l = getUpdate oid . O.createUser l
-
-createChannelU :: Maybe UserId -> Name -> Desc -> Update NoC (Either Error ChanId, Maybe UserId)
-createChannelU oid n = getUpdate oid . O.createChannel n
-
-postU :: Maybe UserId -> ChanId -> UTCTime -> Text -> Maybe Image -> Update NoC (Either Error MsgId, Maybe UserId)
-postU oid cid ts t = getUpdate oid . O.post cid ts t
-
-messagesU :: Maybe UserId -> ChanId -> Offset -> Amount -> Update NoC (Either Error [Message], Maybe UserId)
-messagesU oid c o = getUpdate oid . O.messages c o
-
-messagesTillU :: Maybe UserId -> ChanId -> UTCTime -> Update NoC (Either Error [Message], Maybe UserId)
-messagesTillU oid c = getUpdate oid . O.messagesTill c
+$(makeAcidic ''NoC  [ 'createChan
+                    , 'createUser
+                    , 'addAdmin
+                    , 'rmAdmin 
+                    , 'setChanName
+                    , 'setChanDesc
+                    , 'setChanType
+                    , 'setChanImage
+                    , 'addChanOwner
+                    , 'rmChanOwner
+                    , 'addChanProducer
+                    , 'rmChanProducer
+                    , 'addChanConsumer
+                    , 'rmChanConsumer
+                    , 'post
+                    , 'setUserLogin
+                    , 'setUserPassword
+                    , 'setUserName
+                    , 'setUserDesc
+                    , 'setUserIcon
+                    , 'addUserNotification
+                    , 'addUserContact
+                    , 'rmUserContact
+                    , 'addUserSubscription
+                    , 'rmUserSubscription
+                    ])
