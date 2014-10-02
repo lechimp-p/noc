@@ -69,4 +69,4 @@ makeLenses ''BodyPolicy
 makeLenses ''ServerConfig
 
 class Monad m => WithConfig m where
-    config :: Getting a Config a -> m a  
+    config :: Getting a APIConfig a -> m a  
