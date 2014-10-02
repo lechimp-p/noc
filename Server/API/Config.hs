@@ -12,7 +12,7 @@ import Control.Lens (makeLenses)
 import Control.Lens.Getter (Getting)
 import Happstack.Server.Internal.Cookie
 
-data Config = Config
+data APIConfig = Config
     { _helloWorldMessage    :: Text 
     , _sessionConfig        :: SessionConfig
     , _siteConfig           :: SiteConfig
@@ -62,7 +62,7 @@ data ServerConfig = ServerConfig
     }
     deriving (Show, Data, Typeable)
 
-makeLenses ''Config
+makeLenses ''APIConfig
 makeLenses ''SessionConfig
 makeLenses ''SiteConfig
 makeLenses ''BodyPolicy
