@@ -67,7 +67,7 @@ evalAPI config bpl req = case req of
     GetSession n        -> (True, fmap n CS.getSession)
     PutSession s n      -> (True, fmap n (CS.putSession s))
     ExpireSession n     -> (True, fmap n CS.expireSession) 
-    RespondNow s t n    -> (False, fmap n $ (resp s t) >> return undef)
+    Respond s t n       -> (True, fmap n $ (resp s t) >> return ())
     LookGet t n         -> (True, fmap n (look t)) 
     Timestamp n         -> (True, fmap n (liftIO getCurrentTime))
     Config n            -> (True, fmap n (return config))
@@ -78,6 +78,7 @@ evalAPI config bpl req = case req of
                                         Just b -> return . unBody $ b
                                         Nothing -> return ""
                            )
+    Abort n             -> (False, fmap n $ return undef)
     where
     undef = error "evalAPI.respondNow: Don't eval this!"
 {--    bpolc = _bodyPolicy config
