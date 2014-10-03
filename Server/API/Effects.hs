@@ -18,7 +18,7 @@ data API session config n
     | PutSession session            (() -> n)
     | ExpireSession                 (() -> n)
     | forall a. RespondNow Int Text (a -> n) 
-    | LookGet Text                  (Text -> n)
+    | LookGet String                (String -> n)
     | Timestamp                     (UTCTime -> n)
     | Config                        (config -> n)
     | GetBody                       (L.ByteString -> n)               
@@ -34,6 +34,9 @@ instance Functor (API session config) where
     fmap f (Config n)           = Config (f . n)
     fmap f (GetBody n)          = GetBody (f . n)
 
+----------------
+-- Basic Effects
+----------------
 
 getSession :: forall session config r.
               ( Typeable session
@@ -88,10 +91,10 @@ lookGet :: forall session config r.
            , Typeable config
            , Member (API session config) r
            )
-        => Text -> Eff r Text
+        => String -> Eff r String
 lookGet var = send inj'
     where
-    inj' :: forall w. (Text -> VE r w) -> Union r (VE r w)
+    inj' :: forall w. (String -> VE r w) -> Union r (VE r w)
     inj' next = inj (LookGet var next :: API session config (VE r w))
 
 
@@ -129,3 +132,7 @@ getBody = send inj'
     where
     inj' :: forall w. (L.ByteString -> VE r w) -> Union r (VE r w)
     inj' next = inj (GetBody next :: API session config (VE r w))
+
+---------------------
+-- Higher order stuff
+---------------------
