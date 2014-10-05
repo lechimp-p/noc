@@ -68,53 +68,6 @@ handleError eff = do
     where
     undef = error "API/Errors::handleError: do not evaluate result after call to abort."
 
-
-            
 respondError :: Member API r
              => Error -> Eff r () 
 respondError = badRequest . T.pack . show 
-
-{--
-instance Monad m => MonadJSONError (EitherT Error m) where
-    throwJSONError = left . JSONError'
-
-instance Monad m => MonadQueryError (EitherT Error m) where
-    throwQueryError = left . ModelError'
-
-instance Monad m => MonadUpdateError (EitherT Error m) where
-    throwUpdateError = left . ModelError'
-
-instance Monad m => MonadImageError (EitherT Error m) where
-    throwImageError = left . ImageError'
-
-instance WithConfig m => WithConfig (EitherT Error m) where
-    config = lift . config
-
-instance FilterMonad Response m 
-      => FilterMonad Response (EitherT Error m) 
-    where
-    setFilter = lift . setFilter
-    composeFilter = lift . composeFilter
-    -- getFilter :: EitherT Error m a -> EitherT Error m (a, b -> b)
-    getFilter m = do
-        (v, f) <- lift . getFilter . runEitherT $ m
-        case v of
-            Left err -> left err
-            Right v' -> right (v', f) 
-
-instance ServerMonad m
-      => ServerMonad (EitherT Error m)
-    where
-    askRq = lift askRq
-    -- localRq :: (Request -> Request) -> EitherT Error m a -> EitherT Error m a
-    localRq f m = do
-        v <- lift . localRq f . runEitherT $ m
-        case v of
-            Left err -> left err
-            Right v' -> right v'
-
-instance WebMonad Response m 
-      => WebMonad Response (EitherT Error m)
-    where
-    finishWith = lift . finishWith
---}

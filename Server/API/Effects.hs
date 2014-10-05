@@ -115,9 +115,6 @@ noContent = respond 201 ("" :: Text)
 badRequest :: Member API r => Text -> Eff r () 
 badRequest = respond 300 . L.pack . T.unpack
 
-jsonResponse :: Member API r => Value -> Eff r () 
-jsonResponse = respond 200 . encode
-
 instance IsResponse L.ByteString where
     content = id
     contentType = const "text/plain"
@@ -126,4 +123,6 @@ instance IsResponse Text where
     content = L.pack . T.unpack
     contentType = const "text/plain"
 
-
+instance IsResponse Value where
+    content = encode
+    contentType = const "application/json"
