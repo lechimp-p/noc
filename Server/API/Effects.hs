@@ -8,30 +8,33 @@
 
 module API.Effects where
 
+import API.Config
+import API.Session
+
 import Data.Text (Text)
 import Data.Time.Clock (UTCTime)
 import Data.Data (Typeable)
 import qualified Data.ByteString.Lazy.Char8 as L 
+import qualified Data.ByteString as B
 import Control.Eff
 
 class IsResponse r where
-    contentType :: r -> L.ByteString
+    contentType :: r -> B.ByteString
     content :: r -> L.ByteString
      
-
-data API session config n 
-    = GetSession                                (session -> n)     
-    | PutSession session                        (() -> n)
+data API n 
+    = GetSession                                (AuthData -> n)     
+    | PutSession AuthData                       (() -> n)
     | ExpireSession                             (() -> n)
     | forall r. IsResponse r => Respond Int r   (() -> n) 
     | LookGet String                            (String -> n)
     | Timestamp                                 (UTCTime -> n)
-    | Config                                    (config -> n)
+    | Config                                    (APIConfig -> n)
     | GetBody                                   (L.ByteString -> n)               
     | forall a. Abort                           (a -> n)
     deriving (Typeable)
 
-instance Functor (API session config) where
+instance Functor API where
     fmap f (GetSession n)       = GetSession (f . n)
     fmap f (PutSession s n)     = PutSession s (f . n)
     fmap f (ExpireSession n)    = ExpireSession (f . n)
@@ -46,109 +49,47 @@ instance Functor (API session config) where
 -- Basic Effects
 ----------------
 
-getSession :: forall session config r.
-              ( Typeable session
-              , Typeable config
-              , Member (API session config) r
-              ) 
-           => Eff r session 
-getSession = send inj'
-    where
-    inj' :: forall w. (session -> VE r w) -> Union r (VE r w)
-    inj' next = inj (GetSession next :: API session config (VE r w))
+getSession :: Member API r 
+           => Eff r AuthData 
+getSession = send $ \ next -> inj (GetSession next) 
 
 
-putSession :: forall session config r.
-              ( Typeable session
-              , Typeable config
-              , Member (API session config) r
-              ) 
-           => session -> Eff r ()
-putSession sess = send inj'
-    where
-    inj' :: forall w. (() -> VE r w) -> Union r (VE r w)
-    inj' next = inj (PutSession sess next :: API session config (VE r w))
+putSession :: Member API r
+           => AuthData -> Eff r ()
+putSession sess = send $ \ next -> inj (PutSession sess next)
 
 
-expireSession :: forall session config r.
-                 ( Typeable session
-                 , Typeable config
-                 , Member (API session config) r
-                 )
+expireSession :: Member API r
               => Eff r ()
-expireSession = send inj'
-    where
-    inj' :: forall w. (()-> VE r w) -> Union r (VE r w)
-    inj' next = inj (ExpireSession next :: API session config (VE r w))
+expireSession = send $ \ next -> inj (ExpireSession next)
 
 
-respond :: forall session config r resp.
-              ( Typeable session
-              , Typeable config
-              , Member (API session config) r
-              , IsResponse resp 
-              )
+respond :: ( Member API r
+           , IsResponse resp 
+           )
            => Int -> resp -> Eff r () 
-respond status resp = send inj'
-    where
-    inj' :: forall w. (() -> VE r w) -> Union r (VE r w)
-    inj' next = inj (Respond status resp next :: API session config (VE r w))
+respond status resp = send $ \ next -> inj (Respond status resp next)
 
 
-lookGet :: forall session config r.
-           ( Typeable session
-           , Typeable config
-           , Member (API session config) r
-           )
+lookGet :: Member API r
         => String -> Eff r String
-lookGet var = send inj'
-    where
-    inj' :: forall w. (String -> VE r w) -> Union r (VE r w)
-    inj' next = inj (LookGet var next :: API session config (VE r w))
+lookGet var = send $ \ next -> inj (LookGet var next)
 
 
-timestamp :: forall session config r.
-             ( Typeable session
-             , Typeable config
-             , Member (API session config) r
-             )
+timestamp :: Member API r
           => Eff r UTCTime
-timestamp = send inj'
-    where
-    inj' :: forall w. (UTCTime -> VE r w) -> Union r (VE r w)
-    inj' next = inj (Timestamp next :: API session config (VE r w))
+timestamp = send $ \ next -> inj (Timestamp next)
 
 
-config :: forall session config r.
-          ( Typeable session
-          , Typeable config
-          , Member (API session config) r
-          )
-       => Eff r config
-config = send inj'
-    where
-    inj' :: forall w. (config -> VE r w) -> Union r (VE r w)
-    inj' next = inj (Config next :: API session config (VE r w))
+config :: Member API r
+       => Eff r APIConfig 
+config = send $ \ next -> inj (Config next)
 
 
-getBody :: forall session config r.
-           ( Typeable session
-           , Typeable config
-           , Member (API session config) r
-           )
+getBody :: Member API r 
         => Eff r L.ByteString 
-getBody = send inj'
-    where
-    inj' :: forall w. (L.ByteString -> VE r w) -> Union r (VE r w)
-    inj' next = inj (GetBody next :: API session config (VE r w))
+getBody = send $ \ next -> inj (GetBody next)
 
-abort :: forall session config r a.
-         ( Typeable session
-         , Typeable config
-         , Member (API session config) r
-         )
+abort :: Member API r
       => Eff r a 
-abort = send inj'
-    where
-    inj' :: forall w. (a -> VE r w) -> Union r (VE r w)
-    inj' next = inj (Abort next :: API session config (VE r w))
+abort = send $ \ next -> inj (Abort next)
