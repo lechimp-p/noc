@@ -1,5 +1,7 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module API.Happstack where
@@ -21,7 +23,7 @@ import Happstack.Server.RqData ( look
                                , BodyPolicy
                                , HasRqData
                                )
-import Happstack.Server.Response (resp)
+import Happstack.Server.Response (resp, ToMessage(..))
 import Happstack.Server.Types (Response, takeRequestBody)
 import Happstack.Server.Monads (FilterMonad, ServerMonad, WebMonad)
 
@@ -47,6 +49,7 @@ runAPI config bpl action = go (admin action)
         $ \ req -> case evalAPI config bpl req of
             (True, action)  -> lift action >>= go 
             (False, action) -> lift action >> return () 
+
     
 evalAPI :: ( Typeable session
            , Typeable config 
@@ -88,4 +91,6 @@ evalAPI config bpl req = case req of
                              (_maxBytesHeader bpolc)
 --}
 
-
+instance IsResponse a => ToMessage a where
+    toContentType = contentType
+    toMessage = content
