@@ -7,8 +7,6 @@ module Model.Operations
     , module Control.Eff 
     , E.Exec
     , Q.Query
-    , Q.Offset
-    , Q.Amount
     , U.Update
     )
 where
@@ -23,7 +21,7 @@ import Model.BaseTypes
 import Model.Errors
 import Model.Permissions
 import Model.Exec (Exec)
-import Model.Query (Query, Offset, Amount)
+import Model.Query (Query)
 import Model.Update (Update)
 import qualified Model.Exec as E
 import qualified Model.Query as Q
