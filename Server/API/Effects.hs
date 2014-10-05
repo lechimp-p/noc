@@ -14,16 +14,21 @@ import Data.Data (Typeable)
 import qualified Data.ByteString.Lazy.Char8 as L 
 import Control.Eff
 
+class IsResponse r where
+    contentType :: r -> L.ByteString
+    content :: r -> L.ByteString
+     
+
 data API session config n 
-    = GetSession                (session -> n)     
-    | PutSession session        (() -> n)
-    | ExpireSession             (() -> n)
-    | Respond Int L.ByteString  (() -> n) 
-    | LookGet String            (String -> n)
-    | Timestamp                 (UTCTime -> n)
-    | Config                    (config -> n)
-    | GetBody                   (L.ByteString -> n)               
-    | forall a. Abort           (a -> n)
+    = GetSession                                (session -> n)     
+    | PutSession session                        (() -> n)
+    | ExpireSession                             (() -> n)
+    | forall r. IsResponse r => Respond Int r   (() -> n) 
+    | LookGet String                            (String -> n)
+    | Timestamp                                 (UTCTime -> n)
+    | Config                                    (config -> n)
+    | GetBody                                   (L.ByteString -> n)               
+    | forall a. Abort                           (a -> n)
     deriving (Typeable)
 
 instance Functor (API session config) where
@@ -77,12 +82,13 @@ expireSession = send inj'
     inj' next = inj (ExpireSession next :: API session config (VE r w))
 
 
-respond :: forall session config r.
+respond :: forall session config r resp.
               ( Typeable session
               , Typeable config
               , Member (API session config) r
+              , IsResponse resp 
               )
-           => Int -> L.ByteString -> Eff r () 
+           => Int -> resp -> Eff r () 
 respond status resp = send inj'
     where
     inj' :: forall w. (() -> VE r w) -> Union r (VE r w)
