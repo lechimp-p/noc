@@ -48,6 +48,7 @@ makeLenses ''AuthData
 -- instance ClientSession AuthData where
 --    emptySession = AuthData Nothing Nothing Nothing 
 
+
 authGet :: (Member API r)
         => (AuthData -> a) -> Eff r a
 authGet f = getSession >>= return . f 

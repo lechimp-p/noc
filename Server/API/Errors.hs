@@ -25,36 +25,52 @@ import Control.Monad.Trans.JSON
 --}
 import qualified Model.Errors as ME
 import API.Effects
-import API.ImageUtils 
+import API.ImageUtils (ImageError)
+import API.Session (AuthData)
+import API.Config (APIConfig)
 
 import Control.Eff
 import Control.Eff.JSON (JSONError)
 import Data.Monoid
+import qualified Data.Text as T
 
 data Error
     = ModelError' ME.Error
     | JSONError' JSONError
     | ImageError' ImageError
+    | JustStopped
     deriving (Show)
 
+class IsError err where
+    toError :: err -> Error
+
 instance Monoid Error where
-    mempty = Abort
+    mempty = JustStopped 
     a `mappend` _ = a
 
-{--handleError :: ( Monad m, MonadIO m 
-               , FilterMonad Response m 
-               )
-            => EitherT Error m Response
-            -> m Response
-handleError op = runEitherT op >>= \ res -> 
+instance IsError ME.Error where
+    toError = ModelError'
+
+instance IsError JSONError where
+    toError = JSONError'
+
+instance IsError ImageError where
+    toError = ImageError'
+
+handleError :: (Member API r, IsError err)
+            => Eff r (Either err a) -> Eff r a
+handleError eff = do
+    res <- eff
     case res of
-        Left err -> respondError err
-        Right res -> return res
---}
+        Left err -> respondError (toError err) >> abort >> return undef
+        Right v -> return v
+
+    where
+    undef = error "API/Errors::handleError: do not evaluate result after call to abort."
 
 
             
-respondError :: (Member API r)
+respondError :: Member API r
              => Error -> Eff r () 
 respondError = badRequest . T.pack . show 
 

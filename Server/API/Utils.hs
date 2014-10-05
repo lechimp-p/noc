@@ -11,17 +11,12 @@
 module API.Utils
 where
 
---import Model
 import Model.BaseTypes
 import API.Config
-import API.Effects
---import API.Errors
+import API.Effects (IsResponse)
+import qualified API.Effects as E
 
---import Data.Text hiding (any)
---import Data.Acid ( AcidState )
 import qualified Data.ByteString.Lazy.Char8 as L 
---import qualified Data.ByteString.Lazy as BL 
---import qualified Data.ByteString.Char8 as B 
 import Control.Eff
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -33,29 +28,6 @@ import Control.Lens.Prism
 import Data.Data (Typeable)
 import Data.Time.Clock (UTCTime)
 
-data AuthData = AuthData 
-    { _login        :: Maybe Login 
-    , _password     :: Maybe Password 
-    , _timestamp    :: Maybe UTCTime
-    }
-    deriving (Eq, Ord, Read, Show, Typeable)
-
-makeLenses ''AuthData
-
-ok :: Member (API AuthData APIConfig) r
-   => Text -> Eff r () 
-ok = respond 200 . L.pack
-
--- TODO: status code??
-noContent :: Member (API AuthData APIConfig) r => Eff r () 
-noContent = respond 201 ""
-
--- TODO: status code??
-badRequest :: Member (API AuthData APIConfig) r => Text -> Eff r () 
-badRequest = respond 300 . L.pack . T.unpack
-
-jsonResponse :: Member (API AuthData APIConfig) r => Value -> Eff r () 
-jsonResponse = respond 200 . encode
 
 ifIsJust :: (Monad m) => Maybe a -> (a -> m ()) -> m ()
 ifIsJust v op =

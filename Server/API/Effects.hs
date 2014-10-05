@@ -16,6 +16,8 @@ import Data.Time.Clock (UTCTime)
 import Data.Data (Typeable)
 import qualified Data.ByteString.Lazy.Char8 as L 
 import qualified Data.ByteString as B
+import qualified Data.Text as T
+import Data.Aeson (Value, encode)
 import Control.Eff
 
 class IsResponse r where
@@ -93,3 +95,35 @@ getBody = send $ \ next -> inj (GetBody next)
 abort :: Member API r
       => Eff r a 
 abort = send $ \ next -> inj (Abort next)
+
+
+----------------
+-- Derived Stuff 
+----------------
+
+ok :: ( Member API r
+      , IsResponse resp
+      )
+   => resp -> Eff r () 
+ok = respond 200
+
+-- TODO: status code??
+noContent :: Member API r => Eff r () 
+noContent = respond 201 ("" :: Text)
+
+-- TODO: status code??
+badRequest :: Member API r => Text -> Eff r () 
+badRequest = respond 300 . L.pack . T.unpack
+
+jsonResponse :: Member API r => Value -> Eff r () 
+jsonResponse = respond 200 . encode
+
+instance IsResponse L.ByteString where
+    content = id
+    contentType = const "text/plain"
+
+instance IsResponse Text where
+    content = L.pack . T.unpack
+    contentType = const "text/plain"
+
+
