@@ -5,7 +5,7 @@
 module API.Errors
 where
 
-import qualified Data.Text as T
+{--import qualified Data.Text as T
 import Happstack.Server 
         ( Response, FilterMonad, ok
         , toResponse, ServerMonad
@@ -21,28 +21,27 @@ import Happstack.Server.Internal.Monads
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Either
 import Control.Monad.Trans
-import Data.Monoid
 import Control.Monad.Trans.JSON
-
+--}
 import qualified Model.Errors as ME
-import Model
+import API.Effects
 import API.ImageUtils 
-import API.APIMonad
-import API.Config
-import ACID
+
+import Control.Eff
+import Control.Eff.JSON (JSONError)
+import Data.Monoid
 
 data Error
     = ModelError' ME.Error
     | JSONError' JSONError
     | ImageError' ImageError
-    | Abort
     deriving (Show)
 
 instance Monoid Error where
     mempty = Abort
     a `mappend` _ = a
 
-handleError :: ( Monad m, MonadIO m 
+{--handleError :: ( Monad m, MonadIO m 
                , FilterMonad Response m 
                )
             => EitherT Error m Response
@@ -51,11 +50,15 @@ handleError op = runEitherT op >>= \ res ->
     case res of
         Left err -> respondError err
         Right res -> return res
-            
-respondError :: (Monad m, MonadIO m, FilterMonad Response m)
-             => Error -> m Response
-respondError = badRequest . toResponse . T.pack . show 
+--}
 
+
+            
+respondError :: (Member API r)
+             => Error -> Eff r () 
+respondError = badRequest . T.pack . show 
+
+{--
 instance Monad m => MonadJSONError (EitherT Error m) where
     throwJSONError = left . JSONError'
 
@@ -98,3 +101,4 @@ instance WebMonad Response m
       => WebMonad Response (EitherT Error m)
     where
     finishWith = lift . finishWith
+--}

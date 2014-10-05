@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE FlexibleInstances #-}
@@ -9,41 +11,85 @@
 module API.Utils
 where
 
-import Data.Text hiding (any)
-import Data.Acid ( AcidState )
-import qualified Data.HashMap.Strict as HM
+--import Model
+import Model.BaseTypes
+import API.Config
+import API.Effects
+--import API.Errors
+
+--import Data.Text hiding (any)
+--import Data.Acid ( AcidState )
 import qualified Data.ByteString.Lazy.Char8 as L 
-import qualified Data.ByteString.Lazy as BL 
-import qualified Data.ByteString.Char8 as B 
+--import qualified Data.ByteString.Lazy as BL 
+--import qualified Data.ByteString.Char8 as B 
+import Control.Eff
+import Data.Text (Text)
+import qualified Data.Text as T
 import Data.Aeson
 import Data.Aeson.Types
 import Data.Scientific
 import Control.Lens
 import Control.Lens.Prism
-import Happstack.Server
-import Happstack.Server.Types
-import Happstack.Server.ClientSession
-import Control.Monad
-import Control.Monad.IO.Class (liftIO, MonadIO)
-import Control.Monad.Trans.Class
-import Control.Monad.Trans.Either
-import Control.Monad.Error.Class hiding (Error)
-import Control.Monad.Trans.JSON
-import Control.Monad.Writer
-import Control.Monad.Reader
+import Data.Data (Typeable)
+import Data.Time.Clock (UTCTime)
 
-import Model
-import Model.BaseTypes
-import Model.Channel
-import API.Config
-import API.Errors
-import API.APIMonad
-import API.JSONQueryMonad
-import API.JSONUpdateMonad
-import ACID
+data AuthData = AuthData 
+    { _login        :: Maybe Login 
+    , _password     :: Maybe Password 
+    , _timestamp    :: Maybe UTCTime
+    }
+    deriving (Eq, Ord, Read, Show, Typeable)
 
-type ACID = AcidState NoC
+makeLenses ''AuthData
 
+ok :: Member (API AuthData APIConfig) r
+   => Text -> Eff r () 
+ok = respond 200 . L.pack
+
+-- TODO: status code??
+noContent :: Member (API AuthData APIConfig) r => Eff r () 
+noContent = respond 201 ""
+
+-- TODO: status code??
+badRequest :: Member (API AuthData APIConfig) r => Text -> Eff r () 
+badRequest = respond 300 . L.pack . T.unpack
+
+jsonResponse :: Member (API AuthData APIConfig) r => Value -> Eff r () 
+jsonResponse = respond 200 . encode
+
+ifIsJust :: (Monad m) => Maybe a -> (a -> m ()) -> m ()
+ifIsJust v op =
+    case v of
+        Just a -> op a
+        Nothing -> return () 
+
+ifIsJust' = flip ifIsJust
+
+{--getBody :: ( ServerMonad m, MonadPlus m, MonadIO m
+           , FilterMonad Response m, WebMonad Response m
+           , WithConfig m) 
+        => m L.ByteString
+getBody = do
+    bplc <- config bodyPolicy
+    decodeBody $ defaultBodyPolicy (_uploadPath bplc) (_maxBytesFile bplc) (_maxBytesBody bplc) (_maxBytesHeader bplc)
+    body <- askRq >>= liftIO . takeRequestBody
+    case body of
+        Just rqbody -> return . unBody $ rqbody
+        Nothing -> return ""
+--}  
+{--ok' :: (Monad m, MonadIO m, FilterMonad Response m)
+    =>  Text -> m Response
+ok' = ok . toResponse 
+
+noContent' :: (Monad m, MonadIO m, FilterMonad Response m)
+           => m Response
+noContent' = noContent . toResponse $ ("" :: Text)
+
+badRequest' :: (Monad m, MonadIO m, FilterMonad Response m)
+            =>  Text -> m Response
+badRequest' = badRequest . toResponse 
+--}
+{--
 instance FromJSON Login where
     parseJSON (String t) = return . mkLogin $ t
     parseJSON _ = mzero 
@@ -119,47 +165,13 @@ instance ToJSON ChanType where
     toJSON None         = String "none"
     toJSON Stream       = String "stream"
     toJSON Conversation = String "conversation"
+--}
+--instance ToMessage Value where
+--    toContentType _ = B.pack "application/json"
+--    toMessage       = encode
 
-instance ToMessage Value where
-    toContentType _ = B.pack "application/json"
-    toMessage       = encode
 
-getBody :: ( ServerMonad m, MonadPlus m, MonadIO m
-           , FilterMonad Response m, WebMonad Response m
-           , WithConfig m) 
-        => m L.ByteString
-getBody = do
-    bplc <- config bodyPolicy
-    decodeBody $ defaultBodyPolicy (_uploadPath bplc) (_maxBytesFile bplc) (_maxBytesBody bplc) (_maxBytesHeader bplc)
-    body <- askRq >>= liftIO . takeRequestBody
-    case body of
-        Just rqbody -> return . unBody $ rqbody
-        Nothing -> return ""
-     
-ok' :: (Monad m, MonadIO m, FilterMonad Response m)
-    =>  Text -> m Response
-ok' = ok . toResponse 
-
-noContent' :: (Monad m, MonadIO m, FilterMonad Response m)
-           => m Response
-noContent' = noContent . toResponse $ ("" :: Text)
-
-badRequest' :: (Monad m, MonadIO m, FilterMonad Response m)
-            =>  Text -> m Response
-badRequest' = badRequest . toResponse 
-
-jsonR' :: FilterMonad Response m => Value -> m Response
-jsonR' = ok . toResponse 
-
-ifIsJust :: (Monad m) => Maybe a -> (a -> m ()) -> m ()
-ifIsJust v op =
-    case v of
-        Just a -> op a
-        Nothing -> return () 
-
-ifIsJust' = flip ifIsJust
-
-instance (Monad m, MonadIO m)
+{--instance (Monad m, MonadIO m)
      => FilterMonad Response (JSONQueryMonadT acid url session m) where
     setFilter = JSONQueryMonadT . lift . lift . lift . setFilter
     composeFilter = JSONQueryMonadT . lift . lift . lift . composeFilter
@@ -183,8 +195,9 @@ instance ( Monad m, MonadIO m, Functor m
     getSession = JSONQueryMonadT . lift . lift . lift $ getSession
     putSession = JSONQueryMonadT . lift . lift . lift . putSession
     expireSession = JSONQueryMonadT . lift . lift . lift $ expireSession
+--}
 
-queryWithJSON' :: (Monad m, MonadIO m)
+{--queryWithJSON' :: (Monad m, MonadIO m)
                => AcidState acid
                -> Maybe UserId
                -> Object
@@ -211,9 +224,9 @@ queryWithJSONInput acid json = queryWithJSON acid json >>= return . fst
 queryWithJSONResponse acid json = do
     (_, res) <- queryWithJSON acid json
     jsonR' res
+--}
 
-
-
+{--
 instance (Monad m, MonadIO m)
      => FilterMonad Response (JSONUpdateMonadT acid url session m) where
     setFilter = JSONUpdateMonadT . lift . lift . lift . setFilter
@@ -254,7 +267,8 @@ instance (Monad m, MonadIO m)
             otherwise -> error "API.Utils.catchError (UpdateMonadT): this should not happen."
         JSONUpdateMonadT . lift $ setOperatorIdU uid'
         return a'
-
+--}
+{--
 updateWithJSON' :: (Monad m, MonadIO m)
                => AcidState acid
                -> Maybe UserId
@@ -286,7 +300,7 @@ updateWithJSONInput acid json = updateWithJSON acid json >>= return . fst
 updateWithJSONResponse acid json = do
     (_, res) <- updateWithJSON acid json
     jsonR' res
-
+--}
 
 {--
 updateWithJSON :: (Monad m, MonadIO m)
@@ -309,7 +323,7 @@ updateWithJSONResponse acid json = do
         Right (_, v) -> jsonR' v >>= return . Right
 --}
 
-userInfoQ uid = do
+{--userInfoQ uid = do
     "id"        <: uid
     "login"     <$ getUserLoginQ uid
     "name"      <$ getUserNameQ uid
@@ -320,3 +334,4 @@ channelInfoQ cid = do
     "name"          <$ getChanNameQ cid
     "description"   <$ getChanDescQ cid      
     "type"          <$ getChanTypeQ cid
+--}
