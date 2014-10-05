@@ -4,27 +4,28 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE TypeSynonymInstances #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeOperators #-}
 
 module API.Utils
 where
 
 import Model.BaseTypes
 import API.Config
-import API.Effects (IsResponse)
-import qualified API.Effects as E
+import API.Effects
 
 import qualified Data.ByteString.Lazy.Char8 as L 
+import qualified Data.ByteString as BL 
 import Control.Eff
+import Control.Eff.JSON
 import Data.Text (Text)
 import qualified Data.Text as T
-import Data.Aeson
-import Data.Aeson.Types
-import Data.Scientific
+import Data.Aeson (Value (..), FromJSON, ToJSON
+                  , parseJSON, toJSON)
+import Control.Monad (mzero)
+--import Data.Aeson.Types
+import Data.Scientific (isInteger, toBoundedInteger)
 import Control.Lens
-import Control.Lens.Prism
+--import Control.Lens.Prism
 import Data.Data (Typeable)
 import Data.Time.Clock (UTCTime)
 
@@ -36,6 +37,12 @@ ifIsJust v op =
         Nothing -> return () 
 
 ifIsJust' = flip ifIsJust
+
+withJSONIO :: Member API r
+           => Eff (JSONOut :> JSONIn :> r) a -> Eff r (Either JSONError Value) 
+withJSONIO eff = do
+    body <- getBody
+    fmap (fmap fst) $ runJSONIO' (if L.null body then "{}" else body) eff
 
 {--getBody :: ( ServerMonad m, MonadPlus m, MonadIO m
            , FilterMonad Response m, WebMonad Response m
@@ -61,7 +68,7 @@ badRequest' :: (Monad m, MonadIO m, FilterMonad Response m)
             =>  Text -> m Response
 badRequest' = badRequest . toResponse 
 --}
-{--
+
 instance FromJSON Login where
     parseJSON (String t) = return . mkLogin $ t
     parseJSON _ = mzero 
@@ -137,7 +144,7 @@ instance ToJSON ChanType where
     toJSON None         = String "none"
     toJSON Stream       = String "stream"
     toJSON Conversation = String "conversation"
---}
+
 --instance ToMessage Value where
 --    toContentType _ = B.pack "application/json"
 --    toMessage       = encode

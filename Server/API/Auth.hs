@@ -51,8 +51,7 @@ authTimestamp = authGet _timestamp
 
 logUserIn :: (Member API r, Member Exec r)
           => Eff r Value 
-logUserIn acid = handleError $ 
-    queryWithJSONResponse acid $ do
+logUserIn = handleError . withJSONIO $ do
         l <- prop "login"
         pw <- prop "password"
         "id" <$ doLogin l pw
@@ -67,14 +66,14 @@ logUserOut = do
 
 
 refreshCookie :: (Member API r, Member Exec r)
-              => Maybe Login -> Maybe Password -> m () 
+              => Maybe Login -> Maybe Password -> Eff r () 
 refreshCookie l pw = do
     ifIsJust l $ \ _ -> authSet (set login l)
     ifIsJust pw $ \ _ -> authSet (set password pw)
 
 
 trySessionLogin :: (Member API r, Member Exec r)
-                => m () 
+                => Eff r () 
 trySessionLogin = do
     l' <- authLogin
     pw' <- authPassword
