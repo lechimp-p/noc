@@ -1,7 +1,5 @@
 module Model
     ( module Model.Operations
-    , NoC
-    , mkNoC
     , Login
     , mkLogin
     , Password
@@ -22,8 +20,5 @@ module Model
 where
 
 import Model.Operations
-import Model.NoC
 import Model.Message
-import Model.User
 import Model.BaseTypes
-import Model.Channel
