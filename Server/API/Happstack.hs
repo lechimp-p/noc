@@ -40,14 +40,12 @@ runAPI :: ( Typeable1 m
           , MonadPlus m
           , SetMember Lift (Lift m) r
           )
-       => APIConfig -> Eff (API :> r) a -> Eff r ()
+       => APIConfig -> Eff (API :> r) a -> Eff r a
 runAPI config action = go (admin action)
     where
-    go (Val v) = return () 
+    go (Val v) = return v 
     go (E request) = handleRelay request go
-        $ \ req -> case evalAPI config req of
-            (True, action)  -> lift action >>= go 
-            (False, action) -> lift action >> return () 
+        $ \ req -> (lift (evalAPI config req) >>= go)
 
     
 evalAPI :: ( Typeable1 m 
@@ -61,23 +59,23 @@ evalAPI :: ( Typeable1 m
            , MonadPlus m
            , SetMember Lift (Lift m) r
            )
-        => APIConfig -> API (VE r w) -> (Bool, m (VE r w))
+        => APIConfig -> API (VE r w) -> (m (VE r w))
 evalAPI config req = case req of
-    GetSession n        -> (True, fmap n CS.getSession)
-    PutSession s n      -> (True, fmap n (CS.putSession s))
-    ExpireSession n     -> (True, fmap n CS.expireSession) 
-    Respond s t n       -> (True, fmap n $ (resp s t) >> return ())
-    LookGet t n         -> (True, fmap n (look t)) 
-    Timestamp n         -> (True, fmap n (liftIO getCurrentTime))
-    Config f n          -> (True, fmap n . return . f $ config)
-    GetBody n           -> (True, fmap n $ do
+    GetSession n        -> (fmap n CS.getSession)
+    PutSession s n      -> (fmap n (CS.putSession s))
+    ExpireSession n     -> (fmap n CS.expireSession) 
+    Respond s t n       -> (fmap n $ (resp s t) >> return ())
+    LookGet t n         -> (fmap n (look t)) 
+    Timestamp n         -> (fmap n (liftIO getCurrentTime))
+    Config f n          -> (fmap n . return . f $ config)
+    GetBody n           -> (fmap n $ do
                                     decodeBody bpol
                                     body <- askRq >>= liftIO . takeRequestBody
                                     case body of
                                         Just b -> return . unBody $ b
                                         Nothing -> return ""
                            )
-    Abort n             -> (False, fmap n $ return undef)
+--    Abort n             -> (False, fmap n $ return undef)
     WriteFile p c n     -> undefined "Happstack.WriteFile"
     RemoveFile p n      -> undefined "Happstack.RemoveFile"
     where
