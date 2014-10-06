@@ -10,12 +10,12 @@ module Model
     , mkDesc
     , UserId
     , ChanId
-    , ChanType
     , MsgId
     , Icon (Icon, icnPath)
     , Message
     , Image (Image, imgPath)
     , Notification (..)
+    , ChanType (..)
     )
 where
 
