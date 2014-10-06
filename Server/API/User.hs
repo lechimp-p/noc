@@ -36,6 +36,8 @@ data UserAPI
 
 $(makeBoomerangs ''UserAPI)
 
+instance PathInfo UserAPI
+
 --userroutes :: Router () (API :- ())
 userroutes = 
     (  rBase 

@@ -34,6 +34,8 @@ data ChannelAPI
 
 $(makeBoomerangs ''ChannelAPI)
 
+instance PathInfo ChannelAPI
+
 channelroutes :: Router () (ChannelAPI :- ())
 channelroutes =
     (  rBase 
