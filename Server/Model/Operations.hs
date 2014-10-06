@@ -8,14 +8,9 @@ module Model.Operations
     , E.Exec
     , Q.Query
     , U.Update
+    , Model.Permissions.forceOperatorId
     )
 where
-
-import qualified Data.Set as S
-import Data.Text (Text) 
-import Data.Time.Clock (UTCTime)
-import Data.Maybe (isJust)
-import Control.Eff
 
 import Model.BaseTypes
 import Model.Errors
@@ -27,6 +22,12 @@ import qualified Model.Exec as E
 import qualified Model.Query as Q
 import qualified Model.Update as U
 import Model.Message 
+
+import qualified Data.Set as S
+import Data.Text (Text) 
+import Data.Time.Clock (UTCTime)
+import Data.Maybe (isJust)
+import Control.Eff
 
 throwOn err cond =
     if cond
