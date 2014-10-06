@@ -58,7 +58,7 @@ storeIcon uid typ dat = do
     return . fmap (Icon . T.pack) $ path
 removeIcon = removeFile . T.unpack . icnPath
 
-storeImage cnfg typ dat = do
+storeImage typ dat = do
     cnfg <- config _imageConfig
     path <- storeGeneric cnfg (_channelDir cnfg) typ dat 
     return . fmap (Image . T.pack) $ path
