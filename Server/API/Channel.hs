@@ -19,12 +19,8 @@ import API.ImageUtils
 import Prelude hiding ( id, (.) )
 import Control.Category ( Category(id, (.)) )
 import Web.Routes
-import Control.Monad (mplus, mzero)
 import Control.Eff
 import Control.Eff.JSON
-import Control.Lens
-import qualified Data.Set as S
-import Data.Time.Clock
 import Data.Aeson (Value)
 import Text.Boomerang.TH (makeBoomerangs)
 import Web.Routes.Boomerang

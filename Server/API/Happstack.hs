@@ -1,12 +1,14 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ExistentialQuantification #-}
 
 module API.Happstack where
 
 import API.Effects
+import API.Config
+import API.Session
 
 import Control.Eff
 import Control.Eff.Lift
@@ -27,70 +29,70 @@ import Happstack.Server.Response (resp, ToMessage(..))
 import Happstack.Server.Types (Response, takeRequestBody)
 import Happstack.Server.Monads (FilterMonad, ServerMonad, WebMonad)
 
-runAPI :: ( Typeable session
-          , Typeable config 
-          , Typeable1 m 
+runAPI :: ( Typeable1 m 
           , Functor m
           , MonadIO m
-          , CS.MonadClientSession session m
           , FilterMonad Response m
           , HasRqData m
           , ServerMonad m
           , WebMonad Response m
+          , MonadClientSession AuthData m
           , MonadPlus m
           , SetMember Lift (Lift m) r
           )
-       => config -> (config -> BodyPolicy)
-       -> Eff ((API session config) :> r) a -> Eff r ()
-runAPI config bpl action = go (admin action)
+       => APIConfig -> Eff (API :> r) a -> Eff r ()
+runAPI config action = go (admin action)
     where
     go (Val v) = return () 
     go (E request) = handleRelay request go
-        $ \ req -> case evalAPI config bpl req of
+        $ \ req -> case evalAPI config req of
             (True, action)  -> lift action >>= go 
             (False, action) -> lift action >> return () 
 
     
-evalAPI :: ( Typeable session
-           , Typeable config 
-           , Typeable1 m 
+evalAPI :: ( Typeable1 m 
            , Functor m
            , MonadIO m
-           , CS.MonadClientSession session m
            , FilterMonad Response m
            , HasRqData m
            , ServerMonad m
            , WebMonad Response m
+           , MonadClientSession AuthData m
            , MonadPlus m
            , SetMember Lift (Lift m) r
            )
-        => config -> (config -> BodyPolicy)
-        -> API session config (VE r w) -> (Bool, m (VE r w))
-evalAPI config bpl req = case req of
+        => APIConfig -> API (VE r w) -> (Bool, m (VE r w))
+evalAPI config req = case req of
     GetSession n        -> (True, fmap n CS.getSession)
     PutSession s n      -> (True, fmap n (CS.putSession s))
     ExpireSession n     -> (True, fmap n CS.expireSession) 
     Respond s t n       -> (True, fmap n $ (resp s t) >> return ())
     LookGet t n         -> (True, fmap n (look t)) 
     Timestamp n         -> (True, fmap n (liftIO getCurrentTime))
-    Config n            -> (True, fmap n (return config))
+    Config f n          -> (True, fmap n . return . f $ config)
     GetBody n           -> (True, fmap n $ do
-                                    decodeBody . bpl $ config  
+                                    decodeBody bpol
                                     body <- askRq >>= liftIO . takeRequestBody
                                     case body of
                                         Just b -> return . unBody $ b
                                         Nothing -> return ""
                            )
     Abort n             -> (False, fmap n $ return undef)
+    WriteFile p c n     -> undefined "Happstack.WriteFile"
+    RemoveFile p n      -> undefined "Happstack.RemoveFile"
     where
     undef = error "evalAPI.respondNow: Don't eval this!"
-{--    bpolc = _bodyPolicy config
+    bpolc = _bodyPolicy config
     bpol = defaultBodyPolicy (_uploadPath bpolc)
                              (_maxBytesFile bpolc)
                              (_maxBytesBody bpolc)
                              (_maxBytesHeader bpolc)
---}
 
-instance IsResponse a => ToMessage a where
-    toContentType = contentType
-    toMessage = content
+
+data Message = forall a. IsResponse a => Message a
+
+instance ToMessage Message where
+    toContentType (Message a) = contentType a
+    toMessage (Message a) = content a
+
+
