@@ -1,7 +1,3 @@
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE TypeFamilies #-}
-
 module Model.Acid.Query
 where
 
@@ -18,92 +14,68 @@ import Control.Monad.Reader (ask)
 import Data.Time.Clock (UTCTime)
 
 
-doLogin :: Login -> Password -> Query NoC (Maybe UserId)
-doLogin l pw = ask >>= \ noc -> return $ doLoginR noc l pw
+qDoLogin :: Login -> Password -> Query NoC (Maybe UserId)
+qDoLogin l pw = ask >>= \ noc -> return $ doLoginR noc l pw
 
-isAdmin :: UserId -> Query NoC (Either Error Bool)
-isAdmin uid = ask >>= \ noc -> return . Right $ isAdminR noc uid
+qIsAdmin :: UserId -> Query NoC (Either Error Bool)
+qIsAdmin uid = ask >>= \ noc -> return . Right $ isAdminR noc uid
 
-countAdmins :: Query NoC (Either Error Int)
-countAdmins = ask >>= \ noc -> return . Right $ countAdminsR noc
+qCountAdmins :: Query NoC (Either Error Int)
+qCountAdmins = ask >>= \ noc -> return . Right $ countAdminsR noc
 
-getUserIdByLogin :: Text -> Query NoC (Either Error (Maybe UserId))
-getUserIdByLogin t = ask >>= \ noc -> return . Right $ getUserIdByLoginR noc t
+qGetUserIdByLogin :: Text -> Query NoC (Either Error (Maybe UserId))
+qGetUserIdByLogin t = ask >>= \ noc -> return . Right $ getUserIdByLoginR noc t
 
-getChanName :: ChanId -> Query NoC (Either Error Name)
-getChanName cid = ask >>= \ noc -> return $ getChanNameR noc cid
+qGetChanName :: ChanId -> Query NoC (Either Error Name)
+qGetChanName cid = ask >>= \ noc -> return $ getChanNameR noc cid
 
-getChanDesc :: ChanId -> Query NoC (Either Error Desc)
-getChanDesc cid = ask >>= \ noc -> return $ getChanDescR noc cid
+qGetChanDesc :: ChanId -> Query NoC (Either Error Desc)
+qGetChanDesc cid = ask >>= \ noc -> return $ getChanDescR noc cid
 
-getChanType :: ChanId -> Query NoC (Either Error ChanType)
-getChanType cid = ask >>= \ noc -> return $ getChanTypeR noc cid
+qGetChanType :: ChanId -> Query NoC (Either Error ChanType)
+qGetChanType cid = ask >>= \ noc -> return $ getChanTypeR noc cid
 
-getChanImage :: ChanId -> Query NoC (Either Error (Maybe Image))
-getChanImage cid = ask >>= \ noc -> return $ getChanImageR noc cid
+qGetChanImage :: ChanId -> Query NoC (Either Error (Maybe Image))
+qGetChanImage cid = ask >>= \ noc -> return $ getChanImageR noc cid
 
-isChanOwner :: ChanId -> UserId -> Query NoC (Either Error Bool)
-isChanOwner cid uid = ask >>= \ noc -> return $ isChanOwnerR noc cid uid
+qIsChanOwner :: ChanId -> UserId -> Query NoC (Either Error Bool)
+qIsChanOwner cid uid = ask >>= \ noc -> return $ isChanOwnerR noc cid uid
 
-isChanProducer :: ChanId -> UserId -> Query NoC (Either Error Bool)
-isChanProducer cid uid = ask >>= \ noc -> return $ isChanProducerR noc cid uid
+qIsChanProducer :: ChanId -> UserId -> Query NoC (Either Error Bool)
+qIsChanProducer cid uid = ask >>= \ noc -> return $ isChanProducerR noc cid uid
 
-isChanConsumer :: ChanId -> UserId -> Query NoC (Either Error Bool)
-isChanConsumer cid uid = ask >>= \ noc -> return $ isChanConsumerR noc cid uid
+qIsChanConsumer :: ChanId -> UserId -> Query NoC (Either Error Bool)
+qIsChanConsumer cid uid = ask >>= \ noc -> return $ isChanConsumerR noc cid uid
 
-amountOfSubscribedUsers :: ChanId -> Query NoC (Either Error Int)
-amountOfSubscribedUsers cid = ask >>= \ noc -> return $ amountOfSubscribedUsersR noc cid
+qAmountOfSubscribedUsers :: ChanId -> Query NoC (Either Error Int)
+qAmountOfSubscribedUsers cid = ask >>= \ noc -> return $ amountOfSubscribedUsersR noc cid
 
-lastPostTimestamp :: ChanId -> Query NoC (Either Error (Maybe UTCTime))
-lastPostTimestamp cid = ask >>= \ noc -> return $ lastPostTimestampR noc cid
+qLastPostTimestamp :: ChanId -> Query NoC (Either Error (Maybe UTCTime))
+qLastPostTimestamp cid = ask >>= \ noc -> return $ lastPostTimestampR noc cid
 
-messages :: ChanId -> Offset -> Amount -> Query NoC (Either Error [Message])
-messages cid ofs am = ask >>= \ noc -> return $ messagesR noc cid ofs am
+qMessages :: ChanId -> Offset -> Amount -> Query NoC (Either Error [Message])
+qMessages cid ofs am = ask >>= \ noc -> return $ messagesR noc cid ofs am
 
-messagesTill :: ChanId -> UTCTime -> Query NoC (Either Error [Message])
-messagesTill cid ts = ask >>= \ noc -> return $ messagesTillR noc cid ts
+qMessagesTill :: ChanId -> UTCTime -> Query NoC (Either Error [Message])
+qMessagesTill cid ts = ask >>= \ noc -> return $ messagesTillR noc cid ts
 
-getUserLogin :: UserId -> Query NoC (Either Error Login)
-getUserLogin uid = ask >>= \ noc -> return $ getUserLoginR noc uid
+qGetUserLogin :: UserId -> Query NoC (Either Error Login)
+qGetUserLogin uid = ask >>= \ noc -> return $ getUserLoginR noc uid
 
-getUserName :: UserId -> Query NoC (Either Error Name)
-getUserName uid = ask >>= \ noc -> return $ getUserNameR noc uid
+qGetUserName :: UserId -> Query NoC (Either Error Name)
+qGetUserName uid = ask >>= \ noc -> return $ getUserNameR noc uid
 
-getUserDesc :: UserId -> Query NoC (Either Error Desc)
-getUserDesc uid = ask >>= \ noc -> return $ getUserDescR noc uid
+qGetUserDesc :: UserId -> Query NoC (Either Error Desc)
+qGetUserDesc uid = ask >>= \ noc -> return $ getUserDescR noc uid
 
-getUserIcon :: UserId -> Query NoC (Either Error (Maybe Icon))
-getUserIcon uid = ask >>= \ noc -> return $ getUserIconR noc uid
+qGetUserIcon :: UserId -> Query NoC (Either Error (Maybe Icon))
+qGetUserIcon uid = ask >>= \ noc -> return $ getUserIconR noc uid
 
-getUserNotifications :: UserId -> Query NoC (Either Error [Notification])
-getUserNotifications uid = ask >>= \ noc -> return $ getUserNotificationsR noc uid
+qGetUserNotifications :: UserId -> Query NoC (Either Error [Notification])
+qGetUserNotifications uid = ask >>= \ noc -> return $ getUserNotificationsR noc uid
 
-getUserContacts :: UserId -> Query NoC (Either Error (S.Set UserId))
-getUserContacts uid = ask >>= \ noc -> return $ getUserContactsR noc uid
+qGetUserContacts :: UserId -> Query NoC (Either Error (S.Set UserId))
+qGetUserContacts uid = ask >>= \ noc -> return $ getUserContactsR noc uid
 
-getUserSubscriptions :: UserId -> Query NoC (Either Error (S.Set ChanId))
-getUserSubscriptions uid = ask >>= \ noc -> return $ getUserSubscriptionsR noc uid
-
-$(makeAcidic ''NoC  [ 'doLogin
-                    , 'isAdmin
-                    , 'countAdmins
-                    , 'getUserIdByLogin
-                    , 'getChanName
-                    , 'getChanDesc
-                    , 'getChanType
-                    , 'getChanImage
-                    , 'isChanOwner
-                    , 'isChanProducer
-                    , 'isChanConsumer
-                    , 'amountOfSubscribedUsers
-                    , 'lastPostTimestamp
-                    , 'messages
-                    , 'messagesTill
-                    , 'getUserLogin
-                    , 'getUserName
-                    , 'getUserDesc
-                    , 'getUserIcon
-                    , 'getUserNotifications
-                    , 'getUserContacts
-                    , 'getUserSubscriptions
-                    ])
+qGetUserSubscriptions :: UserId -> Query NoC (Either Error (S.Set ChanId))
+qGetUserSubscriptions uid = ask >>= \ noc -> return $ getUserSubscriptionsR noc uid

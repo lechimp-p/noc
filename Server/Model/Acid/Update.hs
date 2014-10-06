@@ -1,7 +1,3 @@
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE TypeFamilies #-}
-
 module Model.Acid.Update
 where
 
@@ -24,104 +20,77 @@ modify f = do
         Left err -> return . Left $ err
         Right (noc, res) -> put noc >> return (Right res)
 
-createChan :: UserId -> Name -> Update NoC (Either Error ChanId)
-createChan uid name = modify $ \ noc -> Right $ createChanR noc uid name
+uCreateChan :: UserId -> Name -> Update NoC (Either Error ChanId)
+uCreateChan uid name = modify $ \ noc -> Right $ createChanR noc uid name
 
-createUser :: Login -> Password -> Update NoC (Either Error UserId)
-createUser l pw = modify $ \ noc -> Right $ createUserR noc l pw
+uCreateUser :: Login -> Password -> Update NoC (Either Error UserId)
+uCreateUser l pw = modify $ \ noc -> Right $ createUserR noc l pw
 
-addAdmin :: UserId -> Update NoC (Either Error ())
-addAdmin uid = modify $ \ noc -> Right $ addAdminR noc uid
+uAddAdmin :: UserId -> Update NoC (Either Error ())
+uAddAdmin uid = modify $ \ noc -> Right $ addAdminR noc uid
 
-rmAdmin :: UserId -> Update NoC (Either Error ())
-rmAdmin uid = modify $ \ noc -> Right $ rmAdminR noc uid
+uRmAdmin :: UserId -> Update NoC (Either Error ())
+uRmAdmin uid = modify $ \ noc -> Right $ rmAdminR noc uid
 
-setChanName :: ChanId -> Name -> Update NoC (Either Error ())
-setChanName cid n = modify $ \ noc -> setChanNameR noc cid n
+uSetChanName :: ChanId -> Name -> Update NoC (Either Error ())
+uSetChanName cid n = modify $ \ noc -> setChanNameR noc cid n
 
-setChanDesc :: ChanId -> Desc -> Update NoC (Either Error ())
-setChanDesc cid d = modify $ \ noc -> setChanDescR noc cid d
+uSetChanDesc :: ChanId -> Desc -> Update NoC (Either Error ())
+uSetChanDesc cid d = modify $ \ noc -> setChanDescR noc cid d
 
-setChanType :: ChanId -> ChanType -> Update NoC (Either Error ())
-setChanType cid t = modify $ \ noc -> setChanTypeR noc cid t
+uSetChanType :: ChanId -> ChanType -> Update NoC (Either Error ())
+uSetChanType cid t = modify $ \ noc -> setChanTypeR noc cid t
 
-setChanImage :: ChanId -> Maybe Image -> Update NoC (Either Error ())
-setChanImage cid img = modify $ \ noc -> setChanImageR noc cid img 
+uSetChanImage :: ChanId -> Maybe Image -> Update NoC (Either Error ())
+uSetChanImage cid img = modify $ \ noc -> setChanImageR noc cid img 
 
-addChanOwner :: ChanId -> UserId -> Update NoC (Either Error ())
-addChanOwner cid uid = modify $ \ noc -> addChanOwnerR noc cid uid
+uAddChanOwner :: ChanId -> UserId -> Update NoC (Either Error ())
+uAddChanOwner cid uid = modify $ \ noc -> addChanOwnerR noc cid uid
 
-rmChanOwner :: ChanId -> UserId -> Update NoC (Either Error ())
-rmChanOwner cid uid = modify $ \ noc -> rmChanOwnerR noc cid uid
+uRmChanOwner :: ChanId -> UserId -> Update NoC (Either Error ())
+uRmChanOwner cid uid = modify $ \ noc -> rmChanOwnerR noc cid uid
 
-addChanProducer :: ChanId -> UserId -> Update NoC (Either Error ())
-addChanProducer cid uid = modify $ \ noc -> addChanProducerR noc cid uid
+uAddChanProducer :: ChanId -> UserId -> Update NoC (Either Error ())
+uAddChanProducer cid uid = modify $ \ noc -> addChanProducerR noc cid uid
 
-rmChanProducer :: ChanId -> UserId -> Update NoC (Either Error ())
-rmChanProducer cid uid = modify $ \ noc -> rmChanProducerR noc cid uid
+uRmChanProducer :: ChanId -> UserId -> Update NoC (Either Error ())
+uRmChanProducer cid uid = modify $ \ noc -> rmChanProducerR noc cid uid
 
-addChanConsumer :: ChanId -> UserId -> Update NoC (Either Error ())
-addChanConsumer cid uid = modify $ \ noc -> addChanConsumerR noc cid uid
+uAddChanConsumer :: ChanId -> UserId -> Update NoC (Either Error ())
+uAddChanConsumer cid uid = modify $ \ noc -> addChanConsumerR noc cid uid
 
-rmChanConsumer :: ChanId -> UserId -> Update NoC (Either Error ())
-rmChanConsumer cid uid = modify $ \ noc -> rmChanConsumerR noc cid uid
+uRmChanConsumer :: ChanId -> UserId -> Update NoC (Either Error ())
+uRmChanConsumer cid uid = modify $ \ noc -> rmChanConsumerR noc cid uid
 
-post :: ChanId -> UserId -> UTCTime -> Text -> Maybe Image -> Update NoC (Either Error MsgId)
-post cid uid ts txt img = modify $ \ noc -> postR noc cid uid ts txt img
+uPost :: ChanId -> UserId -> UTCTime -> Text -> Maybe Image -> Update NoC (Either Error MsgId)
+uPost cid uid ts txt img = modify $ \ noc -> postR noc cid uid ts txt img
 
-setUserLogin :: UserId -> Login -> Update NoC (Either Error ())
-setUserLogin uid l = modify $ \ noc -> setUserLoginR noc uid l
+uSetUserLogin :: UserId -> Login -> Update NoC (Either Error ())
+uSetUserLogin uid l = modify $ \ noc -> setUserLoginR noc uid l
 
-setUserPassword :: UserId -> Password -> Update NoC (Either Error ())
-setUserPassword uid l = modify $ \ noc -> setUserPasswordR noc uid l
+uSetUserPassword :: UserId -> Password -> Update NoC (Either Error ())
+uSetUserPassword uid l = modify $ \ noc -> setUserPasswordR noc uid l
 
-setUserName :: UserId -> Name -> Update NoC (Either Error ())
-setUserName uid l = modify $ \ noc -> setUserNameR noc uid l
+uSetUserName :: UserId -> Name -> Update NoC (Either Error ())
+uSetUserName uid l = modify $ \ noc -> setUserNameR noc uid l
 
-setUserDesc :: UserId -> Desc -> Update NoC (Either Error ())
-setUserDesc uid l = modify $ \ noc -> setUserDescR noc uid l
+uSetUserDesc :: UserId -> Desc -> Update NoC (Either Error ())
+uSetUserDesc uid l = modify $ \ noc -> setUserDescR noc uid l
 
-setUserIcon :: UserId -> Maybe Icon -> Update NoC (Either Error ())
-setUserIcon uid l = modify $ \ noc -> setUserIconR noc uid l
+uSetUserIcon :: UserId -> Maybe Icon -> Update NoC (Either Error ())
+uSetUserIcon uid l = modify $ \ noc -> setUserIconR noc uid l
 
-addUserNotification :: UserId -> Notification -> Update NoC (Either Error ())
-addUserNotification uid n = modify $ \ noc -> addUserNotificationR noc uid n
+uAddUserNotification :: UserId -> Notification -> Update NoC (Either Error ())
+uAddUserNotification uid n = modify $ \ noc -> addUserNotificationR noc uid n
 
-addUserContact :: UserId -> UserId -> Update NoC (Either Error ())
-addUserContact uid c = modify $ \ noc -> addUserContactR noc uid c
+uAddUserContact :: UserId -> UserId -> Update NoC (Either Error ())
+uAddUserContact uid c = modify $ \ noc -> addUserContactR noc uid c
 
-rmUserContact :: UserId -> UserId -> Update NoC (Either Error ())
-rmUserContact uid c = modify $ \ noc -> rmUserContactR noc uid c
+uRmUserContact :: UserId -> UserId -> Update NoC (Either Error ())
+uRmUserContact uid c = modify $ \ noc -> rmUserContactR noc uid c
 
-addUserSubscription :: UserId -> ChanId -> Update NoC (Either Error ())
-addUserSubscription uid c = modify $ \ noc -> addUserSubscriptionR noc uid c
+uAddUserSubscription :: UserId -> ChanId -> Update NoC (Either Error ())
+uAddUserSubscription uid c = modify $ \ noc -> addUserSubscriptionR noc uid c
 
-rmUserSubscription :: UserId -> ChanId -> Update NoC (Either Error ())
-rmUserSubscription uid c = modify $ \ noc -> rmUserSubscriptionR noc uid c
-
-$(makeAcidic ''NoC  [ 'createChan
-                    , 'createUser
-                    , 'addAdmin
-                    , 'rmAdmin 
-                    , 'setChanName
-                    , 'setChanDesc
-                    , 'setChanType
-                    , 'setChanImage
-                    , 'addChanOwner
-                    , 'rmChanOwner
-                    , 'addChanProducer
-                    , 'rmChanProducer
-                    , 'addChanConsumer
-                    , 'rmChanConsumer
-                    , 'post
-                    , 'setUserLogin
-                    , 'setUserPassword
-                    , 'setUserName
-                    , 'setUserDesc
-                    , 'setUserIcon
-                    , 'addUserNotification
-                    , 'addUserContact
-                    , 'rmUserContact
-                    , 'addUserSubscription
-                    , 'rmUserSubscription
-                    ])
+uRmUserSubscription :: UserId -> ChanId -> Update NoC (Either Error ())
+uRmUserSubscription uid c = modify $ \ noc -> rmUserSubscriptionR noc uid c
