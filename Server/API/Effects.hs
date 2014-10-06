@@ -23,6 +23,14 @@ import Control.Eff
 class IsResponse r where
     contentType :: r -> B.ByteString
     content :: r -> L.ByteString
+
+data HTTPMethod
+    = GET
+    | POST
+    | PUT
+    | DELETE
+    | HEAD
+    deriving (Typeable)
      
 data API n 
     = GetSession                                (AuthData -> n)     
@@ -31,9 +39,12 @@ data API n
     | forall r. IsResponse r => Respond Int r   (() -> n) 
     | LookGet String                            (String -> n)
     | Timestamp                                 (UTCTime -> n)
-    | Config                                    (APIConfig -> n)
+    | forall a. Config (APIConfig -> a)         (a -> n)
     | GetBody                                   (L.ByteString -> n)               
+    | Method                                    (HTTPMethod -> n)                         
     | forall a. Abort                           (a -> n)
+    | WriteFile FilePath B.ByteString           (() -> n)
+    | RemoveFile FilePath                       (Bool -> n)
     deriving (Typeable)
 
 instance Functor API where
@@ -43,9 +54,11 @@ instance Functor API where
     fmap f (Respond s t n)      = Respond s t (f . n)
     fmap f (LookGet t n)        = LookGet t (f . n)
     fmap f (Timestamp n)        = Timestamp (f . n)
-    fmap f (Config n)           = Config (f . n)
+    fmap f (Config f' n)        = Config f' (f . n)
     fmap f (GetBody n)          = GetBody (f . n)
     fmap f (Abort n)            = Abort (f . n)
+    fmap f (WriteFile p c n)    = WriteFile p c (f . n)
+    fmap f (RemoveFile p n)     = RemoveFile p (f . n)
 
 ----------------
 -- Basic Effects
@@ -84,24 +97,38 @@ timestamp = send $ \ next -> inj (Timestamp next)
 
 
 config :: Member API r
-       => Eff r APIConfig 
-config = send $ \ next -> inj (Config next)
+       => (APIConfig -> a) -> Eff r a 
+config f = send $ \ next -> inj (Config f next)
 
 
 getBody :: Member API r 
         => Eff r L.ByteString 
 getBody = send $ \ next -> inj (GetBody next)
 
+
+method :: Member API r
+       => Eff r HTTPMethod
+method = send $ \ next -> inj (Method next)
+
+
 abort :: Member API r
       => Eff r a 
 abort = send $ \ next -> inj (Abort next)
 
 
+writeFile :: Member API r
+          => FilePath -> B.ByteString -> Eff r ()
+writeFile p c = send $ \ next -> inj (WriteFile p c next)
+
+removeFile :: Member API r
+           => FilePath -> Eff r Bool
+removeFile p = send $ \ next -> inj (RemoveFile p next)
+
 ----------------
 -- Derived Stuff 
 ----------------
 
-ok :: ( Member API r
+{--ok :: ( Member API r
       , IsResponse resp
       )
    => resp -> Eff r () 
@@ -114,6 +141,7 @@ noContent = respond 201 ("" :: Text)
 -- TODO: status code??
 badRequest :: Member API r => Text -> Eff r () 
 badRequest = respond 300 . L.pack . T.unpack
+--}
 
 instance IsResponse L.ByteString where
     content = id
