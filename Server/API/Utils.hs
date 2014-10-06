@@ -9,9 +9,12 @@
 module API.Utils
 where
 
+import Model
+import qualified Model.Errors as ME
 import Model.BaseTypes
 import API.Config
 import API.Effects
+import API.ImageUtils
 
 import qualified Data.ByteString.Lazy.Char8 as L 
 import qualified Data.ByteString as BL 
@@ -28,6 +31,7 @@ import Control.Lens
 --import Control.Lens.Prism
 import Data.Data (Typeable)
 import Data.Time.Clock (UTCTime)
+import Data.Monoid
 
 
 ifIsJust :: (Monad m) => Maybe a -> (a -> m ()) -> m ()
@@ -38,36 +42,44 @@ ifIsJust v op =
 
 ifIsJust' = flip ifIsJust
 
+
 withJSONIO :: Member API r
-           => Eff (JSONOut :> JSONIn :> r) a -> Eff r (Either JSONError Value) 
+           => Eff (JSONOut :> JSONIn :> r) a -> Eff r (Either Error (Maybe Value)) 
 withJSONIO eff = do
     body <- getBody
-    fmap (fmap fst) $ runJSONIO' (if L.null body then "{}" else body) eff
+    fmap (fmapl JSONError' . fmap (Just . fst)) $ runJSONIO' body eff --(if L.null body then "{}" else body) eff
 
-{--getBody :: ( ServerMonad m, MonadPlus m, MonadIO m
-           , FilterMonad Response m, WebMonad Response m
-           , WithConfig m) 
-        => m L.ByteString
-getBody = do
-    bplc <- config bodyPolicy
-    decodeBody $ defaultBodyPolicy (_uploadPath bplc) (_maxBytesFile bplc) (_maxBytesBody bplc) (_maxBytesHeader bplc)
-    body <- askRq >>= liftIO . takeRequestBody
-    case body of
-        Just rqbody -> return . unBody $ rqbody
-        Nothing -> return ""
---}  
-{--ok' :: (Monad m, MonadIO m, FilterMonad Response m)
-    =>  Text -> m Response
-ok' = ok . toResponse 
 
-noContent' :: (Monad m, MonadIO m, FilterMonad Response m)
-           => m Response
-noContent' = noContent . toResponse $ ("" :: Text)
+withJSONOut :: Eff (JSONOut :> r) a -> Eff r (Either Error (Maybe Value))
+withJSONOut = fmap (Right . Just . fst) . runJSONOut
 
-badRequest' :: (Monad m, MonadIO m, FilterMonad Response m)
-            =>  Text -> m Response
-badRequest' = badRequest . toResponse 
---}
+
+withJSONIn :: Member API r
+           => Eff (JSONIn :> r) a -> Eff r (Either Error a)
+withJSONIn eff = do
+    body <- getBody
+    fmap (fmapl JSONError') $ runJSONIn' body eff --(if L.null body then "{}" else body) eff
+
+
+data Error
+    = ModelError' ME.Error
+    | JSONError' JSONError
+    | ImageError' ImageError
+    | MethodNotSupported
+    | JustStopped
+    deriving (Show)
+
+instance Monoid Error where
+    mempty = JustStopped 
+    a `mappend` _ = a
+
+fmapl f (Right v) = Right v
+fmapl f (Left v) = Left . f $ v
+
+methodNotSupported :: Member API r
+                   => Eff r (Either Error (Maybe Value))
+methodNotSupported = return . Left $ MethodNotSupported
+
 
 instance FromJSON Login where
     parseJSON (String t) = return . mkLogin $ t
@@ -302,15 +314,14 @@ updateWithJSONResponse acid json = do
         Right (_, v) -> jsonR' v >>= return . Right
 --}
 
-{--userInfoQ uid = do
+userInfo uid = do
     "id"        <: uid
-    "login"     <$ getUserLoginQ uid
-    "name"      <$ getUserNameQ uid
-    "icon"      <$ getUserIconQ uid
+    "login"     <$ getUserLogin uid
+    "name"      <$ getUserName uid
+    "icon"      <$ getUserIcon uid
 
-channelInfoQ cid = do
+channelInfo cid = do
     "id"            <: cid
-    "name"          <$ getChanNameQ cid
-    "description"   <$ getChanDescQ cid      
-    "type"          <$ getChanTypeQ cid
---}
+    "name"          <$ getChanName cid
+    "description"   <$ getChanDesc cid      
+    "type"          <$ getChanType cid
