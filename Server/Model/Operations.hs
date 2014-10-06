@@ -254,6 +254,13 @@ setUserLogin uid l = do
             checkDuplicateLogin l
             U.setUserLogin uid l
 
+setUserPassword :: (Member Update r, Member Query r, Member Exec r)
+            => UserId -> Password -> Eff r ()
+setUserPassword uid v = do
+    checkAccess uid forUserSelfOrAdmins
+    U.setUserPassword uid v
+
+
 setUserName :: (Member Update r, Member Query r, Member Exec r)
             => UserId -> Name -> Eff r ()
 setUserName uid v = do
