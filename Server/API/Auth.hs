@@ -11,7 +11,6 @@ where
 import API.Effects
 import API.Session
 import API.Utils
-import API.Errors
 import Model.BaseTypes
 import Model.Exec
 
@@ -50,8 +49,8 @@ authTimestamp = authGet _timestamp
 
 
 logUserIn :: (Member API r, Member Exec r)
-          => Eff r Value 
-logUserIn = handleError . withJSONIO $ do
+          => Eff r (Either Error (Maybe Value))
+logUserIn = withJSONIO $ do
         l <- prop "login"
         pw <- prop "password"
         "id" <$ doLogin l pw
@@ -59,11 +58,10 @@ logUserIn = handleError . withJSONIO $ do
 
 
 logUserOut :: (Member API r, Member Exec r)
-           => Eff r () 
+           => Eff r (Either Error (Maybe Value)) 
 logUserOut = do
     refreshCookie Nothing Nothing
-    noContent
-
+    return $ Right Nothing
 
 refreshCookie :: (Member API r, Member Exec r)
               => Maybe Login -> Maybe Password -> Eff r () 
