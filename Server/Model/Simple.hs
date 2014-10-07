@@ -1,166 +1,157 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE TemplateHaskell #-}
+--{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+--{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TypeOperators #-}
 
 module Model.Simple
-    ( runOp'
-    , runOp
-    , noc
-    , Operation
-    , OpContext (..)
+    ( runQuery
+    , runQueryAndUpdate
+    , runSimple
+    --, run
     )
 where
 
-import Control.Monad
-import Control.Applicative
-import Control.Lens 
-import Data.Data (Data, Typeable)
-import qualified Data.Set as S 
-import qualified Data.IxSet as IX
-import Data.Maybe (isJust)
-
-import Model.OpMonad
-import Model.Errors
 import Model.BaseTypes
-import qualified Model.NoC as N
-import Model.NoC
-import qualified Model.User as U
-import Model.User
-import qualified Model.Channel as C
-import Model.Channel
-import qualified Model.Message as M
-import Model.Message
+import Model.Errors
+import Model.Query
+import Model.Update
+import Model.Exec
 
-data OpContext = OpContext
-    { _noc       :: NoC
-    , _operator  :: Maybe UserId
-    }
-    deriving (Data, Typeable)
+import qualified Model.Simple.NoC as N
+import Model.Simple.NoC
+import qualified Model.Simple.User as U
+import Model.Simple.User
+import qualified Model.Simple.Channel as C
+import Model.Simple.Channel
+import qualified Model.Simple.Message as M
+import Model.Simple.Message
+import Model.Simple.Operations
 
-makeLenses ''OpContext
-
-newtype Operation a = Operation { runOperation :: OpContext -> Either Error (OpContext, a) }
-
-runOp' noc operator action = runOperation action $ OpContext noc operator 
-
-instance Monad Operation where
-    return v = Operation $ \ s -> Right (s, v)
-    m >>= m' = Operation $ \ s ->
-        let l = runOperation m s
-        in case l of
-            (Left e) -> Left e
-            (Right (s', v)) ->
-                let n = m' v
-                in runOperation n s'
-
-instance Functor Operation where
-    fmap f v = v >>= return . f
-
-instance Applicative Operation where
-    pure = return
-    f <*> v = do
-        f' <- f
-        v' <- v
-        return $ f' v'
-
-runOp :: NoC -> Login -> Password -> Operation a -> Either Error (NoC, a)
-runOp noc l pw op = over (_Right . _1) _noc 
-                  . runOp' noc Nothing
-                  $ doLogin l pw >> op
+import Control.Eff
+import qualified Data.IxSet as IX
 
 
-instance OpMonad Operation where
-    throw e = Operation $ \ s -> Left e
-    getChannels = getChannels'
-    storeChannel = storeChannel'
-    newChanId = newChanId'
-    getUsers = getUsers'
-    storeUser = storeUser'
-    newUserId = newUserId'
-    getMessages = getMessages'
-    storeMessage = storeMessage'
-    newMsgId = newMsgId'
-    getAdmins = getAdmins'
-    addAdmin = addAdmin'
-    rmAdmin = rmAdmin'
-    getOperatorId = getOperatorId'
-    doLogin = doLogin'
-    doLogout = doLogout'
+runQuery :: NoC -> Eff (Query :> Exec :> r) a -> Eff (Exec :> r) a
+runQuery noc action = go noc (admin action)
+    where
+    go _ (Val v) = return v
+    go noc (E request) = handleRelay request (go noc) 
+        $ \ req -> case evalQuery noc req of 
+            Right next -> go noc next 
+            Left err -> throwME err
 
-doLogin' :: Login -> Password -> Operation UserId 
-doLogin' l pw = do
-    oid <- getOperatorId'
-    AlreadyLoggedIn `throwOn` isJust oid
-    Operation $ \ s -> 
-        let maybeUserId = do
-                user <- IX.getOne ((s ^. noc . users) IX.@= l)
-                if checkPassword (U._password user) pw
-                    then return (U._id user)
-                    else fail "password mismatch" 
-        in case maybeUserId of
-                Nothing  -> Left $ CantLogin l
-                Just uid -> Right $ (s & operator .~ Just uid, uid) 
+evalQuery :: (Member Query r)
+          => NoC -> Query (VE r w) -> Either Error (VE r w) 
+evalQuery noc q = case q of
+    IsAdmin uid next -> Right . next . isAdminR noc $ uid
+    CountAdmins next -> Right . next . countAdminsR $ noc
+    GetUserIdByLogin l next -> Right . next . getUserIdByLoginR noc $ l
+    ChanQuery cid q -> evalChanQuery noc q cid
+    UserQuery uid q -> evalUserQuery noc q uid
 
-doLogout' :: Operation ()
-doLogout' = Operation $ \ s -> Right (set operator Nothing s, ())
+evalChanQuery :: (Member Query r)
+              => NoC -> ChanQueryType (VE r a) -> ChanId -> Either Error (VE r a) 
+evalChanQuery noc q cid = case q of
+    GetChanName next -> fmap next . getChanNameR noc $ cid
+    GetChanDesc next -> fmap next . getChanDescR noc $ cid
+    GetChanType next -> fmap next . getChanTypeR noc $ cid
+    GetChanImage next -> fmap next . getChanImageR noc $ cid
+    IsChanOwner uid next -> fmap next . isChanOwnerR noc cid $ uid
+    IsChanProducer uid next -> fmap next . isChanProducerR noc cid $ uid 
+    IsChanConsumer uid next -> fmap next . isChanConsumerR noc cid $ uid
+    AmountOfSubscribedUsers next -> fmap next . amountOfSubscribedUsersR noc $ cid
+    LastPostTimestamp next -> fmap next . lastPostTimestampR noc $ cid 
+    Messages ofs am next -> fmap next . messagesR noc cid ofs $ am
+    MessagesTill ts next -> fmap next . messagesTillR noc cid $ ts
 
-
-getChannels' :: Operation (IX.IxSet Channel) 
-getChannels' = Operation $ \ s -> Right (s, s ^. noc . channels)
-
-storeChannel' :: Channel -> Operation ()
-storeChannel' chan = Operation $ \ s -> 
-    let s' = over (noc . channels) (IX.insert chan . IX.deleteIx (C._id chan)) s
-    in Right (s', ())
-
-newChanId' :: Operation ChanId 
-newChanId' = Operation $ \ s ->
-    let cid = s ^. noc . nextChanId
-        s' = set (noc . nextChanId) (ChanId (1 + ciToInt cid)) s
-    in Right (s', cid)
-
-getUsers' :: Operation (IX.IxSet User)
-getUsers' = Operation $ \ s -> Right (s, s ^. noc . users)
-
-storeUser' :: User -> Operation ()
-storeUser' user = Operation $ \ s -> 
-    let s' = over (noc . users ) (IX.insert user . IX.deleteIx (U._id user)) s
-    in Right (s', ())
-
-newUserId' :: Operation UserId 
-newUserId' = Operation $ \ s ->
-    let uid = s ^. noc . nextUserId
-        s' = set (noc . nextUserId) (UserId (1 + uiToInt uid)) s
-    in Right (s', uid)
-
-getMessages' :: Operation (IX.IxSet Message) 
-getMessages' = Operation $ \ s -> Right (s, s ^. noc . N.messages)
-
-storeMessage' :: Message -> Operation ()
-storeMessage' msg = Operation $ \ s -> 
-    let s' = over (noc . N.messages) (IX.insert msg . IX.deleteIx (M._id msg)) s
-    in Right (s', ())
-
-newMsgId' :: Operation MsgId
-newMsgId' = Operation $ \ s ->
-    let mid = s ^. noc . nextMsgId
-        s' = set (noc . nextMsgId) (MsgId (1 + miToInt mid)) s
-    in Right (s', mid)
-
-getAdmins' :: Operation (S.Set UserId)
-getAdmins' = Operation $ \ s -> Right (s, s ^. noc . admins)
-
-addAdmin' :: UserId -> Operation ()
-addAdmin' uid = Operation $ \ s ->
-    let s' = over (noc . admins) (S.insert uid) s
-    in Right (s', ())
-
-rmAdmin' :: UserId -> Operation ()
-rmAdmin' uid = Operation $ \ s ->
-    let s' = over (noc . admins) (S.delete uid) s
-    in Right (s', ())
-
-getOperatorId' :: Operation (Maybe UserId)
-getOperatorId' = Operation $ \ s -> Right (s, _operator s)
+evalUserQuery :: (Member Query r)
+              => NoC -> UserQueryType (VE r a) -> UserId -> Either Error (VE r a) 
+evalUserQuery noc q uid = case q of
+    GetUserLogin next -> fmap next . getUserLoginR noc $ uid
+    GetUserName next -> fmap next . getUserNameR noc $ uid
+    GetUserDesc next -> fmap next . getUserDescR noc $ uid
+    GetUserIcon next -> fmap next . getUserIconR noc $ uid
+    GetUserNotifications next -> fmap next . getUserNotificationsR noc $ uid
+    GetUserContacts next -> fmap next . getUserContactsR noc $ uid
+    GetUserSubscriptions next -> fmap next . getUserSubscriptionsR noc $ uid
 
 
+runQueryAndUpdate :: NoC -> Eff (Query :> Update :> Exec :> r) a -> Eff (Exec :> r) (NoC, a)
+runQueryAndUpdate noc action = go noc (admin action)
+    where
+    go n (Val v) = return (n, v) 
+    go n (E request) = checkQuery n request
+
+    checkQuery n r = flip (either (checkUpdate n)) (decomp r)
+                        $ \ req -> case evalQuery n req of 
+                            Right next -> go n next
+                            Left err -> throwME err
+    checkUpdate n r = flip (either (passOn n)) (decomp r) 
+                        $ \ req -> case evalUpdate n req of
+                            Right (noc', next) -> go noc' next
+                            Left err -> throwME err
+    passOn n r = send (flip fmap r) >>= go n 
+
+evalUpdate :: (Member Update r)
+           => NoC -> Update (VE r w) -> Either Error (NoC, (VE r w))
+evalUpdate noc q = case q of
+    CreateChan uid name next -> Right . fmap next . createChanR noc uid $ name 
+    CreateUser l pw next -> Right . fmap next . createUserR noc l $ pw
+    AddAdmin uid next -> Right . fmap next . addAdminR noc $ uid
+    RmAdmin uid next -> Right . fmap next . rmAdminR noc $ uid
+    ChanUpdate cid q -> evalChanUpdate noc cid q 
+    UserUpdate uid q -> evalUserUpdate noc uid q
+
+evalChanUpdate noc cid q = case q of
+    SetChanName n next -> fmap (fmap next) . setChanNameR noc cid $ n
+    SetChanDesc d next -> fmap (fmap next) . setChanDescR noc cid $ d
+    SetChanType t next -> fmap (fmap next) . setChanTypeR noc cid $ t
+    SetChanImage t next -> fmap (fmap next) . setChanImageR noc cid $ t
+    AddChanOwner uid next -> fmap (fmap next) . addChanOwnerR noc cid $ uid
+    RmChanOwner uid next -> fmap (fmap next) . rmChanOwnerR noc cid $ uid
+    AddChanProducer uid next -> fmap (fmap next) . addChanOwnerR noc cid $ uid
+    RmChanProducer uid next -> fmap (fmap next) . rmChanOwnerR noc cid $ uid
+    AddChanConsumer uid next -> fmap (fmap next) . addChanConsumerR noc cid $ uid
+    RmChanConsumer uid next -> fmap (fmap next) . rmChanConsumerR noc cid $ uid
+    Post uid ts txt img next -> fmap (fmap next) . postR noc cid uid ts txt $ img
+      
+evalUserUpdate noc uid q = case q of
+    SetUserLogin l next -> fmap (fmap next) . setUserLoginR noc uid $ l 
+    SetUserPassword pw next -> fmap (fmap next) . setUserPasswordR noc uid $ pw
+    SetUserName n next -> fmap (fmap next) . setUserNameR noc uid $ n
+    SetUserDesc d next -> fmap (fmap next) . setUserDescR noc uid $ d
+    SetUserIcon i next -> fmap (fmap next) . setUserIconR noc uid $ i
+    AddUserNotification n next -> fmap (fmap next) . addUserNotificationR noc uid $ n
+    AddUserContact uid' next -> fmap (fmap next) . addUserContactR noc uid $ uid'
+    RmUserContact uid' next -> fmap (fmap next) . rmUserContactR noc uid $ uid'
+    AddUserSubscription cid next -> fmap (fmap next) . addUserSubscriptionR noc uid $ cid
+    RmUserSubscription cid next -> fmap (fmap next) . rmUserSubscriptionR noc uid $ cid
+
+runSimple :: NoC -> Maybe UserId -> Eff (Query :> Update :> Exec :> r) a 
+          -> Eff r (Either Error (NoC, a))
+runSimple noc uid action = go noc uid (admin action)
+    where
+    go n _ (Val v) = return . Right $ (n, v)
+    go n u (E request) = checkQuery n u request
+
+    checkQuery n u r = flip (either (checkUpdate n u)) (decomp r)
+                        $ \ req -> case evalQuery n req of 
+                            Right next -> go n u next
+                            Left err -> return . Left $ err
+    checkUpdate n u r = flip (either (checkExec n u)) (decomp r) 
+                        $ \ req -> case evalUpdate n req of
+                            Right (noc', next) -> go noc' u next
+                            Left err -> return . Left $ err
+    checkExec n u r = flip (either (passOn n u)) (decomp r)
+                        $ \ req -> case evalExec n u req of
+                            Right (next, noc', uid') -> go noc' uid' next 
+                            Left err -> return . Left $ err
+    passOn n u r = send (flip fmap r) >>= go n u
+
+evalExec noc uid q = case q of
+    GetOperatorId next -> Right (next uid, noc, uid) 
+    ThrowME err next -> Left $ err 
+    DoLogout next -> Right (next (), noc, uid)
+    DoLogin l pw next -> case doLoginR noc l pw of
+            Nothing -> Left $ CantLogin l 
+            Just id -> Right (next id, noc, Just id)

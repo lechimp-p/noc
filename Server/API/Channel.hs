@@ -9,134 +9,128 @@
 module API.Channel
 where
 
-import Prelude hiding ( id, (.) )
-import Control.Category ( Category(id, (.)) )
-import Web.Routes
-import Web.Routes.Happstack
-import Happstack.Server 
-        ( Response, ok, method
-        , Method (POST, GET, HEAD)
-        , FilterMonad, look
-        )
-import Control.Monad.IO.Class
-import Control.Monad
-import Control.Applicative ((<$>))
-import Control.Lens
-import qualified Data.Set as S
-import Data.Time.Clock
-import Text.Boomerang.TH (makeBoomerangs)
-import Web.Routes.Boomerang
-import Control.Monad.Trans.JSON
-import Text.Read (readMaybe)
-
 import Model
 import Model.Message hiding (id)
-import ACID
-import API.APIMonad
+import API.Effects
 import API.Config
 import API.Utils
-import API.Errors
 import API.Auth hiding (timestamp)
 import API.ImageUtils
 
-data API
+import Prelude hiding ( id, (.) )
+import Control.Category ( Category(id, (.)) )
+import Web.Routes
+import Control.Eff
+import Control.Eff.JSON
+import Data.Aeson (Value)
+import Text.Boomerang.TH (makeBoomerangs)
+import Web.Routes.Boomerang
+import Text.Read (readMaybe)
+
+data ChannelAPI
     = Base
     | Messages 
     | Users
     deriving (Generic)
 
-$(makeBoomerangs ''API)
+$(makeBoomerangs ''ChannelAPI)
 
-channelroutes :: Router () (API :- ())
+instance PathInfo ChannelAPI
+
+channelroutes :: Router () (ChannelAPI :- ())
 channelroutes =
     (  rBase 
     <> "messages" . rMessages
     <> "users" . rUsers
     )
 
-route :: (Monad m, MonadIO m, Functor m)
-      => ACID -> ChanId -> API -> APIMonadT API AuthData m Response
-route acid cid url = case url of
-    Base        ->      (method [GET, HEAD] >> getHandler acid cid)
-                `mplus` (method [POST]      >> setHandler acid cid)
-    Messages    ->      (method [GET, HEAD] >> getMessagesHandler acid cid)
-                `mplus` (method [POST]      >> postHandler acid cid)
-    Users       ->      (method [POST, HEAD]>> setUsersHandler acid cid)
+route :: (Member API r, Member Exec r, Member Query r, Member Update r)
+      => ChanId -> ChannelAPI -> Eff r (Either Error (Maybe Value))
+route cid url = do
+    m <- method 
+    case url of
+        Base -> case m of
+            GET     -> getHandler cid
+            POST    -> setHandler cid
+            otherwise -> methodNotSupported 
+        Messages -> case m of 
+            GET         -> getMessagesHandler cid
+            POST        -> postHandler cid
+            otherwise   -> methodNotSupported
+        Users -> case m of
+            POST        -> setUsersHandler cid
+            otherwise   -> methodNotSupported 
 
-genericHandler acid = (method [GET, HEAD] >> searchHandler acid)
-              `mplus` (method POST >> createHandler acid)
+genericHandler = do
+    m <- method
+    case m of
+        GET         -> searchHandler
+        POST        -> createHandler
+        otherwise   -> methodNotSupported
 
-searchHandler acid = ok' "Channel.searchHandler"
+searchHandler = error "Channel.searchHandler"
 
-createHandler acid = handleError $ 
-    updateWithJSONResponse acid $ do
-        trySessionLoginU
-        n <- prop "name"
-        d <- prop "description"
-        "id"    <$ createChannelU n d
+createHandler = withJSONIO $ do 
+    trySessionLogin
+    n <- prop "name"
+    d <- maybeProp "description"
+    cid <- createChannel n
+    ifIsJust d (setChanDesc cid)
+    "id" <: cid 
 
-getHandler acid cid = handleError $
-    queryWithJSONResponse acid $ do
-        trySessionLoginQ
-        "name"          <$ getChanNameQ cid
-        "description"   <$ getChanDescQ cid      
-        "type"          <$ getChanTypeQ cid
-        "amountOfUsers" <$ amountOfDistinctUsersQ cid
-        "lastPost"      <$ lastPostTimestampQ cid
+getHandler cid = withJSONOut $ do
+    trySessionLogin
+    "name"          <$ getChanName cid
+    "description"   <$ getChanDesc cid      
+    "type"          <$ getChanType cid
+    "amountOfUsers" <$ amountOfSubscribedUsers cid
+    "lastPost"      <$ lastPostTimestamp cid
 
-setHandler acid cid = handleError $
-    updateWithJSONInput acid $ do
-        trySessionLoginU
-        "name"          ?> setChanNameU cid
-        "description"   ?> setChanDescU cid  
-        "type"          ?> setChanTypeU cid
-        noContent'
+setHandler cid = withJSONIn $ do 
+    trySessionLogin
+    "name"          ?> setChanName cid
+    "description"   ?> setChanDesc cid  
+    "type"          ?> setChanType cid
+    return Nothing
 
-getMessagesHandler acid cid = handleError $ do
-    o <- maybe 0 id <$> maybeQueryParam "offset"
-    a <- maybe 10 id <$> maybeQueryParam "amount"
-    ts' <- maybeQueryParam' "timestamp"
-    let ts = join . fmap convertTimestamp $ ts' 
-    queryWithJSONResponse acid $ do
-        trySessionLoginQ
-        msgs <- case ts of
-            Nothing -> messagesQ cid o a
-            -- use a little offset to the delivered time here
-            -- since precision of utc time is lost during 
-            -- json-serialization/deserialization
-            Just ts -> messagesTillQ cid (0.01 `addUTCTime` ts)
-        "messages" <$: flip fmap msgs .$ \ msg -> do
-            "image"     <: view image msg
-            "text"      <: view text msg
-            "timestamp" <: view timestamp msg 
-            let uid = view author msg  
-            "author"    <$. userInfoQ uid
+getMessagesHandler cid = withJSONOut $ do
+    o <- fmap (maybe 0 id . readMaybe) $ lookGet "offset"
+    a <- fmap (maybe 10 id . readMaybe) $ lookGet "amount"
+    ts <- fmap readMaybe $ lookGet "timestamp"
+    trySessionLogin
+    msgs <- case ts of
+        Nothing -> messages cid o a
+        Just ts -> messagesTill cid ts
+    "messages" <$: flip fmap msgs .$ \ msg -> do
+        "image"     <: _image msg
+        "text"      <: _text msg
+        "timestamp" <: _timestamp msg 
+        let uid = _author msg  
+        "author"    <$. userInfo uid
 
-postHandler acid cid = handleError $
-    updateWithJSONInput acid $ do
-        trySessionLoginU
-        ts <- liftIO $ getCurrentTime
-        t <- prop "text"
-        img <- "image" .?> do
-            typ <- prop "type"
-            dat <- prop "data"
-            cfg <- config imageConfig 
-            storeImage cfg typ dat 
-        postU cid ts t img
-        noContent'   
+postHandler cid = withJSONIn $ do 
+    trySessionLogin
+    ts <- timestamp 
+    t <- prop "text"
+    img <- "image" .??> do
+        typ <- prop "type"
+        dat <- prop "data"
+        storeImage typ dat 
+    oid <- forceOperatorId
+    post cid oid ts t img
+    return Nothing
 
-setUsersHandler acid cid = handleError $
-    updateWithJSONInput acid $ do
-        trySessionLoginU
-        ts <- liftIO $ getCurrentTime
-        oid <- getOperatorIdU
-        let wN = withNotification ts oid
-        "addOwners"         ?> sequence . fmap (wN $ addChanOwnerU cid)
-        "removeOwners"      ?> sequence . fmap (wN $ rmChanOwnerU cid)
-        "addProducers"      ?> sequence . fmap (wN $ addChanProducerU cid)
-        "removeProducers"   ?> sequence . fmap (wN $ rmChanProducerU cid)
-        "addConsumers"      ?> sequence . fmap (wN $ addChanConsumerU cid)
-        "removeConsumers"   ?> sequence . fmap (wN $ rmChanConsumerU cid) 
-        noContent'
+setUsersHandler cid = withJSONIn $ do 
+    trySessionLogin
+    ts <- timestamp
+    oid <- forceOperatorId
+    let wN = withNotification ts oid
+    "addOwners"         ?> sequence . fmap (wN $ addChanOwner cid)
+    "removeOwners"      ?> sequence . fmap (wN $ rmChanOwner cid)
+    "addProducers"      ?> sequence . fmap (wN $ addChanProducer cid)
+    "removeProducers"   ?> sequence . fmap (wN $ rmChanProducer cid)
+    "addConsumers"      ?> sequence . fmap (wN $ addChanConsumer cid)
+    "removeConsumers"   ?> sequence . fmap (wN $ rmChanConsumer cid) 
+    return Nothing
     where
-    withNotification ts oid f uid = f uid >> tryToAddUserNotificationU uid (AddedToChannel ts oid cid)
+    withNotification ts oid f uid = f uid >> tryToAddUserNotification uid (AddedToChannel ts oid cid)

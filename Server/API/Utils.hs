@@ -1,50 +1,107 @@
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE TypeSynonymInstances #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeOperators #-}
 
 module API.Utils
 where
 
-import Data.Text hiding (any,head)
-import Data.Acid ( AcidState )
-import qualified Data.HashMap.Strict as HM
-import qualified Data.ByteString.Lazy.Char8 as L 
-import qualified Data.ByteString.Lazy as BL 
-import qualified Data.ByteString.Char8 as B 
-import Data.Aeson
-import Data.Aeson.Types
-import Data.Time.Clock (UTCTime)
-import Data.Scientific
-import Control.Lens
-import Control.Lens.Prism
-import Happstack.Server
-import Happstack.Server.Types
-import Happstack.Server.ClientSession
-import Control.Monad
-import Control.Monad.IO.Class (liftIO, MonadIO)
-import Control.Monad.Trans.Class
-import Control.Monad.Trans.Either
-import Control.Monad.Error.Class hiding (Error)
-import Control.Monad.Trans.JSON
-import Control.Monad.Writer
-import Control.Monad.Reader
-import Text.Read (readMaybe)
-
 import Model
+import qualified Model.Errors as ME
 import Model.BaseTypes
-import Model.Channel
 import API.Config
-import API.Errors
-import API.APIMonad
-import API.JSONQueryMonad
-import API.JSONUpdateMonad
-import ACID
+import API.Effects
+import API.ImageUtils
 
-type ACID = AcidState NoC
+import qualified Data.ByteString.Lazy.Char8 as L 
+import qualified Data.ByteString as BL 
+import Control.Eff
+import Control.Eff.JSON
+import Data.Text (Text)
+import qualified Data.Text as T
+import Data.Aeson (Value (..), FromJSON, ToJSON
+                  , parseJSON, toJSON)
+import Control.Monad (mzero)
+import Data.Scientific (isInteger, toBoundedInteger)
+import Control.Lens
+import Data.Data (Typeable)
+import Data.Time.Clock (UTCTime)
+import Data.Monoid
+
+
+ifIsJust :: (Monad m) => Maybe a -> (a -> m ()) -> m ()
+ifIsJust v op =
+    case v of
+        Just a -> op a
+        Nothing -> return () 
+
+ifIsJust' = flip ifIsJust
+
+-----------------
+-- Error handling
+-----------------
+
+data Error
+    = ModelError' ME.Error
+    | JSONError' JSONError
+    | ImageError' ImageError
+    | MethodNotSupported
+    | JustStopped
+    deriving (Show)
+
+instance Monoid Error where
+    mempty = JustStopped 
+    a `mappend` _ = a
+
+fmapl :: (a -> b) -> Either a c -> Either b c
+fmapl f (Right v) = Right v
+fmapl f (Left v) = Left . f $ v
+
+methodNotSupported :: Member API r
+                   => Eff r (Either Error (Maybe Value))
+methodNotSupported = return . Left $ MethodNotSupported
+
+errorJSON :: Error -> Value
+errorJSON = String . T.pack . show
+
+normalizeError :: Either Error (Maybe Value) -> (Maybe Value)
+normalizeError (Left err) = Just $ errorJSON err
+normalizeError (Right v) = v
+
+
+normalizeResponse :: Member API r
+                  => Eff r (Either Error (Maybe Value)) -> Eff r (Maybe Value)
+normalizeResponse m = m >>= \ val -> case val of
+    Left err        -> badRequest . Just $ errorJSON err
+    Right Nothing   -> noContent $ Nothing
+    Right v@(Just _)-> ok $ v 
+
+---------------
+-- JSON Helpers
+---------------
+
+withJSONIO :: Member API r
+           => Eff (JSONOut :> JSONIn :> r) a -> Eff r (Either Error (Maybe Value)) 
+withJSONIO eff = do
+    body <- getBody
+    fmap (fmapl JSONError' . fmap (Just . fst)) $ runJSONIO' body eff
+
+
+withJSONOut :: Eff (JSONOut :> r) a -> Eff r (Either Error (Maybe Value))
+withJSONOut = fmap (Right . Just . fst) . runJSONOut
+
+withJSONIn :: Member API r
+           => Eff (JSONIn :> r) a -> Eff r (Either Error a)
+withJSONIn eff = do
+    body <- getBody
+    fmap (fmapl JSONError') $ runJSONIn' body eff
+
+-----------------
+-- JSON instances
+-----------------
 
 instance FromJSON Login where
     parseJSON (String t) = return . mkLogin $ t
@@ -122,231 +179,18 @@ instance ToJSON ChanType where
     toJSON Stream       = String "stream"
     toJSON Conversation = String "conversation"
 
-instance ToMessage Value where
-    toContentType _ = B.pack "application/json"
-    toMessage       = encode
+-----------------
+-- Common outputs
+-----------------
 
-getBody :: ( ServerMonad m, MonadPlus m, MonadIO m
-           , FilterMonad Response m, WebMonad Response m
-           , WithConfig m) 
-        => m L.ByteString
-getBody = do
-    bplc <- config bodyPolicy
-    decodeBody $ defaultBodyPolicy (_uploadPath bplc) (_maxBytesFile bplc) (_maxBytesBody bplc) (_maxBytesHeader bplc)
-    body <- askRq >>= liftIO . takeRequestBody
-    case body of
-        Just rqbody -> return . unBody $ rqbody
-        Nothing -> return ""
-     
-ok' :: (Monad m, MonadIO m, FilterMonad Response m)
-    =>  Text -> m Response
-ok' = ok . toResponse 
-
-noContent' :: (Monad m, MonadIO m, FilterMonad Response m)
-           => m Response
-noContent' = noContent . toResponse $ ("" :: Text)
-
-badRequest' :: (Monad m, MonadIO m, FilterMonad Response m)
-            =>  Text -> m Response
-badRequest' = badRequest . toResponse 
-
-jsonR' :: FilterMonad Response m => Value -> m Response
-jsonR' = ok . toResponse 
-
-ifIsJust :: (Monad m) => Maybe a -> (a -> m ()) -> m ()
-ifIsJust v op =
-    case v of
-        Just a -> op a
-        Nothing -> return () 
-
-ifIsJust' = flip ifIsJust
-
-queryParam :: (MonadIO m, Read a) => String -> EitherT Error (APIMonadT url session m) a
-queryParam name = do
-    res <- lift $ getDataFn (queryString . look $ name)
-    case res of
-        Left err -> throwAPIError . QueryParamNotFound $ name
-        Right st -> case readMaybe st of
-            Nothing -> throwAPIError . QueryParamNotConverted name $ st 
-            Just r -> return r
-
-maybeQueryParam :: (MonadIO m, Read a) => String -> EitherT Error (APIMonadT url session m) (Maybe a)
-maybeQueryParam name = do
-    res <- lift $ getDataFn (queryString . look $ name)
-    case res of
-        Left err -> return Nothing
-        Right st -> case readMaybe st of
-            Nothing -> throwAPIError . QueryParamNotConverted name $ st 
-            Just r' -> return $ Just r'
-
-maybeQueryParam' :: MonadIO m => String -> EitherT Error (APIMonadT url session m) (Maybe String)
-maybeQueryParam' name = do
-    res <- lift $ getDataFn (queryString . look $ name)
-    case res of
-        Left err -> return Nothing
-        Right st -> return $ Just st 
-
-convertTimestamp :: String -> Maybe UTCTime
-convertTimestamp st = fmap head . decode . L.pack $ "[\"" ++ st ++ "\"]"
-
-instance (Monad m, MonadIO m)
-     => FilterMonad Response (JSONQueryMonadT acid url session m) where
-    setFilter = JSONQueryMonadT . lift . lift . lift . setFilter
-    composeFilter = JSONQueryMonadT . lift . lift . lift . composeFilter
-    -- getFilter :: m b -> m (b, a -> a)
-    getFilter m = do
-        obj <- JSONQueryMonadT . JSONMonadT $ ask
-        uid <- JSONQueryMonadT . lift $ maybeOperatorIdQ
-        acid <- JSONQueryMonadT . lift $ getAcidQ
-        (((a', obj'), uid'), res) <- JSONQueryMonadT . lift . lift 
-                . getFilter . queryWithJSON' acid uid obj $ m
-        case obj' of
-            Object o -> JSONQueryMonadT . JSONMonadT . lift . tell $ HM.toList o
-            otherwise -> error "API.Utils.getFilter (QueryMonadT): this should not happen."
-        JSONQueryMonadT . lift $ setOperatorIdQ uid'
-        return (a', res)
-
-instance ( Monad m, MonadIO m, Functor m
-         , ClientSession session )
-      => MonadClientSession session (JSONQueryMonadT acid url session m)
-    where 
-    getSession = JSONQueryMonadT . lift . lift . lift $ getSession
-    putSession = JSONQueryMonadT . lift . lift . lift . putSession
-    expireSession = JSONQueryMonadT . lift . lift . lift $ expireSession
-
-queryWithJSON' :: (Monad m, MonadIO m)
-               => AcidState acid
-               -> Maybe UserId
-               -> Object
-               -> JSONQueryMonadT acid url session m a
-               -> EitherT Error (APIMonadT url session m) ((a, Value), Maybe UserId)
-queryWithJSON' acid uid obj json = do
-    (\ m -> runQueryMonadT' m acid uid) 
-        . (\ m -> runJSONMonadTWithObject m obj) 
-        . runJSONQueryMonadT 
-        $ json 
-
-queryWithJSON :: (Monad m, MonadIO m)
-              => AcidState acid
-              -> JSONQueryMonadT acid url session m a
-              -> EitherT Error (APIMonadT url session m) (a, Value)
-queryWithJSON acid json = do
-    body <- getBody
-    flip runQueryMonadT acid 
-        . flip runJSONMonadT (if BL.null body then "{}" else body) 
-        . runJSONQueryMonadT 
-        $ json 
-
-queryWithJSONInput acid json = queryWithJSON acid json >>= return . fst 
-queryWithJSONResponse acid json = do
-    (_, res) <- queryWithJSON acid json
-    jsonR' res
-
-
-
-instance (Monad m, MonadIO m)
-     => FilterMonad Response (JSONUpdateMonadT acid url session m) where
-    setFilter = JSONUpdateMonadT . lift . lift . lift . setFilter
-    composeFilter = JSONUpdateMonadT . lift . lift . lift . composeFilter
-    -- getFilter :: m b -> m (b, a -> a)
-    getFilter m = do
-        obj <- JSONUpdateMonadT . JSONMonadT $ ask
-        uid <- JSONUpdateMonadT . lift $ maybeOperatorIdU
-        acid <- JSONUpdateMonadT . lift $ getAcidU
-        (((a', obj'), uid'), res) <- JSONUpdateMonadT . lift . lift 
-                . getFilter . updateWithJSON' acid uid obj $ m
-        case obj' of
-            Object o -> JSONUpdateMonadT . JSONMonadT . lift . tell $ HM.toList o
-            otherwise -> error "API.Utils.getFilter (UpdateMonadT): this should not happen."
-        JSONUpdateMonadT . lift $ setOperatorIdU uid'
-        return (a', res)
-
-instance ( Monad m, MonadIO m, Functor m
-         , ClientSession session)
-      => MonadClientSession session (JSONUpdateMonadT acid url session m)
-    where 
-    getSession = JSONUpdateMonadT . lift . lift . lift $ getSession
-    putSession = JSONUpdateMonadT . lift . lift . lift . putSession
-    expireSession = JSONUpdateMonadT . lift . lift . lift $ expireSession
-
-instance (Monad m, MonadIO m)
-      => MonadError Error (JSONUpdateMonadT acid url session m) where
-    throwError = JSONUpdateMonadT . lift . lift . throwError
-    catchError op handler = do
-        obj <- JSONUpdateMonadT . JSONMonadT $ ask
-        uid <- JSONUpdateMonadT . lift $ maybeOperatorIdU
-        acid <- JSONUpdateMonadT . lift $ getAcidU
-        ((a', obj'), uid') <- JSONUpdateMonadT . lift . lift
-                . catchError (updateWithJSON' acid uid obj op)
-                           $ (\ e -> updateWithJSON' acid uid obj (handler e))
-        case obj' of
-            Object o -> JSONUpdateMonadT . JSONMonadT . lift . tell $ HM.toList o
-            otherwise -> error "API.Utils.catchError (UpdateMonadT): this should not happen."
-        JSONUpdateMonadT . lift $ setOperatorIdU uid'
-        return a'
-
-updateWithJSON' :: (Monad m, MonadIO m)
-               => AcidState acid
-               -> Maybe UserId
-               -> Object
-               -> JSONUpdateMonadT acid url session m a
-               -> EitherT Error (APIMonadT url session m) ((a, Value), Maybe UserId)
-updateWithJSON' acid uid obj json = do
-    (\ m -> runUpdateMonadT' m acid uid) 
-        . (\ m -> runJSONMonadTWithObject m obj) 
-        . runJSONUpdateMonadT 
-        $ json 
-
-updateWithJSON :: (Monad m, MonadIO m)
-              => AcidState acid
-              -> JSONUpdateMonadT acid url session m a
-              -> EitherT Error (APIMonadT url session m) (a, Value)
-updateWithJSON acid json = do
-    body <- getBody
-    flip runUpdateMonadT acid 
-        . flip runJSONMonadT body 
-        . runJSONUpdateMonadT 
-        $ json 
-
-updateWithJSONInput :: (Monad m, MonadIO m)
-                    => AcidState acid
-                    -> JSONUpdateMonadT acid url session m a
-                    -> EitherT Error (APIMonadT url session m) a
-updateWithJSONInput acid json = updateWithJSON acid json >>= return . fst 
-updateWithJSONResponse acid json = do
-    (_, res) <- updateWithJSON acid json
-    jsonR' res
-
-
-{--
-updateWithJSON :: (Monad m, MonadIO m)
-               => AcidState acid
-               -> JSONMonadT (UpdateMonadT acid (APIMonadT url session m)) a
-               -> APIMonadT url session m (Either Error (a, Value))
-updateWithJSON acid json = do
-    body <- getBody
-    res' <- flip runUpdateMonadT acid . runJSONMonadT json $ body 
-    case res' of
-        Left err -> return . Left . ModelError' $ err
-        Right (Left err) -> return . Left . JSONError' $ err
-        Right (Right a) -> return . Right $ a
-
-updateWithJSONInput acid json = updateWithJSON acid json >>= return . over _Right fst
-updateWithJSONResponse acid json = do
-    res <- updateWithJSON acid json
-    case res of
-        Left err -> return $ Left err
-        Right (_, v) -> jsonR' v >>= return . Right
---}
-
-userInfoQ uid = do
+userInfo uid = do
     "id"        <: uid
-    "login"     <$ getUserLoginQ uid
-    "name"      <$ getUserNameQ uid
-    "icon"      <$ getUserIconQ uid
+    "login"     <$ getUserLogin uid
+    "name"      <$ getUserName uid
+    "icon"      <$ getUserIcon uid
 
-channelInfoQ cid = do
+channelInfo cid = do
     "id"            <: cid
-    "name"          <$ getChanNameQ cid
-    "description"   <$ getChanDescQ cid      
-    "type"          <$ getChanTypeQ cid
+    "name"          <$ getChanName cid
+    "description"   <$ getChanDesc cid      
+    "type"          <$ getChanType cid

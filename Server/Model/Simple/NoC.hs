@@ -4,7 +4,7 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Model.NoC
+module Model.Simple.NoC
 where
 
 import Prelude hiding (words)
@@ -14,13 +14,12 @@ import Data.Text
 import Data.Time.Clock (UTCTime)
 import Data.IxSet (Indexable, empty, IxSet, ixSet, ixFun) 
 import qualified Data.IxSet as IX
-import Data.SafeCopy (SafeCopy, base, deriveSafeCopy)
 import Control.Lens (makeLenses)
 
 import Model.BaseTypes
-import Model.Channel
-import Model.User
-import Model.Message
+import Model.Simple.Channel
+import Model.Simple.User
+import Model.Simple.Message
 
 data NoC = NoC 
     { _channels   :: IxSet Channel
@@ -33,7 +32,6 @@ data NoC = NoC
     }
     deriving (Data, Typeable)
 
-$(deriveSafeCopy 0 'base ''NoC)
 makeLenses ''NoC
 
 mkNoC :: Login -> Password -> NoC

@@ -4,7 +4,6 @@
 module Model.Errors
 where
 
-import Data.SafeCopy (SafeCopy, base, deriveSafeCopy)
 import Data.Monoid
 import Data.Text
 import Data.Data (Data, Typeable)
@@ -24,12 +23,9 @@ data PermissionViolation =
     | PVAnd PermissionViolation PermissionViolation
     deriving (Show, Eq, Data, Typeable)
 
-$(deriveSafeCopy 0 'base ''PermissionViolation) 
-
 instance Monoid PermissionViolation where
     mempty = JustForbidden
     pv `mappend` pv' = PVAnd pv pv'
-
 
 data Error =
       InsufficientPermissions PermissionViolation 
@@ -45,5 +41,3 @@ data Error =
     | NotLoggedIn
     | Custom String
     deriving (Show, Eq, Data, Typeable)
-
-$(deriveSafeCopy 0 'base ''Error) 
