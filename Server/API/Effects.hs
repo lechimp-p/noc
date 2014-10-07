@@ -129,20 +129,19 @@ removeFile p = send $ \ next -> inj (RemoveFile p next)
 -- Derived Stuff 
 ----------------
 
-{--ok :: ( Member API r
+ok :: ( Member API r
       , IsResponse resp
       )
    => resp -> Eff r () 
 ok = respond 200
 
 -- TODO: status code??
-noContent :: Member API r => Eff r () 
+noContent :: Member API r => Eff r r 
 noContent = respond 201 ("" :: Text)
 
 -- TODO: status code??
-badRequest :: Member API r => Text -> Eff r () 
+badRequest :: Member API r => Text -> Eff r r 
 badRequest = respond 300 . L.pack . T.unpack
---}
 
 instance IsResponse L.ByteString where
     content = id

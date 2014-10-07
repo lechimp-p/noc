@@ -67,7 +67,6 @@ removeImage = removeFile . T.unpack . imgPath
 storeGeneric :: Member API r 
              => ImageConfig -> FilePath -> ImgType -> Text -> Eff r (Either ImageError String)
 storeGeneric cnfg path typ dat = do
---    base <- liftIO $ getCurrentDirectory
     let hash = hashWithSalt (_salt cnfg) dat
         filename = show hash <.> getExtension typ 
     imgDat <- decodeBase64 dat
@@ -78,10 +77,6 @@ storeGeneric cnfg path typ dat = do
             return . Right $ path </> filename
         Left err -> do
             return $ Left err
-
---removeGeneric :: Member API r 
---           => FilePath -> Eff r Bool 
---removeGeneric = removeFile 
 
 decodeBase64 :: Member API r 
              => Text -> Eff r (Either ImageError ByteString)

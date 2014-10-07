@@ -119,6 +119,3 @@ newtype CSSPT a = CSSPT { unCSSPT :: CS.ClientSessionT AuthData (ServerPartT IO)
              , WebMonad Response
              , MonadPlus
              )
-
---deriving instance Typeable1 CSSPT
---deriving instance Typeable1 (CS.ClientSessionT AuthData (ServerPartT IO))

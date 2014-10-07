@@ -38,7 +38,7 @@ $(makeBoomerangs ''UserAPI)
 
 instance PathInfo UserAPI
 
---userroutes :: Router () (API :- ())
+userroutes :: Router () (UserAPI :- ())
 userroutes = 
     (  rBase 
     <> "contacts" . rContacts
