@@ -1,11 +1,6 @@
 {-# LANGUAGE TemplateHaskell #-}
 
-module Maintenance 
-    ( Options (..)
-    , readOptions
-    , readConfig
-    )
-where
+module Maintenance where
 
 import API.Config
 import API.Session
@@ -20,21 +15,24 @@ import System.Console.GetOpt
 import System.Environment
 import Control.Eff.Lift (runLift)
 import Control.Monad (join)
+import Control.Monad.IO.Class
+import Control.Exception (bracket)
+import Control.Lens
 import Data.Yaml
 import qualified Data.Aeson.TH as TH 
-import Happstack.Server.Internal.Cookie
-import Control.Exception (bracket)
 import Data.Acid (openLocalStateFrom)
 import Data.Acid.Local (createCheckpointAndClose)
 import Happstack.Server
         ( ServerPartT, Response
         )
+import Happstack.Server.Internal.Cookie (CookieLife)
 import Happstack.Server.ClientSession
         ( ClientSessionT
-        , getDefaultKey, mkSessionConf
+        , getKey, mkSessionConf
         , withClientSessionT, SessionConf
         )
 import Web.Routes
+import Web.Routes.Happstack (implSite)
 import Web.Routes.Boomerang (boomerangSite)
 
 data Options = Options
@@ -102,14 +100,12 @@ acidAPISite cfg acid = setDefault Default $ boomerangSite (const action) apirout
            . runAcid acid Nothing 
            . route
 
---api acid = setDefault Default $ mkSitePI (runRouteT $ unAPIMonadT . route acid)
-{--
-acidSite :: APIConfig -> AcidState NoC -> ServerPartT IO Response
-acidSite cfg acid = do
+
+runAcidAPISite :: APIConfig -> AcidState NoC -> ServerPartT IO Response
+runAcidAPISite cfg acid = do
     key <- liftIO . getKey $ cfg ^. sessionConfig . keyfileName
     let sessionConf = mkSessionConf key
     withClientSessionT sessionConf $
         let loc = cfg ^. siteConfig . location 
             path = cfg ^. siteConfig . handlerPath
-        in implSite loc path $ acidApi cfg acid
---}
+        in implSite loc path $ acidAPISite cfg acid
