@@ -3,8 +3,8 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Model.Acid.Safecopy
-    ( module Model.Acid.Safecopy
+module Model.Acid.SafeCopy
+    ( module Model.Acid.SafeCopy
     , module Model.Simple.NoC
     )
 where

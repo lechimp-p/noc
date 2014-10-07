@@ -5,7 +5,7 @@ import Model.BaseTypes
 import Model.Message
 import Model.Errors
 import Model.Simple.Operations
-import Model.Acid.Safecopy
+import Model.Acid.SafeCopy
 
 import Data.Acid
 import Data.Text (Text)

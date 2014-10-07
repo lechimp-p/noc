@@ -13,7 +13,7 @@ module API.Happstack where
 import API.Effects
 import API.Config
 import API.Session
-import Model.Acid.Safecopy
+import Model.Acid.SafeCopy
 
 import Control.Eff
 import Control.Eff.Lift
