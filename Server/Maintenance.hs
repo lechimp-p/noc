@@ -92,14 +92,13 @@ acidAPISite cfg acid = setDefault Default $ boomerangSite (const action) apirout
     where
     action :: RootAPI -> ClientSessionT AuthData (ServerPartT IO) Response
     action = fmap makeResponse 
-           . fmap normalizeError 
            . unCSSPT
            . runLift 
            . runAPI cfg 
+           . normalizeResponse
            . fmap (join . fmapl ModelError')
            . runAcid acid Nothing 
            . route
-
 
 runAcidAPISite :: APIConfig -> AcidState NoC -> ServerPartT IO Response
 runAcidAPISite cfg acid = do

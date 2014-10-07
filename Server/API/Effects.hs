@@ -132,16 +132,20 @@ removeFile p = send $ \ next -> inj (RemoveFile p next)
 ok :: ( Member API r
       , IsResponse resp
       )
-   => resp -> Eff r () 
+   => resp -> Eff r resp 
 ok = respond 200
 
--- TODO: status code??
-noContent :: Member API r => Eff r r 
-noContent = respond 201 ("" :: Text)
+noContent :: ( Member API r 
+             , IsResponse resp
+             )
+          => resp -> Eff r resp
+noContent = respond 204
 
--- TODO: status code??
-badRequest :: Member API r => Text -> Eff r r 
-badRequest = respond 300 . L.pack . T.unpack
+badRequest :: ( Member API r 
+              , IsResponse resp
+              )
+           => resp -> Eff r resp 
+badRequest = respond 400
 
 instance IsResponse L.ByteString where
     content = id
@@ -159,5 +163,4 @@ instance IsResponse (Maybe Value) where
     content Nothing = ""
     content (Just v) = encode v
     contentType Nothing = ""
-    contentType _ = "application/json"
-    
+    contentType _ = "application/json" 
