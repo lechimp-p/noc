@@ -5,6 +5,7 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleInstances #-}
 
 module API.Effects where
 
@@ -36,7 +37,7 @@ data API n
     = GetSession                                (AuthData -> n)     
     | PutSession AuthData                       (() -> n)
     | ExpireSession                             (() -> n)
-    | forall r. IsResponse r => Respond Int r   (() -> n) 
+    | forall r. IsResponse r => Respond Int r   (r -> n) 
     | LookGet String                            (String -> n)
     | Timestamp                                 (UTCTime -> n)
     | forall a. Config (APIConfig -> a)         (a -> n)
@@ -82,7 +83,7 @@ expireSession = send $ \ next -> inj (ExpireSession next)
 respond :: ( Member API r
            , IsResponse resp 
            )
-           => Int -> resp -> Eff r () 
+           => Int -> resp -> Eff r resp
 respond status resp = send $ \ next -> inj (Respond status resp next)
 
 
@@ -154,3 +155,10 @@ instance IsResponse Text where
 instance IsResponse Value where
     content = encode
     contentType = const "application/json"
+
+instance IsResponse (Maybe Value) where
+    content Nothing = ""
+    content (Just v) = encode v
+    contentType Nothing = ""
+    contentType _ = "application/json"
+    
