@@ -57,6 +57,7 @@ instance Functor API where
     fmap f (Timestamp n)        = Timestamp (f . n)
     fmap f (Config f' n)        = Config f' (f . n)
     fmap f (GetBody n)          = GetBody (f . n)
+    fmap f (Method n)           = Method (f . n)
     -- fmap f (Abort n)            = Abort (f . n)
     fmap f (WriteFile p c n)    = WriteFile p c (f . n)
     fmap f (RemoveFile p n)     = RemoveFile p (f . n)
