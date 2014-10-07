@@ -35,6 +35,7 @@ import Happstack.Server.RqData ( look
 import Happstack.Server.Response (resp, ToMessage(..))
 import Happstack.Server.Types (Response, takeRequestBody)
 import Happstack.Server.Monads (FilterMonad, ServerMonad, WebMonad)
+import qualified Happstack.Server.Types as HS
 
 runAPI :: ( Typeable1 m 
           , Functor m
@@ -81,6 +82,18 @@ evalAPI config req = case req of
                                     case body of
                                         Just b -> return . unBody $ b
                                         Nothing -> return ""
+                           )
+    Method n            -> (fmap n $ do
+                                rq <- askRq
+                                return $ case HS.rqMethod rq of
+                                    HS.GET -> GET
+                                    HS.HEAD -> HEAD
+                                    HS.POST -> POST
+                                    HS.PUT -> PUT
+                                    HS.DELETE -> DELETE
+                                    HS.TRACE -> TRACE
+                                    HS.OPTIONS -> OPTIONS
+                                    HS.CONNECT -> CONNECT
                            )
 --    Abort n             -> (False, fmap n $ return undef)
     WriteFile p c n     -> undefined "Happstack.WriteFile"

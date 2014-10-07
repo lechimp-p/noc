@@ -27,10 +27,13 @@ class IsResponse r where
 
 data HTTPMethod
     = GET
+    | HEAD
     | POST
     | PUT
     | DELETE
-    | HEAD
+    | TRACE
+    | OPTIONS
+    | CONNECT
     deriving (Typeable)
      
 data API n 
