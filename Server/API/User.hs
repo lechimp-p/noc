@@ -71,6 +71,13 @@ route uid url = do
             GET     -> getNotificationsHandler uid
             otherwise -> methodNotSupported
 
+genericHandler = do
+    m <- method
+    case m of
+        GET         -> searchHandler
+        POST        -> createHandler
+        otherwise   -> methodNotSupported
+
 searchHandler = error "User.searchHandler" 
 
 createHandler = withJSONIO $ do

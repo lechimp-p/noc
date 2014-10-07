@@ -72,9 +72,9 @@ route url = do
             POST            -> logUserOut  
             otherwise       -> methodNotSupported 
         User uid uapi       -> User.route (UserId uid) uapi 
-        UserGeneric         -> error "Route UserGeneric undefined."
+        UserGeneric         -> User.genericHandler
         Channel cid capi    -> Channel.route (ChanId cid) capi
-        ChannelGeneric      -> error "Route UserGeneric undefined."
+        ChannelGeneric      -> Channel.genericHandler
         Default             -> helloWorld
 
 

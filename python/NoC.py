@@ -4,7 +4,7 @@ import requests
 import json
 import pdb
 
-base_url = "http://localhost/api"
+base_url = "http://localhost:8000"
 json_headers = {"content-type" : "application/json"}
 
 class NoCError(Exception):
