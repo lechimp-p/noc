@@ -8,52 +8,44 @@
 module API
 where
 
+import Model
+import Model.BaseTypes (UserId (..), ChanId (..))
+import API.Effects
+import API.Auth
+import API.Config
+import API.Session
+import API.Utils
+import API.User
+import API.Channel 
+import qualified API.User as User
+import qualified API.Channel as Channel
+
 import Prelude hiding ( id, (.) )
 import Control.Category ( Category(id, (.)) )
 import Data.Text (pack)
 import Web.Routes
-        ( Site, setDefault, PathInfo, Generic
-        , mkSitePI, runRouteT, RouteT )
-import Web.Routes.Happstack
+import Control.Eff
+import Control.Eff.JSON
 import Web.Routes.Boomerang
-import Happstack.Server 
-        ( ServerPartT, Response, ok
-        , toResponse, Method (..), method
-        , FilterMonad
-        )
-import Happstack.Server.ClientSession
-        ( getKey, mkSessionConf
-        , withClientSessionT, SessionConf
-        )
-import Data.Aeson
-import Data.Aeson.Types
-import Control.Monad.IO.Class
-import Control.Monad.Trans.Reader (runReaderT)
+import Data.Aeson (Value (..))
 import Text.Boomerang.TH (makeBoomerangs)
 import Control.Lens
 
-import qualified Model.BaseTypes as BT
-import API.APIMonad
-import API.Auth
-import API.Config
-import API.Utils
-import qualified API.User as User
-import qualified API.Channel as Channel
-
-
-data API
+data RootAPI
     = Login 
     | Logout
-    | User Int User.API
+    | User Int UserAPI
     | UserGeneric
-    | Channel Int Channel.API
+    | Channel Int ChannelAPI
     | ChannelGeneric 
     | Default
     deriving (Generic)
 
-$(makeBoomerangs ''API)
+$(makeBoomerangs ''RootAPI)
 
-apiroutes :: Router () (API :- ())
+instance PathInfo RootAPI
+
+apiroutes :: Router () (RootAPI :- ())
 apiroutes = 
     (  "login" . rLogin
     <> "logout" . rLogout
@@ -68,39 +60,25 @@ apiroutes =
              <> rChannel </> int </> Channel.channelroutes
 
 
-route :: (Functor m, Monad m, MonadIO m)
-      => ACID -> API -> APIMonadT API AuthData m Response
-route acid url = case url of
-    Login               -> (method [POST, HEAD])
-                           >> logUserIn acid
-    Logout              -> method [POST, HEAD] 
-                           >> logUserOut  
-    User uid uapi       -> User uid `nestURL` User.route acid (BT.UserId uid) uapi 
-    UserGeneric         -> User.genericHandler acid
-    Channel cid capi    -> Channel cid `nestURL` Channel.route acid (BT.ChanId cid) capi
-    ChannelGeneric      -> Channel.genericHandler acid
-    Default             -> helloWorld
+route :: (Member API r, Member Exec r, Member Query r, Member Update r)
+      => RootAPI -> Eff r (Either Error (Maybe Value))  
+route url = do
+    m <- method
+    case url of
+        Login -> case m of
+            POST            -> logUserIn 
+            otherwise       -> methodNotSupported 
+        Logout -> case m of
+            POST            -> logUserOut  
+            otherwise       -> methodNotSupported 
+        User uid uapi       -> User.route (UserId uid) uapi 
+        UserGeneric         -> error "Route UserGeneric undefined."
+        Channel cid capi    -> Channel.route (ChanId cid) capi
+        ChannelGeneric      -> error "Route UserGeneric undefined."
+        Default             -> helloWorld
 
-api :: (Functor m, Monad m, MonadIO m)
-    => Config -> ACID -> Site API (InnerAPIMonadT AuthData m Response)
-api cfg acid = 
-    let handler :: (MonadIO m, Functor m) => API -> RouteT API (InnerAPIMonadT AuthData m) Response
-        handler = flip runReaderT cfg . unAPIMonadT . route acid
-    in setDefault Default $ boomerangSite (runRouteT handler) apiroutes
---api acid = setDefault Default $ mkSitePI (runRouteT $ unAPIMonadT . route acid)
 
-site :: Config -> ACID -> ServerPartT IO Response
-site cfg acid = do
-    key <- liftIO . getKey $ cfg ^. sessionConfig . keyfileName
-    let sessionConf = mkSessionConf key
-    withClientSessionT sessionConf $
-        implSite (cfg ^. siteConfig . location) (cfg ^. siteConfig . handlerPath) $
-        api cfg acid
+helloWorld :: Member API r 
+           => Eff r (Either Error (Maybe Value)) 
+helloWorld = return . Right . Just . String =<< config _helloWorldMessage
 
-helloWorld :: (Functor m, Monad m, MonadIO m)
-           => APIMonadT API AuthData m Response
-helloWorld = ok . toResponse =<< config helloWorldMessage
-
-instance PathInfo User.API
-instance PathInfo Channel.API
-instance PathInfo API

@@ -4,7 +4,7 @@
 module Model.Acid
     ( runQuery
     , runQueryAndUpdate
-    , runSimple
+    , runAcid
     , NoC
     , mkNoC
     , A.AcidState
@@ -147,9 +147,9 @@ evalUserUpdate state uid q = case q of
     where
     ffu n = fmap (fmap n) . AA.update' state
 
-runSimple :: (Typeable1 m, Functor m, MonadIO m, SetMember Lift (Lift m) r)
-          => A.AcidState NoC -> Maybe UserId -> Eff (Query :> Update :> Exec :> r) a -> Eff r (Either Error a)
-runSimple state uid action = go uid (admin action)
+runAcid :: (Typeable1 m, Functor m, MonadIO m, SetMember Lift (Lift m) r)
+        => A.AcidState NoC -> Maybe UserId -> Eff (Query :> Update :> Exec :> r) a -> Eff r (Either Error a)
+runAcid state uid action = go uid (admin action)
     where
     go _ (Val v) = return . Right $ v
     go uid (E request) = checkQuery uid request 

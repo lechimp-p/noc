@@ -7,13 +7,35 @@ module Maintenance
     )
 where
 
+import API.Config
+import API.Session
+import API.Effects
+import API.Utils
+import API (route, apiroutes, RootAPI (Default)) 
+import API.Happstack
+import Model
+import Model.Acid
+
 import System.Console.GetOpt
 import System.Environment
+import Control.Eff.Lift (runLift)
+import Control.Monad (join)
 import Data.Yaml
 import qualified Data.Aeson.TH as TH 
 import Happstack.Server.Internal.Cookie
-
-import API.Config
+import Control.Exception (bracket)
+import Data.Acid (openLocalStateFrom)
+import Data.Acid.Local (createCheckpointAndClose)
+import Happstack.Server
+        ( ServerPartT, Response
+        )
+import Happstack.Server.ClientSession
+        ( ClientSessionT
+        , getDefaultKey, mkSessionConf
+        , withClientSessionT, SessionConf
+        )
+import Web.Routes
+import Web.Routes.Boomerang (boomerangSite)
 
 data Options = Options
     { optConfigFile    :: FilePath
@@ -42,9 +64,9 @@ $(TH.deriveJSON TH.defaultOptions{TH.fieldLabelModifier = drop 1} ''ImageConfig)
 $(TH.deriveJSON TH.defaultOptions{TH.fieldLabelModifier = drop 1} ''BodyPolicy)
 $(TH.deriveJSON TH.defaultOptions{TH.fieldLabelModifier = drop 1} ''ServerConfig)
 $(TH.deriveJSON TH.defaultOptions ''CookieLife)
-$(TH.deriveJSON TH.defaultOptions{TH.fieldLabelModifier = drop 1} ''Config)
+$(TH.deriveJSON TH.defaultOptions{TH.fieldLabelModifier = drop 1} ''APIConfig)
     
-readConfig :: FilePath -> IO (Maybe Config) 
+readConfig :: FilePath -> IO (Maybe APIConfig) 
 readConfig path = do
     res <- decodeFileEither path
     case res of
@@ -53,4 +75,41 @@ readConfig path = do
             return Nothing
         Right res -> return . Just $ res
     
+withConfig :: FilePath -> (APIConfig -> IO a) -> IO (Maybe a)
+withConfig path m = do
+    cfg <- readConfig path
+    case cfg of
+        Nothing -> return Nothing
+        Just c -> fmap Just (m c)
 
+withACID :: FilePath -> NoC -> (AcidState NoC -> IO a) -> IO a
+withACID path def m = 
+    bracket (openLocalStateFrom path def)
+            createCheckpointAndClose
+            m
+     
+acidAPISite :: APIConfig -> AcidState NoC 
+            -> Site RootAPI (ClientSessionT AuthData (ServerPartT IO) Response)
+acidAPISite cfg acid = setDefault Default $ boomerangSite (const action) apiroutes
+    where
+    action :: RootAPI -> ClientSessionT AuthData (ServerPartT IO) Response
+    action = fmap makeResponse 
+           . fmap normalizeError 
+           . unCSSPT
+           . runLift 
+           . runAPI cfg 
+           . fmap (join . fmapl ModelError')
+           . runAcid acid Nothing 
+           . route
+
+--api acid = setDefault Default $ mkSitePI (runRouteT $ unAPIMonadT . route acid)
+{--
+acidSite :: APIConfig -> AcidState NoC -> ServerPartT IO Response
+acidSite cfg acid = do
+    key <- liftIO . getKey $ cfg ^. sessionConfig . keyfileName
+    let sessionConf = mkSessionConf key
+    withClientSessionT sessionConf $
+        let loc = cfg ^. siteConfig . location 
+            path = cfg ^. siteConfig . handlerPath
+        in implSite loc path $ acidApi cfg acid
+--}

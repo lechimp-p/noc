@@ -3,22 +3,29 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module API.Happstack where
 
 import API.Effects
 import API.Config
 import API.Session
+import Model.Acid.Safecopy
 
 import Control.Eff
 import Control.Eff.Lift
 import Data.Data (Typeable)
+import Data.Typeable (Typeable1)
 import Data.Time.Clock (getCurrentTime)
 import Data.Typeable.Internal (Typeable1)
+import Data.SafeCopy (base, deriveSafeCopy)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad (MonadPlus)
 import Happstack.Server.ClientSession as CS
-import Happstack.Server (unBody, askRq)
+import Happstack.Server (unBody, askRq, ServerPartT)
 import Happstack.Server.RqData ( look
                                , decodeBody
                                , defaultBodyPolicy
@@ -64,7 +71,7 @@ evalAPI config req = case req of
     GetSession n        -> (fmap n CS.getSession)
     PutSession s n      -> (fmap n (CS.putSession s))
     ExpireSession n     -> (fmap n CS.expireSession) 
-    Respond s t n       -> (fmap n $ (resp s t) >> return ())
+    Respond s t n       -> (fmap n $ (resp s t))
     LookGet t n         -> (fmap n (look t)) 
     Timestamp n         -> (fmap n (liftIO getCurrentTime))
     Config f n          -> (fmap n . return . f $ config)
@@ -93,4 +100,25 @@ instance ToMessage Message where
     toContentType (Message a) = contentType a
     toMessage (Message a) = content a
 
+makeResponse :: IsResponse a => a -> Response
+makeResponse = toResponse . Message
 
+$(deriveSafeCopy 0 'base ''AuthData)
+
+instance CS.ClientSession AuthData where
+    emptySession = AuthData Nothing Nothing Nothing
+
+-- This is necessary since GHC won't derive a Typeable1 instance for plain 
+-- transformder stack
+newtype CSSPT a = CSSPT { unCSSPT :: CS.ClientSessionT AuthData (ServerPartT IO) a}
+    deriving (Typeable, Monad, Functor, MonadIO
+             , MonadClientSession AuthData
+             , FilterMonad Response
+             , HasRqData
+             , ServerMonad
+             , WebMonad Response
+             , MonadPlus
+             )
+
+--deriving instance Typeable1 CSSPT
+--deriving instance Typeable1 (CS.ClientSessionT AuthData (ServerPartT IO))

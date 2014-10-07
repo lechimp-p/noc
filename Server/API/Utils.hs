@@ -61,6 +61,10 @@ withJSONIn eff = do
     fmap (fmapl JSONError') $ runJSONIn' body eff --(if L.null body then "{}" else body) eff
 
 
+-----------------
+-- Error handling
+-----------------
+
 data Error
     = ModelError' ME.Error
     | JSONError' JSONError
@@ -73,6 +77,7 @@ instance Monoid Error where
     mempty = JustStopped 
     a `mappend` _ = a
 
+fmapl :: (a -> b) -> Either a c -> Either b c
 fmapl f (Right v) = Right v
 fmapl f (Left v) = Left . f $ v
 
@@ -80,6 +85,16 @@ methodNotSupported :: Member API r
                    => Eff r (Either Error (Maybe Value))
 methodNotSupported = return . Left $ MethodNotSupported
 
+errorJSON :: Error -> Value
+errorJSON = String . T.pack . show
+
+normalizeError :: Either Error (Maybe Value) -> (Maybe Value)
+normalizeError (Left err) = Just $ errorJSON err
+normalizeError (Right v) = v
+
+-----------------
+-- JSON instances
+-----------------
 
 instance FromJSON Login where
     parseJSON (String t) = return . mkLogin $ t
