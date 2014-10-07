@@ -152,13 +152,13 @@ runAcid :: (Typeable1 m, Functor m, MonadIO m, SetMember Lift (Lift m) r)
 runAcid state uid action = go uid (admin action)
     where
     go _ (Val v) = return . Right $ v
-    go uid (E request) = checkQuery uid request 
+    go u (E request) = checkQuery u request 
  
-    checkQuery u r = flip (either (checkUpdate uid)) (decomp r)
+    checkQuery u r = flip (either (checkUpdate u)) (decomp r)
                         $ \ req -> let act = evalQuery state req in do
                                 res <- lift act 
                                 either (return . Left) (go u) res
-    checkUpdate u r = flip (either (checkExec uid)) (decomp r)
+    checkUpdate u r = flip (either (checkExec u)) (decomp r)
                         $ \ req -> let act = evalUpdate state req in do
                                 res <- lift act 
                                 either (return . Left) (go u) res
@@ -179,5 +179,5 @@ evalExec state uid q = case q of
             res <- AA.query' state (QDoLogin l pw)
             case res of
                 Nothing -> return . Left $ CantLogin l 
-                Just id -> return $ Right (Just id, next id)
+                Just i  -> return $ Right (res, next i)
 
