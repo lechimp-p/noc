@@ -65,5 +65,6 @@ data ServerConfig = ServerConfig
 makeLenses ''APIConfig
 makeLenses ''SessionConfig
 makeLenses ''SiteConfig
+makeLenses ''ImageConfig
 makeLenses ''BodyPolicy
 makeLenses ''ServerConfig

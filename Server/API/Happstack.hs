@@ -22,8 +22,15 @@ import Data.Typeable (Typeable1)
 import Data.Time.Clock (getCurrentTime)
 import Data.Typeable.Internal (Typeable1)
 import Data.SafeCopy (base, deriveSafeCopy)
+import Data.ByteString (writeFile)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad (MonadPlus)
+import Control.Lens
+import System.FilePath.Posix
+import System.Directory ( getCurrentDirectory
+                        , createDirectoryIfMissing
+                        , removeFile
+                        )
 import Happstack.Server.ClientSession as CS
 import Happstack.Server (unBody, askRq, ServerPartT)
 import Happstack.Server.RqData ( look
@@ -96,8 +103,18 @@ evalAPI config req = case req of
                                     HS.CONNECT -> CONNECT
                            )
 --    Abort n             -> (False, fmap n $ return undef)
-    WriteFile p c n     -> undefined "Happstack.WriteFile"
-    RemoveFile p n      -> undefined "Happstack.RemoveFile"
+    WriteFile p c n     -> (fmap n $ do
+                                base <- basepath
+                                let dir = base </> takeDirectory p
+                                liftIO $ createDirectoryIfMissing True dir                                
+                                liftIO $ Data.ByteString.writeFile (base </> p) c
+                                return True 
+                           )
+    RemoveFile p n      -> (fmap n $ do
+                                base <- basepath
+                                liftIO . System.Directory.removeFile $ base </> p
+                                return True 
+                           )
     where
     undef = error "evalAPI.respondNow: Don't eval this!"
     bpolc = _bodyPolicy config
@@ -105,7 +122,15 @@ evalAPI config req = case req of
                              (_maxBytesFile bpolc)
                              (_maxBytesBody bpolc)
                              (_maxBytesHeader bpolc)
-
+    basepath' = config ^. imageConfig . basePath      
+    dontExpandBasePath = not $ head basepath' == '.' 
+    basepath = 
+        if dontExpandBasePath
+        then return basepath'
+        else do
+            b <- liftIO getCurrentDirectory
+            return $ b </> basepath'
+    
 
 data Message = forall a. IsResponse a => Message a
 

@@ -47,7 +47,7 @@ data API n
     | GetBody                                   (L.ByteString -> n)               
     | Method                                    (HTTPMethod -> n)                         
     -- | forall a. Abort                           (a -> n)
-    | WriteFile FilePath B.ByteString           (() -> n)
+    | WriteFile FilePath B.ByteString           (Bool -> n)
     | RemoveFile FilePath                       (Bool -> n)
     deriving (Typeable)
 
@@ -122,7 +122,7 @@ method = send $ \ next -> inj (Method next)
 
 
 writeFile :: Member API r
-          => FilePath -> B.ByteString -> Eff r ()
+          => FilePath -> B.ByteString -> Eff r Bool 
 writeFile p c = send $ \ next -> inj (WriteFile p c next)
 
 removeFile :: Member API r
