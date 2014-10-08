@@ -1,7 +1,5 @@
 module Model
     ( module Model.Operations
-    , NoC
-    , mkNoC
     , Login
     , mkLogin
     , Password
@@ -12,18 +10,15 @@ module Model
     , mkDesc
     , UserId
     , ChanId
-    , ChanType
     , MsgId
     , Icon (Icon, icnPath)
     , Message
     , Image (Image, imgPath)
     , Notification (..)
+    , ChanType (..)
     )
 where
 
 import Model.Operations
-import Model.NoC
 import Model.Message
-import Model.User
 import Model.BaseTypes
-import Model.Channel

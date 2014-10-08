@@ -1,9 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
 
 module API.ImageUtils
     ( ImageError (..)
-    , MonadImageError
-    , throwImageError
     , storeIcon
     , removeIcon
     , storeImage
@@ -11,6 +11,11 @@ module API.ImageUtils
     , defaultConfig
     )
 where
+
+import Model
+import Model.BaseTypes
+import API.Config
+import API.Effects
 
 import Prelude hiding (writeFile)
 import Data.Aeson hiding (decode)
@@ -20,14 +25,9 @@ import Data.Text hiding (any)
 import Data.Text.Encoding
 import qualified Data.Text as T
 import Data.Hashable
-import Data.ByteString hiding (any)
+import Data.ByteString hiding (any, writeFile)
 import Data.ByteString.Base64
 import System.FilePath.Posix
-import System.Directory
-
-import Model
-import Model.BaseTypes
-import API.Config (ImageConfig(..))
 
 data ImgType 
     = PNG
@@ -49,43 +49,39 @@ data ImageError
     = Base64Error String
     deriving (Show)
 
-class MonadImageError m where
-    throwImageError :: ImageError -> m a 
-
 defaultConfig = ImageConfig "./files" "user" "channel" 0
 
-storeIcon cnfg uid typ dat = do
+storeIcon uid typ dat = do
+    cnfg <- config _imageConfig
     let sub = _userDir cnfg </> (show . uiToInt $ uid)
     path <- storeGeneric cnfg sub typ dat 
-    return . Icon . T.pack $ path
-removeIcon cnfg = removeGeneric cnfg . T.unpack . icnPath
+    return . fmap (Icon . T.pack) $ path
+removeIcon = removeFile . T.unpack . icnPath
 
-storeImage cnfg typ dat = do
+storeImage typ dat = do
+    cnfg <- config _imageConfig
     path <- storeGeneric cnfg (_channelDir cnfg) typ dat 
-    return . Image . T.pack $ path
-removeImage cnfg = removeGeneric cnfg . T.unpack . imgPath 
+    return . fmap (Image . T.pack) $ path
+removeImage = removeFile . T.unpack . imgPath 
 
-storeGeneric :: (MonadIO m, MonadImageError m) 
-          => ImageConfig -> FilePath -> ImgType -> Text -> m String 
+storeGeneric :: Member API r 
+             => ImageConfig -> FilePath -> ImgType -> Text -> Eff r (Either ImageError String)
 storeGeneric cnfg path typ dat = do
-    base <- liftIO $ getCurrentDirectory
     let hash = hashWithSalt (_salt cnfg) dat
-        path' = _basePath cnfg </> path 
         filename = show hash <.> getExtension typ 
     imgDat <- decodeBase64 dat
-    liftIO $ createDirectoryIfMissing True (base </> path')
-    -- further processing like scaling goes here
-    liftIO $ writeFile (base </> path' </> filename) imgDat
-    return (path </> filename) 
+    case imgDat of
+        Right dat -> do
+            -- further processing like scaling goes here
+            writeFile (path </> filename) dat 
+            return . Right $ path </> filename
+        Left err -> do
+            return $ Left err
 
-removeGeneric :: (MonadIO m, MonadImageError m) 
-           => ImageConfig -> String -> m ()
-removeGeneric cnfg path = liftIO . removeFile $ (_basePath cnfg) </> path 
-
-decodeBase64 :: (MonadIO m, MonadImageError m) 
-             => Text -> m ByteString
+decodeBase64 :: Member API r 
+             => Text -> Eff r (Either ImageError ByteString)
 decodeBase64 dat = do
     let dcd = decode . encodeUtf8 $ dat  
     case dcd of
-        Left err -> throwImageError . Base64Error $ err
-        Right res -> return res 
+        Left err -> return . Left . Base64Error $ err
+        Right res -> return $ Right res 

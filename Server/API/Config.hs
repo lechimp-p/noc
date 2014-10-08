@@ -12,7 +12,7 @@ import Control.Lens (makeLenses)
 import Control.Lens.Getter (Getting)
 import Happstack.Server.Internal.Cookie
 
-data Config = Config
+data APIConfig = APIConfig
     { _helloWorldMessage    :: Text 
     , _sessionConfig        :: SessionConfig
     , _siteConfig           :: SiteConfig
@@ -62,11 +62,9 @@ data ServerConfig = ServerConfig
     }
     deriving (Show, Data, Typeable)
 
-makeLenses ''Config
+makeLenses ''APIConfig
 makeLenses ''SessionConfig
 makeLenses ''SiteConfig
+makeLenses ''ImageConfig
 makeLenses ''BodyPolicy
 makeLenses ''ServerConfig
-
-class Monad m => WithConfig m where
-    config :: Getting a Config a -> m a  

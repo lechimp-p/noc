@@ -8,109 +8,73 @@
 module API.Auth
 where
 
-import Data.Text
-import Data.Data (Data, Typeable)
-import Data.Time.Clock
-import Control.Lens (makeLenses)
-import Data.SafeCopy (SafeCopy, base, deriveSafeCopy)
-import Happstack.Server
-        ( Response, FilterMonad )
-import Happstack.Server.ClientSession 
-        ( ClientSession, emptySession
-        , getSession, putSession, expireSession 
-        , MonadClientSession
-        )
-import Data.Aeson
-import Control.Lens
-import Control.Monad
-import Control.Monad.IO.Class
-import Control.Monad.Trans.Class
-import Data.Acid.Advanced ( query' )
-import Control.Monad.Trans.JSON
-
-import API.APIMonad
-import API.JSONQueryMonad
+import API.Effects
+import API.Session
 import API.Utils
-import API.Errors
-import ACID
-import Model
-import Model.Errors
+import Model.BaseTypes
+import Model.Exec
 
-data AuthData = AuthData 
-    { _login        :: Maybe Login 
-    , _password     :: Maybe Password 
-    , _timestamp    :: Maybe UTCTime
-    }
-    deriving (Eq, Ord, Read, Show, Data, Typeable)
+import Data.Data (Data, Typeable)
+import Data.Time.Clock (UTCTime)
+import Control.Lens (makeLenses)
+import Data.Aeson (Value)
+import Control.Lens
+import Control.Eff
+import Control.Eff.JSON
 
-$(deriveSafeCopy 0 'base ''AuthData)
-makeLenses ''AuthData
 
-instance ClientSession AuthData where
-    emptySession = AuthData Nothing Nothing Nothing 
-
-authGet :: (Monad m, MonadIO m, Functor m, MonadClientSession AuthData m)
-        => (AuthData -> a) -> m a
+authGet :: (Member API r)
+        => (AuthData -> a) -> Eff r a
 authGet f = getSession >>= return . f 
 
-authSet :: (Monad m, MonadIO m, Functor m, MonadClientSession AuthData m)
-        => (AuthData -> AuthData) -> m ()
+
+authSet :: (Member API r)
+        => (AuthData -> AuthData) -> Eff r ()
 authSet f = getSession >>= putSession . f
 
-authPassword :: (Monad m, MonadIO m, Functor m, MonadClientSession AuthData m)
-             => m (Maybe Password)
+
+authPassword :: (Member API r)
+             => Eff r (Maybe Password)
 authPassword = authGet _password
 
-authLogin :: (Monad m, MonadIO m, Functor m, MonadClientSession AuthData m)
-          => m (Maybe Login)
+
+authLogin :: (Member API r)
+          => Eff r (Maybe Login)
 authLogin = authGet _login
 
-authTimestamp :: (Monad m, MonadIO m, Functor m, MonadClientSession AuthData m)
-              => m (Maybe UTCTime)
+
+authTimestamp :: (Member API r)
+              => Eff r (Maybe UTCTime)
 authTimestamp = authGet _timestamp
 
-logUserIn :: ( Monad m, MonadIO m, Functor m ) 
-          => ACID -> APIMonadT url AuthData m Response
-logUserIn acid = handleError $ 
-    queryWithJSONResponse acid $ do
+
+logUserIn :: (Member API r, Member Exec r)
+          => Eff r (Either Error (Maybe Value))
+logUserIn = withJSONIO $ do
         l <- prop "login"
         pw <- prop "password"
-        "id" <$ doLoginQ l pw
+        "id" <$ doLogin l pw
         refreshCookie (Just l) (Just pw)
 
-logUserOut :: ( Monad m, MonadIO m, Functor m
-              , MonadClientSession AuthData m
-              , FilterMonad Response m
-              ) 
-           => m Response
+
+logUserOut :: (Member API r, Member Exec r)
+           => Eff r (Either Error (Maybe Value)) 
 logUserOut = do
     refreshCookie Nothing Nothing
-    noContent'
+    return $ Right Nothing
 
-refreshCookie :: (Monad m, MonadIO m, Functor m, MonadClientSession AuthData m) 
-              => Maybe Login -> Maybe Password -> m () 
+refreshCookie :: (Member API r, Member Exec r)
+              => Maybe Login -> Maybe Password -> Eff r () 
 refreshCookie l pw = do
     ifIsJust l $ \ _ -> authSet (set login l)
     ifIsJust pw $ \ _ -> authSet (set password pw)
 
-trySessionLoginQ :: ( Monad m, MonadIO m, Functor m
-                    , MonadClientSession AuthData m
-                    , MonadQuery m)
-                 => m () 
-trySessionLoginQ = do
-    l' <- authLogin
-    pw' <- authPassword
-    case (l', pw') of
-        (Just l, Just pw) -> doLoginQ l pw >> return ()
-        _ -> return ()
 
-trySessionLoginU :: ( Monad m, MonadIO m, Functor m
-                    , MonadClientSession AuthData m
-                    , MonadUpdate m)
-                 => m () 
-trySessionLoginU = do
+trySessionLogin :: (Member API r, Member Exec r)
+                => Eff r () 
+trySessionLogin = do
     l' <- authLogin
     pw' <- authPassword
     case (l', pw') of
-        (Just l, Just pw) -> doLoginU l pw >> return ()
+        (Just l, Just pw) -> doLogin l pw >> return ()
         _ -> return ()

@@ -12,28 +12,39 @@ html, body {
 	margin-left:10px;
 }
 
+.nopadding {
+	padding:0px;
+}
+
 .noborder {
 	border:none;
 }
 
-.navbar-account {
-	padding:0;
-	margin:5px 0 0 13px;
-	background:none;
-	border:none;
-	color:#aaa;
+.greytext {
+	color:#999;
 }
 
-.navbar-account:hover {
-	background:none;
-	border:none;
-	color:#fff;
+.pushbottom {
+	position:absolute;
+	bottom:0px;
+	left:0px;
+	right:0px;
 }
 
-.navbar-account:focus {
-	background:none;
-	border:none;
-	color:#fff;
+.chatcontent {
+	bottom:54px;
+}
+
+.chatinput {
+	padding:20px 30px;
+}
+
+.lightBar {
+	background:#f2f2f2;
+}
+
+.app-body {
+	background:#fff;
 }
 
 

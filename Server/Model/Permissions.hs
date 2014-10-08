@@ -1,25 +1,26 @@
+{-# LANGUAGE FlexibleContexts #-}
+
 module Model.Permissions
 where
 
 import Data.Monoid
 import qualified Data.Set as S
+import Control.Eff
 
 import Model.BaseTypes
-import Model.OpMonad
+import Model.Exec
+import Model.Query
 import Model.Errors
-import qualified Model.Channel as C
-import qualified Model.User as U
-import qualified Model.Message as M
 
 -- permissions abstract
 
-data Permission a m = 
+data Permission a r = 
       Permission
-        (UserId -> a -> m Bool)                   -- definition of the permission
-        (UserId -> a -> m PermissionViolation)    -- info about violation
+        (UserId -> a -> Eff r Bool)                   -- definition of the permission
+        (UserId -> a -> Eff r PermissionViolation)    -- info about violation
     | Forbidden                                 
 
-instance OpMonad m => Monoid (Permission a m) where
+instance Monoid (Permission a r) where
     mempty = Forbidden
     Forbidden `mappend` p = p
     p `mappend` Forbidden = p
@@ -29,106 +30,81 @@ instance OpMonad m => Monoid (Permission a m) where
 
 -- permission eval
 
-checkAccess :: OpMonad m => a -> Permission a m -> m b -> m b
-checkAccess cont (Permission check constr) action = ifIsLoggedIn' $ \oid -> do
-    success <- check oid cont 
+checkAccess :: (Member Exec r, Member Query r) 
+            => a -> Permission a r -> Eff r () 
+checkAccess cd (Permission ck err) = do
+    oid <- forceOperatorId
+    success <- ck oid cd 
     if not success
-        then constr oid cont >>= throw . InsufficientPermissions 
-        else action
+        then err oid cd >>= throwME . InsufficientPermissions 
+        else return ()
 
-tryAccess :: OpMonad m => a -> Permission a m -> m b -> m (Maybe b)
-tryAccess cont (Permission check _) action = do
+tryAccess :: (Member Exec r, Member Query r)
+          => a -> Permission a r -> Eff r b -> Eff r (Maybe b)
+tryAccess cd (Permission ck _) act = do
     oid <- getOperatorId
     case oid of
         Nothing -> return Nothing
         Just oid' -> do
-            success <- check oid' cont
+            success <- ck oid' cd 
             if success
                 then do
-                    res <- action
+                    res <- act 
                     return $ Just res
                 else return Nothing 
 
-ifIsLoggedIn' :: OpMonad m => (UserId -> m b) -> m b 
-ifIsLoggedIn' op = do
+forceOperatorId :: (Member Exec r)
+                => Eff r UserId
+forceOperatorId = do
     oid <- getOperatorId
     case oid of
-        Nothing  -> throw NotLoggedIn
-        Just oid -> op oid 
-
-ifIsLoggedIn :: OpMonad m => m b -> m b
-ifIsLoggedIn = ifIsLoggedIn' . const 
+        Nothing -> throwME NotLoggedIn
+        Just o -> return o
 
 -- permissions on noc
 
-isNoCAdmin uid = getAdmins >>= \as -> return (uid `S.member` as)
-
-forNoCAdmins :: OpMonad m => Permission () m 
-forNoCAdmins = Permission 
-    (\ uid _ -> isNoCAdmin uid)  
+forAdmins :: Member Query r => Permission a r 
+forAdmins = Permission 
+    (\ uid _ -> isAdmin uid)  
     (\ uid _ -> return (NoNoCAdmin uid))
 
 -- permissions on channel
 
-isAdminOf uid _  = getAdmins >>= \as -> return (uid `S.member` as)
+ret e = \ a b -> return $ e a b
 
-forChanAdmins :: OpMonad m => Permission ChanId m
-forChanAdmins = Permission isAdminOf $ \ u c -> return $ NoChanAdmin u c
+forChanOwners :: Member Query r => Permission ChanId r
+forChanOwners = Permission (flip isChanOwner) (ret NoChanOwner)
 
-isChanXX us uid cid = getChannel cid >>= \chan -> return (uid `S.member` (us chan))
+forChanProducers :: Member Query r => Permission ChanId r
+forChanProducers = Permission (flip isChanProducer) (ret NoChanProducer)
 
-forChanXX :: OpMonad m 
-          => (C.Channel -> S.Set UserId)
-          -> (UserId -> ChanId -> PermissionViolation)
-          -> Permission ChanId m
-forChanXX us cs = Permission (isChanXX us) (\ uid cid -> return (cs uid cid))
+forChanConsumers :: Member Query r => Permission ChanId r
+forChanConsumers = Permission (flip isChanConsumer) (ret NoChanConsumer)
 
-isOwnerOf :: OpMonad m => UserId -> ChanId -> m Bool
-isOwnerOf = isChanXX C._owners
+forAllChanPeople :: Member Query r => Permission ChanId r
+forAllChanPeople = mconcat [forChanConsumers, forChanProducers, forChanOwners, forAdmins]
 
-forChanOwners :: OpMonad m => Permission ChanId m
-forChanOwners = forChanXX C._owners NoChanOwner
+forChanOwnersOrAdmins :: Member Query r => Permission ChanId r
+forChanOwnersOrAdmins = forChanOwners `mappend` forAdmins
 
-isProducerIn :: OpMonad m => UserId -> ChanId -> m Bool
-isProducerIn = isChanXX C._producers
+forConsumersOrOwners :: Member Query r => Permission ChanId r
+forConsumersOrOwners = mconcat [forChanConsumers, forChanOwners, forAdmins]
 
-forChanProducers :: OpMonad m => Permission ChanId m
-forChanProducers = forChanXX C._producers NoChanProducer 
-
-isConsumerIn :: OpMonad m => UserId -> ChanId -> m Bool
-isConsumerIn = isChanXX C._consumers
-
-forChanConsumers :: OpMonad m => Permission ChanId m
-forChanConsumers = forChanXX C._consumers NoChanConsumer
-
-forAllChanPeople :: OpMonad m => Permission ChanId m
-forAllChanPeople = mconcat [forChanConsumers, forChanProducers, forChanOwners, forChanAdmins]
-forChanOwnersOrAdmins :: OpMonad m => Permission ChanId m
-forChanOwnersOrAdmins = forChanOwners `mappend` forChanAdmins
-forConsumersOrOwners :: OpMonad m => Permission ChanId m
-forConsumersOrOwners = mconcat [forChanConsumers, forChanOwners, forChanAdmins]
-forProducersOrOwners :: OpMonad m => Permission ChanId m
-forProducersOrOwners = mconcat [forChanProducers, forChanOwners, forChanAdmins]
+forProducersOrOwners :: Member Query r => Permission ChanId r 
+forProducersOrOwners = mconcat [forChanProducers, forChanOwners, forAdmins]
 
 -- permission on users
 
-forUserSelf :: OpMonad m => Permission UserId m
-forUserSelf = Permission
-    (\ oid uid -> return (oid == uid))
-    (\ oid uid -> return $ NoUserSelf oid uid) 
+forUserSelf :: Permission UserId r
+forUserSelf = Permission (\ o -> return . (==) o) (ret NoUserSelf)
 
-forUserAdmins :: OpMonad m => Permission UserId m
-forUserAdmins = Permission 
-    (\ oid _ -> getAdmins >>= \ as -> return (oid `S.member` as))
-    (\ oid uid -> return (NoUserAdmin oid uid))
-
-forUsersOnContactList :: OpMonad m => Permission UserId m
+forUsersOnContactList :: Member Query m => Permission UserId m
 forUsersOnContactList = Permission
-    (\ oid uid -> getUser uid >>= \ u -> return (oid `S.member` U._contacts u))
-    (\ oid uid -> return (NotOnContactList oid uid))
+    (\ oid uid -> (getUserContacts uid >>= \ u -> return (oid `S.member` u)))
+    (ret NotOnContactList)
 
-forUserSelfOrAdmins :: OpMonad m => Permission UserId m
-forUserSelfOrAdmins = mconcat [forUserSelf, forUserAdmins]
+forUserSelfOrAdmins :: Member Query m => Permission UserId m
+forUserSelfOrAdmins = mconcat [forUserSelf, forAdmins]
 
-forUserContactsSelfOrAdmins :: OpMonad m => Permission UserId m
-forUserContactsSelfOrAdmins = mconcat [forUsersOnContactList, forUserSelf, forUserAdmins]
+forUserContactsSelfOrAdmins :: Member Query m => Permission UserId m
+forUserContactsSelfOrAdmins = mconcat [forUsersOnContactList, forUserSelf, forAdmins]
