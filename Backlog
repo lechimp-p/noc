@@ -25,10 +25,8 @@
 
 Refactoring:
 
-* try to remove tiresome name duplications in ACID
-* enforce update/query model already at model level
-* make implementation of storage engine switchable
 * think about how the model is represented
-* think about organisation of nasty monad transformer layers
+
+* implement constraints in model
 
 
