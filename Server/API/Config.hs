@@ -59,6 +59,8 @@ data BodyPolicy = BodyPolicy
 
 data ServerConfig = ServerConfig
     { _numThreads           :: Int
+    , _threadTimeout        :: Int
+    , _port                 :: Int
     }
     deriving (Show, Data, Typeable)
 
