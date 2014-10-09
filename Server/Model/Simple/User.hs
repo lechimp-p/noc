@@ -38,25 +38,34 @@ instance Ord User where
 
 makeLenses ''User
 
+-- an index for search on user login
+newtype IxLoginSearch = IxLoginSearch Text
+                      deriving (Eq, Ord, Data, Typeable)
+
 -- An index for words in the name.
-newtype IxName = IxName Text 
-                 deriving (Eq, Ord, Data, Typeable)
+-- newtype IxName = IxName Text 
+--                 deriving (Eq, Ord, Data, Typeable)
 -- An index for words an heads of words in the name
-newtype IxAutoComplete = IxAutoComplete Text
-                 deriving (Eq, Ord, Data, Typeable)
+-- newtype IxAutoComplete = IxAutoComplete Text
+--                 deriving (Eq, Ord, Data, Typeable)
 -- An index for words in the description
-newtype IxDesc = IxDesc Text
-                 deriving (Eq, Ord, Data, Typeable)
+-- newtype IxDesc = IxDesc Text
+--                 deriving (Eq, Ord, Data, Typeable)
                   
 instance Indexable User where
     empty = ixSet
         [ ixFun $ (:[]) . _id
         , ixFun $ (:[]) . _login
-        , ixFun $ fmap ( IxAutoComplete . T.reverse )  
-                . filter (not . T.null)
+        , ixFun $ fmap   ( IxLoginSearch . T.reverse )
+                . filter ( not . T.null )
                 . concat
-                . fmap T.tails
-                . T.words . T.reverse . nameToText . _name 
-        , ixFun $ fmap IxName . T.words . nameToText . _name
-        , ixFun $ fmap IxDesc . T.words . descToText . _desc 
+                . fmap   ( T.tails . T.reverse )
+                . T.words . nameToText . _name
+--        , ixFun $ fmap ( IxAutoComplete . T.reverse )  
+--                . filter (not . T.null)
+--                . concat
+--                . fmap T.tails
+--                . T.words . T.reverse . nameToText . _name 
+--        , ixFun $ fmap IxName . T.words . nameToText . _name
+--        , ixFun $ fmap IxDesc . T.words . descToText . _desc 
         ]
