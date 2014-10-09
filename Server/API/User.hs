@@ -86,7 +86,7 @@ searchHandler = withJSONOut $ do
     l <- fmap T.pack $ lookGet "login"
     -- TODO: implement minimal length of input here
     uids <- searchUserByLogin l 
-    "result" <$: fmap userInfo (S.toList (trace (show uids) uids))
+    "result" <$: fmap userInfo (S.toList uids)
     
 
 createHandler = withJSONIO $ do

@@ -30,6 +30,7 @@ countAdminsR noc = S.size . _admins $ noc
 getUserIdByLoginR noc l = fmap U._id . IX.getOne $ _users noc IX.@= (Login l) 
 
 searchUserByLoginR noc l = S.map U._id . IX.toSet $ _users noc IX.@= (IxLoginSearch l)
+searchChanByNameR noc n = S.map C._id . IX.toSet $ _channels noc IX.@= (IxChanNameSearch n)
  
 queryChan :: (Channel -> b)
           -> NoC 

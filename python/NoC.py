@@ -45,7 +45,6 @@ class user(object):
 
     @staticmethod
     def search(op, login):
-        print "HERE: " + login
         return op.getR( user.base_path, { "login" : login })
 
     # Methods
@@ -116,9 +115,13 @@ class channel(object):
         self.id = id
 
     @staticmethod
-    def create(op, name, description):
-        r = op.postR( channel.base_path, { "name" : name, "description" : description })
+    def create(op, name):
+        r = op.postR( channel.base_path, { "name" : name })
         return channel(r["id"])
+
+    @staticmethod
+    def search(op, name):
+        return op.getR( channel.base_path, { "name" : name })
 
     def set(self, op, **dct):
         op.postR(self.channel_path % self.id, dct)

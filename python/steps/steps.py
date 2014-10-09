@@ -23,6 +23,11 @@ def step_impl(context, user):
         except context.NoC.NoCError:
             context.users[user] = context.NoC.user.create(context.users["admin"], user, user)
 
+@given("Channel {channel} exists")
+def step_impl(context, channel):
+    if not channel in context.channels:
+        context.channels[channel] = context.NoC.channel.create(context.users["admin"], channel)
+
 @when("I am {user}")
 def step_impl(context, user):
     context.actor = context.users[user]
@@ -42,7 +47,7 @@ def step_impl(context, can, what, name):
     worked = None 
     if what == "channel":
         try:
-            context.channels[name] = context.NoC.channel.create(context.actor, name, "Description of %s" % name)
+            context.channels[name] = context.NoC.channel.create(context.actor, name)
             worked = True 
         except context.NoC.NoCError:
             worked = False 
@@ -66,10 +71,10 @@ def step_impl(context, name):
 
 @when("{user} creates a channel \"{name}\"")
 def step_impl(context, user, name):
-    create_channel(context.users[user], name)
+    create_channel(context, context.users[user], name)
 
-def create_channel(who, name):
-    context.channels[name] = context.NoC.channel.create(who, name, "Description of %s" % name)
+def create_channel(context, who, name):
+    context.channels[name] = context.NoC.channel.create(who, name)
 
 @then("I {can} set {property} of {what} \"{name}\"")
 def step_imp(context, can, property, what, name):
@@ -108,7 +113,9 @@ def step_imp(context, can, property, what, name):
 def step_impl(context, what, search):
     if what == "channel":
         res = context.NoC.channel.search(context.actor, search)
-        context.search_result = res
+        context.search_result = []
+        for r in res["result"]:
+            context.search_result.append(r["name"]) 
     elif what == "user":
         res = context.NoC.user.search(context.actor, search)
         context.search_result = []
@@ -117,8 +124,8 @@ def step_impl(context, what, search):
     else:
         raise ValueError("Don't know how to search for a %s" % what)
 
-@then("the result will {include} \"{name}\"")
-def step_impl(context, include, name):
-    check_verb("include", include)
-    mod = to_modifier(include)
+@then("the result will {contain} \"{name}\"")
+def step_impl(context, contain, name):
+    check_verb("contain", contain)
+    mod = to_modifier(contain)
     assert mod(name in context.search_result)

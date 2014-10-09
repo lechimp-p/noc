@@ -82,6 +82,14 @@ doLogout = E.doLogout
 -- operations on channels
 -------------------------
 
+searchChanByName :: (Member Query r, Member Exec r)
+                 => Text -> Eff r (S.Set ChanId)
+searchChanByName n = do
+    -- TODO: this is inefficient ...
+    cids <- fmap S.toList $ Q.searchChanByName n 
+    perms <- sequence $ fmap (flip hasAccess forAllChanPeople) cids
+    return . S.fromList . fmap fst . filter snd . zip cids $ perms
+
 getChanName :: (Member Query r, Member Exec r)
             => ChanId -> Eff r Name
 getChanName cid = do

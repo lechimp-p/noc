@@ -47,6 +47,7 @@ evalQuery noc q = case q of
     CountAdmins next -> Right . next . countAdminsR $ noc
     GetUserIdByLogin l next -> Right . next . getUserIdByLoginR noc $ l
     SearchUserByLogin l next -> Right . next . searchUserByLoginR noc $ l
+    SearchChanByName n next -> Right . next . searchChanByNameR noc $ n 
     ChanQuery cid q -> evalChanQuery noc q cid
     UserQuery uid q -> evalUserQuery noc q uid
 

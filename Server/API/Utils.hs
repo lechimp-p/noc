@@ -196,3 +196,5 @@ channelInfo cid = do
     "name"          <$ getChanName cid
     "description"   <$ getChanDesc cid      
     "type"          <$ getChanType cid
+    "amountOfUsers" <$ amountOfSubscribedUsers cid
+    "lastPost"      <$ lastPostTimestamp cid

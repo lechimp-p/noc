@@ -15,6 +15,7 @@ $(makeAcidic ''NoC  [ 'qDoLogin
                     , 'qCountAdmins
                     , 'qGetUserIdByLogin
                     , 'qSearchUserByLogin
+                    , 'qSearchChanByName
                     , 'qGetChanName
                     , 'qGetChanDesc
                     , 'qGetChanType

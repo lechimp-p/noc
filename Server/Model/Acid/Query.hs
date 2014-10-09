@@ -29,6 +29,9 @@ qGetUserIdByLogin t = ask >>= \ noc -> return . Right $ getUserIdByLoginR noc t
 qSearchUserByLogin :: Text -> Query NoC (Either Error (S.Set UserId))
 qSearchUserByLogin t = ask >>= \ noc -> return . Right $ searchUserByLoginR noc t
 
+qSearchChanByName :: Text -> Query NoC (Either Error (S.Set ChanId))
+qSearchChanByName n = ask >>= \ noc -> return . Right $ searchChanByNameR noc n
+
 qGetChanName :: ChanId -> Query NoC (Either Error Name)
 qGetChanName cid = ask >>= \ noc -> return $ getChanNameR noc cid
 

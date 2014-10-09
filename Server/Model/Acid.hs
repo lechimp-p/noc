@@ -48,6 +48,7 @@ evalQuery state q = case q of
     CountAdmins next -> ffq next QCountAdmins
     GetUserIdByLogin l next -> ffq next (QGetUserIdByLogin l)
     SearchUserByLogin l next -> ffq next (QSearchUserByLogin l)
+    SearchChanByName n next -> ffq next (QSearchChanByName n)
     ChanQuery cid q 
         -> evalChanQuery state q cid
     UserQuery uid q 

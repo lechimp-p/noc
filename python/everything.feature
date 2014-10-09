@@ -59,6 +59,21 @@ Scenario: Searching of users by login
     And User guybrush exists
     When I am searcher 
     And I search for user lech
-    Then the result will include "lechimp"
-    And the result will include "lechuck"
-    And the result will not include "guybrush" 
+    Then the result will contain "lechimp"
+    And the result will contain "lechuck"
+    And the result will not contain "guybrush" 
+    And the result will not contain "Georg Lukas" 
+
+Scenario: Searching of channels by name
+    Given User searcher exists
+    And Channel channel 3 exists
+    When searcher creates a channel "channel 1" 
+    And searcher creates a channel "channel 2" 
+    And searcher creates a channel "camel"
+    And I am searcher
+    And I search for channel chan
+    Then the result will contain "channel 1"
+    And the result will contain "channel 2"
+    And the result will not contain "camel"
+    And the result will not contain "cow"
+    And the result will not contain "channel 3"

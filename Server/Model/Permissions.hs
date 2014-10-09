@@ -30,6 +30,12 @@ instance Monoid (Permission a r) where
 
 -- permission eval
 
+hasAccess :: (Member Exec r, Member Query r)
+          => a -> Permission a r -> Eff r Bool
+hasAccess cd (Permission ck err) = do
+    oid <- forceOperatorId
+    ck oid cd 
+
 checkAccess :: (Member Exec r, Member Query r) 
             => a -> Permission a r -> Eff r () 
 checkAccess cd (Permission ck err) = do
