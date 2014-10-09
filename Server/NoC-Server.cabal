@@ -156,6 +156,7 @@ executable NoC-Server-dev
                         -- cabal install
                         , extensible-effects ==1.7.*
                         , json-effects ==0.1.*
+                        , old-locale ==1.0.*
 
 Test-Suite test-NoC-Server
     type:               detailed-0.9
