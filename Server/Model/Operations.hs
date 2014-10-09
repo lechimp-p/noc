@@ -201,6 +201,12 @@ unsubscribeFromChan uid cid = do
 -- operations on users
 ----------------------
 
+searchUserByLogin :: (Member Query r, Member Exec r)
+                  => Text -> Eff r (S.Set UserId)
+searchUserByLogin l = do
+    forceOperatorId
+    Q.searchUserByLogin l
+
 getUserLogin :: (Member Query r, Member Exec r)
              => UserId -> Eff r Login 
 getUserLogin uid = do

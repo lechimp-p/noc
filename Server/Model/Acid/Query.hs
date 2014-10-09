@@ -26,6 +26,9 @@ qCountAdmins = ask >>= \ noc -> return . Right $ countAdminsR noc
 qGetUserIdByLogin :: Text -> Query NoC (Either Error (Maybe UserId))
 qGetUserIdByLogin t = ask >>= \ noc -> return . Right $ getUserIdByLoginR noc t
 
+qSearchUserByLogin :: Text -> Query NoC (Either Error (S.Set UserId))
+qSearchUserByLogin t = ask >>= \ noc -> return . Right $ searchUserByLoginR noc t
+
 qGetChanName :: ChanId -> Query NoC (Either Error Name)
 qGetChanName cid = ask >>= \ noc -> return $ getChanNameR noc cid
 

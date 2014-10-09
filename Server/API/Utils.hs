@@ -185,10 +185,11 @@ instance ToJSON ChanType where
 -----------------
 
 userInfo uid = do
-    "id"        <: uid
-    "login"     <$ getUserLogin uid
-    "name"      <$ getUserName uid
-    "icon"      <$ getUserIcon uid
+    "id"            <: uid
+    "login"         <$ getUserLogin uid
+    "name"          <$ getUserName uid
+    "description"   <$ getUserDesc uid
+    "icon"          <$ getUserIcon uid
 
 channelInfo cid = do
     "id"            <: cid

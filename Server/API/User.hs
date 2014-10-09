@@ -8,6 +8,8 @@
 module API.User 
 where
 
+import Debug.Trace
+
 import Model
 import API.Effects
 import API.Config
@@ -17,6 +19,7 @@ import API.ImageUtils
 
 import Prelude hiding ( id, (.) )
 import Data.Text
+import qualified Data.Text as T
 import Control.Category ( Category(id, (.)) )
 import Web.Routes
 import Control.Eff
@@ -78,7 +81,13 @@ genericHandler = do
         POST        -> createHandler
         otherwise   -> methodNotSupported
 
-searchHandler = error "User.searchHandler" 
+searchHandler = withJSONOut $ do
+    trySessionLogin
+    l <- fmap T.pack $ lookGet "login"
+    -- TODO: implement minimal length of input here
+    uids <- searchUserByLogin l 
+    "result" <$: fmap userInfo (S.toList (trace (show uids) uids))
+    
 
 createHandler = withJSONIO $ do
     trySessionLogin
@@ -88,10 +97,7 @@ createHandler = withJSONIO $ do
 
 getHandler uid = withJSONOut $ do
     trySessionLogin
-    "login"         <$ getUserLogin uid
-    "name"          <$ getUserName uid
-    "description"   <$ getUserDesc uid
-    "icon"          <$ getUserIcon uid
+    userInfo uid
 
 setHandler uid = withJSONIn $ do
     trySessionLogin 
@@ -119,10 +125,11 @@ setHandler uid = withJSONIn $ do
 getContactsHandler uid = withJSONOut $ do
     trySessionLogin
     uids <- getUserContacts uid
-    "contacts" <$: flip fmap (S.toList uids) .$ \ uid -> do
-        "login"         <$ getUserLogin uid
-        "description"   <$ getUserDesc uid
-        "icon"          <$ getUserIcon uid
+    "contacts" <$: fmap userInfo (S.toList uids) 
+    --"contacts" <$: flip fmap (S.toList uids) .$ \ uid -> do
+    --    "login"         <$ getUserLogin uid
+    --    "description"   <$ getUserDesc uid
+    --    "icon"          <$ getUserIcon uid
 
 setContactsHandler uid = withJSONIn $ do
     trySessionLogin
@@ -147,10 +154,11 @@ getChannelsHandler uid = withJSONOut $ do
     showChannels cids
 
 showChannels cids = do         
-    "subscriptions" <$: flip fmap (S.toList cids) .$ \ cid -> do
-        "name"          <$ getChanName cid
-        "description"   <$ getChanDesc cid
-        "type"          <$ getChanType cid
+    "subscriptions" <$: fmap channelInfo (S.toList cids)
+--    "subscriptions" <$: flip fmap (S.toList cids) .$ \ cid -> do
+--        "name"          <$ getChanName cid
+--        "description"   <$ getChanDesc cid
+--        "type"          <$ getChanType cid
 
 getNotificationsHandler uid = withJSONOut $ do
     trySessionLogin

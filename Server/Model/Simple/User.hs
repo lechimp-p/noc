@@ -60,7 +60,7 @@ instance Indexable User where
                 . filter ( not . T.null )
                 . concat
                 . fmap   ( T.tails . T.reverse )
-                . T.words . nameToText . _name
+                . T.words . loginToText . _login
 --        , ixFun $ fmap ( IxAutoComplete . T.reverse )  
 --                . filter (not . T.null)
 --                . concat
