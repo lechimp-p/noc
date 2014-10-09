@@ -103,7 +103,7 @@ withJSONIn eff = do
 -- JSON instances
 -----------------
 
-instance FromJSON Login where
+{--instance FromJSON Login where
     parseJSON (String t) = return . mkLogin $ t
     parseJSON _ = mzero 
 
@@ -118,6 +118,7 @@ instance FromJSON Name where
 instance FromJSON Desc where
     parseJSON (String t) = return . mkDesc $ t
     parseJSON _ = mzero 
+--}
 
 instance FromJSON ChanType where
     parseJSON (String t)
