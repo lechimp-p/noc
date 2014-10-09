@@ -1,5 +1,6 @@
 module Model
     ( module Model.Operations
+    , module Model.Constraints
     , Login
     , Password
     , Name
@@ -18,3 +19,4 @@ where
 import Model.Operations
 import Model.Message
 import Model.BaseTypes
+import Model.Constraints

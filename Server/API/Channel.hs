@@ -72,8 +72,11 @@ searchHandler = error "Channel.searchHandler"
 
 createHandler = withJSONIO $ do 
     trySessionLogin
-    n <- prop "name"
-    d <- maybeProp "description"
+    n <- makeName =<< prop "name"
+    d <- maybeProp "description" >>= \ d ->
+        case d of
+            Nothing -> return Nothing
+            Just d -> fmap Just $ makeDesc d
     cid <- createChannel n
     ifIsJust d (setChanDesc cid)
     "id" <: cid 
@@ -88,8 +91,8 @@ getHandler cid = withJSONOut $ do
 
 setHandler cid = withJSONIn $ do 
     trySessionLogin
-    "name"          ?> setChanName cid
-    "description"   ?> setChanDesc cid  
+    "name"          ?> \ n -> makeName n >>= setChanName cid
+    "description"   ?> \ d -> makeDesc d >>= setChanDesc cid  
     "type"          ?> setChanType cid
     return Nothing
 

@@ -82,8 +82,8 @@ searchHandler = error "User.searchHandler"
 
 createHandler = withJSONIO $ do
     trySessionLogin
-    l <- prop "login"
-    p <- prop "password"
+    l <- makeLogin =<< prop "login"
+    p <- makePassword =<< prop "password"
     "id"    <$. createUser l p
 
 getHandler uid = withJSONOut $ do
@@ -95,10 +95,16 @@ getHandler uid = withJSONOut $ do
 
 setHandler uid = withJSONIn $ do
     trySessionLogin 
-    l <- "login"    ?> \ l -> setUserLogin uid l >> return l
-    p <- "password" ?> \ p -> setUserPassword uid p >> return p
-    "name"          ?> setUserName uid
-    "description"   ?> setUserDesc uid
+    l <- "login"    ?> \l -> do
+        l' <- makeLogin l
+        setUserLogin uid l' 
+        return l'
+    p <- "password" ?> \ p -> do 
+        p' <- makePassword p
+        setUserPassword uid p' 
+        return p'
+    "name"          ?> \ n -> makeName n >>= setUserName uid
+    "description"   ?> \ d -> makeDesc d >>= setUserDesc uid
     "icon"          .?> do
         typ <- prop "type"
         dat <- prop "data"
