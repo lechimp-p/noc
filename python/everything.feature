@@ -51,3 +51,14 @@ Examples: User Property Permission
     | user_2    | user_2    | can     | name        |
     | user_2    | user_2    | can     | description |
     | user_2    | user_2    | can     | icon        |
+
+Scenario: Searching of users by login
+    Given User searcher exists
+    And User lechimp exists
+    And User lechuck exists
+    And User guybrush exists
+    When I am searcher 
+    And I search for user lech
+    Then the result will include "lechimp"
+    And the result will include "lechuck"
+    And the result will not include "guybrush" 

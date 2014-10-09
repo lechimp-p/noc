@@ -24,3 +24,5 @@ siteConfig:
   location: http://localhost:8000
 serverConfig:
   numThreads: 1
+  threadTimeout: 1
+  port: 8000

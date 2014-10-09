@@ -43,6 +43,11 @@ class user(object):
         op.postR( user.base_path, { "login" : login, "password" : password })
         return user(login, password)         
 
+    @staticmethod
+    def search(op, login):
+        print "HERE: " + login
+        return op.getR( user.base_path, { "login" : login })
+
     # Methods
 
     def set(self, op, **dct):
