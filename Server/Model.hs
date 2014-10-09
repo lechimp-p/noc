@@ -1,13 +1,9 @@
 module Model
     ( module Model.Operations
     , Login
-    , mkLogin
     , Password
-    , mkPassword
     , Name
-    , mkName
     , Desc
-    , mkDesc
     , UserId
     , ChanId
     , MsgId
