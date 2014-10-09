@@ -5,15 +5,15 @@ bodyPolicy:
   maxBytesHeader: 100000
 imageConfig:
   salt: 0
-  basePath: ./files
+  basePath: /opt/NoC-data/files
   channelDir: channel
   userDir: user
-acidPath: ./state
+acidPath: /opt/NoC-data/state
 sessionConfig:
   cookieName: NoCSession
   httpsOnly: false
   cookiePath: /
-  keyfileName: ./client_session_key.aes
+  keyfileName: /opt/NoC-data/client_session_key.aes
   cookieLifetime:
     tag: Session
     contents: []
