@@ -29,7 +29,7 @@ isAdminR noc uid = S.member uid . _admins $ noc
 countAdminsR noc = S.size . _admins $ noc
 getUserIdByLoginR noc l = fmap U._id . IX.getOne $ _users noc IX.@= (Login l) 
 
-searchUserByLoginR noc l = undefined "Simple.Operations.searchUserByLoginR" 
+searchUserByLoginR noc l = error "Simple.Operations.searchUserByLoginR" 
  
 queryChan :: (Channel -> b)
           -> NoC 
