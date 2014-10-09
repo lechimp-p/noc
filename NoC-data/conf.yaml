@@ -5,8 +5,8 @@ bodyPolicy:
   maxBytesHeader: 100000
 imageConfig:
   salt: 0
-  channelDir: channel
   basePath: ./files
+  channelDir: channel
   userDir: user
 acidPath: ./state
 sessionConfig:
@@ -24,3 +24,5 @@ siteConfig:
   location: http://localhost:8000
 serverConfig:
   numThreads: 1
+  threadTimeout: 1
+  port: 8000
