@@ -20,6 +20,7 @@ data Query n
     = IsAdmin UserId (Bool -> n)
     | CountAdmins (Int -> n)
     | GetUserIdByLogin Text (Maybe UserId -> n)
+    | SearchUserByLogin Text (S.Set UserId -> n)
     | ChanQuery ChanId (ChanQueryType n) 
     | UserQuery UserId (UserQueryType n)
     deriving (Typeable, Functor)
@@ -32,6 +33,9 @@ countAdmins = send $ \ next -> inj (CountAdmins next)
 
 getUserIdByLogin :: Member Query r => Text -> Eff r (Maybe UserId)
 getUserIdByLogin l = send $ \ next -> inj (GetUserIdByLogin l next)
+
+searchUserByLogin :: Member Query r => Text -> Eff r (S.Set UserId)
+searchUserByLogin l = send $ \ next -> inj (SearchUserByLogin l next)
 
 data ChanQueryType n
     = GetChanName               (Name -> n)
