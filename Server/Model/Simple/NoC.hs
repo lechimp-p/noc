@@ -41,4 +41,4 @@ mkNoC l pw = NoC IX.empty (ChanId 0)
                  ((UserId 0) `S.insert` S.empty) 
     where
     users = admin `IX.insert` IX.empty 
-    admin = User (UserId 0) l pw (mkName "admin") (mkDesc "The Administrator.") Nothing S.empty S.empty S.empty []
+    admin = User (UserId 0) l pw (Name "admin") (Desc "The Administrator.") Nothing S.empty S.empty S.empty []

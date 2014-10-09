@@ -88,13 +88,13 @@ getUserSubscriptionsR = queryUser U._subscriptions
 createChanR noc uid name = (noc', cid)
     where
     noc' = over channels (IX.insert chan) (set nextChanId ncid noc)
-    chan = Channel cid name (mkDesc "") None Nothing (S.insert uid S.empty) S.empty S.empty S.empty S.empty  
+    chan = Channel cid name (Desc "") None Nothing (S.insert uid S.empty) S.empty S.empty S.empty S.empty  
     cid = _nextChanId noc
     ncid = ChanId(ciToInt cid + 1) 
 createUserR noc l pw = (noc', uid)
     where
     noc' = over users (IX.insert user) (set nextUserId nuid noc)
-    user = User uid l pw (mkName "") (mkDesc "") Nothing S.empty S.empty S.empty []
+    user = User uid l pw (Name "") (Desc "") Nothing S.empty S.empty S.empty []
     uid  = _nextUserId noc
     nuid = UserId (uiToInt uid + 1)
 addAdminR noc uid = (over admins (S.insert uid) noc, ()) 
