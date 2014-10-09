@@ -39,5 +39,6 @@ data Error =
     | CantLogin Login 
     | AlreadyLoggedIn
     | NotLoggedIn
+    | ConstraintViolation String
     | Custom String
     deriving (Show, Eq, Data, Typeable)
