@@ -12,6 +12,7 @@ import Data.Text (Text)
 import qualified Data.Set as S
 import Control.Monad.State (get, put)
 import Data.Time.Clock (UTCTime)
+import Text.Email.Validate (EmailAddress)
 
 modify :: (NoC -> Either Error (NoC, a)) -> Update NoC (Either Error a)
 modify f = do
@@ -79,6 +80,9 @@ uSetUserDesc uid l = modify $ \ noc -> setUserDescR noc uid l
 
 uSetUserIcon :: UserId -> Maybe Icon -> Update NoC (Either Error ())
 uSetUserIcon uid l = modify $ \ noc -> setUserIconR noc uid l
+
+uSetUserEmail :: UserId -> Maybe EmailAddress -> Update NoC (Either Error ())
+uSetUserEmail uid e = modify $ \ noc -> setUserEmailR noc uid e
 
 uAddUserNotification :: UserId -> Notification -> Update NoC (Either Error ())
 uAddUserNotification uid n = modify $ \ noc -> addUserNotificationR noc uid n

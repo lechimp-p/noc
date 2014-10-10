@@ -12,6 +12,7 @@ import Data.Text (Text)
 import qualified Data.Set as S
 import Control.Monad.Reader (ask)
 import Data.Time.Clock (UTCTime)
+import Text.Email.Validate (EmailAddress)
 
 
 qDoLogin :: Login -> Password -> Query NoC (Maybe UserId)
@@ -76,6 +77,9 @@ qGetUserDesc uid = ask >>= \ noc -> return $ getUserDescR noc uid
 
 qGetUserIcon :: UserId -> Query NoC (Either Error (Maybe Icon))
 qGetUserIcon uid = ask >>= \ noc -> return $ getUserIconR noc uid
+
+qGetUserEmail :: UserId -> Query NoC (Either Error (Maybe EmailAddress))
+qGetUserEmail uid = ask >>= \ noc -> return $ getUserEmailR noc uid
 
 qGetUserNotifications :: UserId -> Query NoC (Either Error [Notification])
 qGetUserNotifications uid = ask >>= \ noc -> return $ getUserNotificationsR noc uid

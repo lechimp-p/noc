@@ -6,15 +6,15 @@
 
 module Model.Query where
 
+import Model.BaseTypes
+import Model.Message
+
 import Data.Text
 import Data.Time.Clock
 import Data.Data (Typeable)
+import Text.Email.Validate (EmailAddress)
 import qualified Data.Set as S
 import Control.Eff
-
-
-import Model.BaseTypes
-import Model.Message
 
 data Query n
     = IsAdmin UserId (Bool -> n)
@@ -99,6 +99,7 @@ data UserQueryType n
     | GetUserName               (Name -> n)
     | GetUserDesc               (Desc -> n)
     | GetUserIcon               (Maybe Icon -> n)
+    | GetUserEmail              (Maybe EmailAddress -> n)
     | GetUserNotifications      ([Notification] -> n)
     | GetUserContacts           (S.Set UserId -> n)
     | GetUserSubscriptions      (S.Set ChanId -> n)
@@ -122,6 +123,9 @@ getUserDesc uid = userQuery uid GetUserDesc
 
 getUserIcon :: Member Query r => UserId -> Eff r (Maybe Icon) 
 getUserIcon uid = userQuery uid GetUserIcon
+
+getUserEmail :: Member Query r => UserId -> Eff r (Maybe EmailAddress)
+getUserEmail uid = userQuery uid GetUserEmail
 
 getUserNotifications :: Member Query r => UserId -> Eff r [Notification] 
 getUserNotifications uid = userQuery uid GetUserNotifications

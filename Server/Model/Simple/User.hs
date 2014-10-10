@@ -13,6 +13,7 @@ import qualified Data.Text as T
 import Control.Lens (makeLenses)
 import Data.Time.Clock
 import Data.IxSet (Indexable, empty, IxSet, ixSet, ixFun) 
+import Text.Email.Validate (EmailAddress)
 
 import Model.BaseTypes
 
@@ -23,6 +24,7 @@ data User = User
     , _name          :: Name
     , _desc          :: Desc
     , _icon          :: Maybe Icon
+    , _email         :: Maybe EmailAddress
     , _ownedChannels :: S.Set ChanId
     , _subscriptions :: S.Set ChanId
     , _contacts      :: S.Set UserId

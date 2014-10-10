@@ -28,6 +28,7 @@ import Data.Text (Text)
 import Data.Time.Clock (UTCTime)
 import Data.Maybe (isJust)
 import Control.Eff
+import Text.Email.Validate (EmailAddress)
 
 throwOn err cond =
     if cond
@@ -239,6 +240,13 @@ getUserIcon uid = do
     forceOperatorId
     Q.getUserIcon uid
 
+getUserEmail :: (Member Query r, Member Exec r)
+             => UserId -> Eff r (Maybe EmailAddress) 
+getUserEmail uid = do
+    forceOperatorId
+    Q.getUserEmail uid
+
+
 getUserSubscriptions :: (Member Query r, Member Exec r)
                      => UserId -> Eff r (S.Set ChanId)
 getUserSubscriptions uid = do
@@ -292,6 +300,12 @@ setUserIcon :: (Member Update r, Member Query r, Member Exec r)
 setUserIcon uid v = do
     checkAccess uid forUserSelfOrAdmins
     U.setUserIcon uid v
+
+setUserEmail :: (Member Update r, Member Query r, Member Exec r)
+            => UserId -> Maybe EmailAddress -> Eff r ()
+setUserEmail uid v = do
+    checkAccess uid forUserSelfOrAdmins
+    U.setUserEmail uid v
 
 addUserContact :: (Member Update r, Member Query r, Member Exec r)
                => UserId -> UserId -> Eff r ()
