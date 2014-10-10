@@ -17,9 +17,7 @@
 * adjust size of http input to fit images (better: make it depend on usecase)
 * preprocess uploaded icons/images
 
-* implement search
 * implement statistics functions for admins
-* implement output of channel type
 
 * delete users and channels
 
@@ -28,5 +26,3 @@ Refactoring:
 * think about how the model is represented
 
 * implement constraints in model
-
-
