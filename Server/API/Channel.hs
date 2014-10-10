@@ -100,10 +100,10 @@ setHandler cid = withJSONIn $ do
     return Nothing
 
 getMessagesHandler cid = withJSONOut $ do
+    trySessionLogin
     o <- fmap (maybe 0 id . readMaybe) $ lookGet "offset"
     a <- fmap (maybe 10 id . readMaybe) $ lookGet "amount"
     ts <- fmap readMaybe $ lookGet "timestamp"
-    trySessionLogin
     msgs <- case ts of
         Nothing -> messages cid o a
         Just ts -> messagesTill cid ts
