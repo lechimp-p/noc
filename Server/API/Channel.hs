@@ -116,7 +116,7 @@ getMessagesHandler cid = withJSONOut $ do
     "messages" <$: flip fmap msgs .$ \ msg -> do
         "image"     <: _image msg
         "text"      <: _text msg
-        "timestamp" <: _timestamp msg 
+        "timestamp" <: show .$ _timestamp msg
         let uid = _author msg  
         "author"    <$. userInfo uid
 
