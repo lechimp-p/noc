@@ -8,10 +8,12 @@ controller("login-controller", function ($scope, $rootScope, API) {
 
     $scope.login = function(username, password) {
         API.login(username, password)
-            .success(function(_) {
+            .success(function(result) {
+                $rootScope.userId = result.id;
                 $rootScope.$broadcast("event:login-successfull");
             })
             .error(function(_1, status, _2, _3) {
+                // TODO: do proper error handling...
                 alert("Could not login...");
             })
             ;        
