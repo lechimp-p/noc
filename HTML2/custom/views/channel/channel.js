@@ -7,8 +7,6 @@ controller("channel-controller", [ "$scope", "$interval", "$routeParams", "API"
     var updateIntervalMS = 5000;
  
     var toScope = function(response) {
-        console.log("received messages");
-        console.log(response);
         if (response.messages.length > 0) {
             lastTS.value = response.messages[0].timestamp;
         }
@@ -20,23 +18,24 @@ controller("channel-controller", [ "$scope", "$interval", "$routeParams", "API"
         }
     };
 
+    var updateMessages = function() {
+        if (typeof lastTS.value === "undefined") {
+            API.messages($scope.channel.id, 0, 10).success(toScope);
+        }
+        else {
+            API.messagesTill($scope.channel.id, lastTS.value).success(toScope);
+        }
+    };
+
     API.getChannelInfo($routeParams.chanId)
         .success(function(response) {
             $scope.channel = response; 
-       
-            API.messages(0, 0, 10)
-                .success(toScope)
-                .success(function(_) {
-                    $interval(function() {
-                        console.log(lastTS.value);
-                        API.messagesTill(0, lastTS.value).success(toScope);
-                    }, updateIntervalMS);
-                });
+            $interval(updateMessages, updateIntervalMS);
         })
         ;
 
     $scope.post = function(message) {
-        API.post(message); 
+        API.post($scope.channel.id, message); 
     };
 
 /*    $scope.msgs =

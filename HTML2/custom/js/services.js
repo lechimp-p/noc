@@ -50,6 +50,7 @@ factory("API", function($http) {
     };
    
     API.post = function(cid, text) {
+        console.log(cid + " " + text);
         return $http(
                 { method : "POST"
                 , url : "api/channel/"+cid+"/messages"
@@ -62,7 +63,7 @@ factory("API", function($http) {
                     console.log("Error in API.post: " + data);
                 })
                 ;
-    }
+    };
 
     API.getChannelInfo = function(cid) {
         return $http(

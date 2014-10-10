@@ -63,8 +63,7 @@ messagesR n c ofs am = queryChan (messages' ofs am c) n c
 messagesTillR n c ts = queryChan (messagesTill' ts c) n c
     where
     messagesTill' ts cid _ = 
-        takeWhile ((<) ts . _timestamp) 
-        . IX.toDescList (IX.Proxy :: IX.Proxy UTCTime) $ N._messages n IX.@= cid
+        IX.toDescList (IX.Proxy :: IX.Proxy UTCTime) $ N._messages n IX.@= cid IX.@< ts
  
 
 queryUser :: (User -> b)
