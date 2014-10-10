@@ -1,10 +1,11 @@
 angular.module("NoC.channel", []).
-controller("msg-list-controller", function($scope, $interval, API) {
+controller("channel-controller", [ "$scope", "$interval", "$routeParams", "API"
+         , function($scope, $interval, $routeParams, API) {
     "use strict";
 
     var lastTS = {};
     var updateIntervalMS = 5000;
-    
+ 
     var toScope = function(response) {
         console.log("received messages");
         console.log(response);
@@ -19,16 +20,26 @@ controller("msg-list-controller", function($scope, $interval, API) {
         }
     };
 
-    API.messages(0, 0, 10)
-        .success(toScope)
-        .success(function(_) {
-            $interval(function() {
-                console.log(lastTS.value);
-                API.messagesTill(0, lastTS.value).success(toScope);
-             }, updateIntervalMS);
-         }); 
+    API.getChannelInfo($routeParams.chanId)
+        .success(function(response) {
+            $scope.channel = response; 
+       
+            API.messages(0, 0, 10)
+                .success(toScope)
+                .success(function(_) {
+                    $interval(function() {
+                        console.log(lastTS.value);
+                        API.messagesTill(0, lastTS.value).success(toScope);
+                    }, updateIntervalMS);
+                });
+        })
+        ;
 
-    /*$scope.msgs =
+    $scope.post = function(message) {
+        API.post(message); 
+    };
+
+/*    $scope.msgs =
         [ { author : 
             { icon : "img/profilepic.png"
             , name : "Max Mustermann"
@@ -44,5 +55,11 @@ controller("msg-list-controller", function($scope, $interval, API) {
             , text : "Ja, echt spitze!"
           }
         ];
-    */
-});
+
+    $scope.channel =
+        { image : "img/channel/0.png"
+        , name : "Grillen in Kölle"
+        , description : "Für alle, die in Köln grillen wollen."
+        };
+*/
+}]);

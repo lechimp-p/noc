@@ -11,7 +11,8 @@ controller("login-controller", function ($scope, $rootScope, API) {
             .success(function(_) {
                 $rootScope.$broadcast("event:login-successfull");
             })
-            .error(function(_, status, _, _) {
+            .error(function(_1, status, _2, _3) {
+                alert("Could not login...");
             })
             ;        
     };

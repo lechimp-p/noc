@@ -135,12 +135,24 @@ module.exports = function (grunt) {
             }
         , 'views-js' : { files : [
             { expand : true
+            , cwd : 'custom/views/channel'
+            , src : '*.js'
+            , dest : 'dist/js'
+            , filter : 'isFile'
+            },
+            { expand : true
             , cwd : 'custom/views/login'
             , src : '*.js'
             , dest : 'dist/js'
             , filter : 'isFile'
             }]}
         , 'views-html' : { files : [
+            { expand : true
+            , cwd : 'custom/views/channel'
+            , src : '*.html'
+            , dest : 'dist/partials'
+            , filter : 'isFile'
+            },
             { expand : true
             , cwd : 'custom/views/login'
             , src : '*.html'

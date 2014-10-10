@@ -8,9 +8,17 @@ angular.module("NoC",
 
 .config([ '$routeProvider', function($routeProvider) {
         $routeProvider
-            .when("/login", { templateUrl: "partials/login.html"
-                            , controller : "login-controller"
-                            })
+            .when("/login", 
+                { templateUrl: "partials/login.html"
+                , controller : "login-controller"
+                })
+            .when("/channel/:chanId", 
+                { templateUrl: "partials/channel.html"
+                , controller : "channel-controller"
+                })
+            .otherwise(
+                { redirectTo : "/login"
+                })
             ;
 }])
 
@@ -19,22 +27,23 @@ angular.module("NoC",
 // login required event and resend the requests after successfull
 // login.
 .factory('unauthInterceptor', ['$q', '$rootScope', function($q, $rootScope) {
+    var STATUS_UNAUTHORIZED = 401;
     var unauthInterceptor =
         { 'responseError' : function(rejection) {
                 console.log(rejection);
-                if (rejection.status === 401) {
-                    var deferred = $q.defer();
-                    var request = { config : rejection.config
-                                  , deferred : deferred
-                                  };
+                if (rejection.status === STATUS_UNAUTHORIZED) {
+//                    var deferred = $q.defer();
+//                    var request = { config : rejection.config
+//                                  , deferred : deferred
+//                                  };
 
-                    $rootScope.deferred401.push(request);
+//                    $rootScope.deferred401.push(request);
                     $rootScope.$broadcast("event:login-required");
-                    return deferred.promise;
+//                    return deferred.promise;
                 }
-                else {
+//                else {
                     return $q.reject(rejection);
-                }
+//                }
             }
         };
     return unauthInterceptor;
@@ -44,13 +53,20 @@ angular.module("NoC",
     $httpProvider.interceptors.push( 'unauthInterceptor');
 }])
 
-.run(['$rootScope', '$http', 'API', function($rootScope, $http, API) {
-    $rootScope.deferred401 = [];
+.run(['$rootScope', '$http', '$location', 'API', function($rootScope, $http, $location, API) {
+    //$rootScope.deferred401 = [];
+    $rootScope.deferredRoute = "";
     
     $rootScope.$on("event:login-successfull", function() {
-        $http(req.config).then(function(response) {
+        $location.path($rootScope.deferredRoute);
+        /*$http(req.config).then(function(response) {
             req.deferred.resolve(reponse);
-        }); 
+        });*/ 
+    });
+
+    $rootScope.$on("event:login-required", function() {
+        $rootScope.deferredRoute = $location.path();
+        $location.path("/login");
     });
 }])
 
