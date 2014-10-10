@@ -103,6 +103,13 @@ setHandler cid = withJSONIn $ do
     "name"          ?> \ n -> makeName n >>= setChanName cid
     "description"   ?> \ d -> makeDesc d >>= setChanDesc cid  
     "type"          ?> setChanType cid
+    "image"         .?> do
+        typ <- prop "type"
+        dat <- prop "data"
+        img <- storeImage typ dat 
+        case img of
+            Left err -> throwJSONError $ CantDecodeProperty "image" (show err)
+            Right r -> setChanImage cid (Just r)
     return Nothing
 
 getMessagesHandler cid = withJSONOut $ do
