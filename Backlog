@@ -21,6 +21,10 @@
 
 * delete users and channels
 
+* The session handling needs some kind of review:
+    - login and password should not be stored in session
+    - make session an effect?
+
 Refactoring:
 
 * think about how the model is represented
