@@ -42,8 +42,8 @@ instance PathInfo ChannelAPI
 channelroutes :: Router () (ChannelAPI :- ())
 channelroutes =
     (  rBase 
-    <> "messages" . rMessages
     <> "users" . rUsers
+    <> "messages" . rMessages
     )
 
 route :: (Member API r, Member Exec r, Member Query r, Member Update r)
@@ -72,10 +72,16 @@ genericHandler = do
 
 searchHandler = withJSONOut $ do
     trySessionLogin
-    n <- fmap T.pack $ lookGet "name"
+    n' <- fmap (fmap T.pack) $ lookGet "name"
     -- TODO: set minimal length of search param
-    cids <- searchChanByName n
-    "result" <$: fmap channelInfo (S.toList cids)
+    case n' of
+        Just n -> do
+            cids <- searchChanByName n
+            "result" <$: fmap channelInfo (S.toList cids)
+            return () 
+        Nothing -> do
+            "error" <: ("No query parameter given." :: String)
+            return () 
 
 createHandler = withJSONIO $ do 
     trySessionLogin
@@ -101,9 +107,9 @@ setHandler cid = withJSONIn $ do
 
 getMessagesHandler cid = withJSONOut $ do
     trySessionLogin
-    o <- fmap (maybe 0 id . readMaybe) $ lookGet "offset"
-    a <- fmap (maybe 10 id . readMaybe) $ lookGet "amount"
-    ts <- fmap readMaybe $ lookGet "timestamp"
+    o  <- fmap (maybe 0 id) $ readGet "offset"
+    a <- fmap (maybe 10 id) $ readGet "amount"
+    ts <- readGet "timestamp"
     msgs <- case ts of
         Nothing -> messages cid o a
         Just ts -> messagesTill cid ts

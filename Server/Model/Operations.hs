@@ -109,6 +109,12 @@ getChanType cid = do
     checkAccess cid forAllChanPeople
     Q.getChanType cid
 
+getChanImage :: (Member Query r, Member Exec r)
+             => ChanId -> Eff r (Maybe Image) 
+getChanImage cid = do
+    checkAccess cid forAllChanPeople
+    Q.getChanImage cid
+
 setChanName :: (Member Update r, Member Query r, Member Exec r)
             => ChanId -> Name -> Eff r () 
 setChanName cid v = do
@@ -126,6 +132,12 @@ setChanType :: (Member Update r, Member Query r, Member Exec r)
 setChanType cid v = do
     checkAccess cid forChanOwnersOrAdmins
     U.setChanType cid v 
+
+setChanImage :: (Member Update r, Member Query r, Member Exec r)
+             => ChanId -> Maybe Image -> Eff r () 
+setChanImage cid v = do
+    checkAccess cid forChanOwnersOrAdmins
+    U.setChanImage cid v 
 
 isChanOwner :: (Member Query r, Member Exec r)
             => ChanId -> UserId -> Eff r Bool

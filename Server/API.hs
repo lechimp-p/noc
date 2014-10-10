@@ -50,14 +50,14 @@ apiroutes =
     (  "login" . rLogin
     <> "logout" . rLogout
     <> "user" . user
-    <> "channel" . channel
+    <> "channel" . channel 
     <> rDefault
     )
     where
     user =      rUserGeneric
-             <> rUser </> int </> User.userroutes 
-    channel =   rChannelGeneric 
-             <> rChannel </> int </> Channel.channelroutes
+             <> rUser </> int </> userroutes 
+    channel =   rChannelGeneric
+             <> rChannel </> int </> channelroutes 
 
 
 route :: (Member API r, Member Exec r, Member Query r, Member Update r)
