@@ -33,11 +33,12 @@ import System.Directory ( getCurrentDirectory
                         )
 import Happstack.Server.ClientSession as CS
 import Happstack.Server (unBody, askRq, ServerPartT)
-import Happstack.Server.RqData ( look
+import Happstack.Server.RqData ( looks
                                , decodeBody
                                , defaultBodyPolicy
                                , BodyPolicy
                                , HasRqData
+                               , queryString
                                )
 import Happstack.Server.Response (resp, ToMessage(..))
 import Happstack.Server.Types (Response, takeRequestBody)
@@ -80,7 +81,7 @@ evalAPI config req = case req of
     PutSession s n      -> (fmap n (CS.putSession s))
     ExpireSession n     -> (fmap n CS.expireSession) 
     Respond s t n       -> (fmap n $ (resp s t))
-    LookGet t n         -> (fmap n (look t)) 
+    LookGet t n         -> (fmap (n . head') (queryString $ looks t)) 
     Timestamp n         -> (fmap n (liftIO getCurrentTime))
     Config f n          -> (fmap n . return . f $ config)
     GetBody n           -> (fmap n $ do
@@ -130,6 +131,9 @@ evalAPI config req = case req of
         else do
             b <- liftIO getCurrentDirectory
             return $ b </> basepath'
+
+    head' [] = Nothing
+    head' (x:xs) = Just x
     
 
 data Message = forall a. IsResponse a => Message a

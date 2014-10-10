@@ -20,6 +20,8 @@ import qualified Data.ByteString as B
 import qualified Data.Text as T
 import Data.Aeson (Value, encode)
 import Control.Eff
+import Control.Monad (join)
+import Text.Read (readMaybe)
 
 class IsResponse r where
     contentType :: r -> B.ByteString
@@ -41,7 +43,7 @@ data API n
     | PutSession AuthData                       (() -> n)
     | ExpireSession                             (() -> n)
     | forall r. IsResponse r => Respond Int r   (r -> n) 
-    | LookGet String                            (String -> n)
+    | LookGet String                            (Maybe String -> n)
     | Timestamp                                 (UTCTime -> n)
     | forall a. Config (APIConfig -> a)         (a -> n)
     | GetBody                                   (L.ByteString -> n)               
@@ -92,7 +94,7 @@ respond status resp = send $ \ next -> inj (Respond status resp next)
 
 
 lookGet :: Member API r
-        => String -> Eff r String
+        => String -> Eff r (Maybe String)
 lookGet var = send $ \ next -> inj (LookGet var next)
 
 
@@ -156,6 +158,16 @@ unauthorized :: ( Member API r
                 )
              => resp -> Eff r resp
 unauthorized = respond 401 
+
+
+readGet :: (Member API r, Read a)
+        => String -> Eff r (Maybe a)
+readGet = fmap (join . fmap readMaybe) . lookGet
+--do
+--    res <- lookGet var
+--    case res of
+--        Nothing -> return Nothing
+--        Just r' -> return $ readMaybe r'
 
 instance IsResponse L.ByteString where
     content = id
