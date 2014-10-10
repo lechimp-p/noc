@@ -75,6 +75,7 @@ normalizeError (Right v) = v
 normalizeResponse :: Member API r
                   => Eff r (Either Error (Maybe Value)) -> Eff r (Maybe Value)
 normalizeResponse m = m >>= \ val -> case val of
+    Left err@(ModelError' ME.NotLoggedIn) -> unauthorized . Just $ errorJSON err 
     Left err        -> badRequest . Just $ errorJSON err
     Right Nothing   -> noContent $ Nothing
     Right v@(Just _)-> ok $ v 

@@ -151,6 +151,12 @@ badRequest :: ( Member API r
            => resp -> Eff r resp 
 badRequest = respond 400
 
+unauthorized :: ( Member API r
+                , IsResponse resp
+                )
+             => resp -> Eff r resp
+unauthorized = respond 401 
+
 instance IsResponse L.ByteString where
     content = id
     contentType = const "text/plain"
