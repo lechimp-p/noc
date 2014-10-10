@@ -86,10 +86,16 @@ genericHandler = do
 
 searchHandler = withJSONOut $ do
     trySessionLogin
-    l <- fmap T.pack $ lookGet "login"
+    l' <- fmap (fmap T.pack) $ lookGet "login"
     -- TODO: implement minimal length of input here
-    uids <- searchUserByLogin l 
-    "result" <$: fmap userInfo (S.toList uids)
+    case l' of
+        Just l -> do
+            uids <- searchUserByLogin l 
+            "result" <$: fmap userInfo (S.toList uids)
+            return ()
+        Nothing -> do
+            "error" <: ("No query parameter given." :: String)
+            return ()
     
 
 createHandler = withJSONIO $ do
