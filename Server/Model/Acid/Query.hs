@@ -12,6 +12,7 @@ import Data.Text (Text)
 import qualified Data.Set as S
 import Control.Monad.Reader (ask)
 import Data.Time.Clock (UTCTime)
+import Text.Email.Validate (EmailAddress)
 
 
 qDoLogin :: Login -> Password -> Query NoC (Maybe UserId)
@@ -25,6 +26,12 @@ qCountAdmins = ask >>= \ noc -> return . Right $ countAdminsR noc
 
 qGetUserIdByLogin :: Text -> Query NoC (Either Error (Maybe UserId))
 qGetUserIdByLogin t = ask >>= \ noc -> return . Right $ getUserIdByLoginR noc t
+
+qSearchUserByLogin :: Text -> Query NoC (Either Error (S.Set UserId))
+qSearchUserByLogin t = ask >>= \ noc -> return . Right $ searchUserByLoginR noc t
+
+qSearchChanByName :: Text -> Query NoC (Either Error (S.Set ChanId))
+qSearchChanByName n = ask >>= \ noc -> return . Right $ searchChanByNameR noc n
 
 qGetChanName :: ChanId -> Query NoC (Either Error Name)
 qGetChanName cid = ask >>= \ noc -> return $ getChanNameR noc cid
@@ -70,6 +77,9 @@ qGetUserDesc uid = ask >>= \ noc -> return $ getUserDescR noc uid
 
 qGetUserIcon :: UserId -> Query NoC (Either Error (Maybe Icon))
 qGetUserIcon uid = ask >>= \ noc -> return $ getUserIconR noc uid
+
+qGetUserEmail :: UserId -> Query NoC (Either Error (Maybe EmailAddress))
+qGetUserEmail uid = ask >>= \ noc -> return $ getUserEmailR noc uid
 
 qGetUserNotifications :: UserId -> Query NoC (Either Error [Notification])
 qGetUserNotifications uid = ask >>= \ noc -> return $ getUserNotificationsR noc uid

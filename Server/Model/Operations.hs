@@ -28,6 +28,7 @@ import Data.Text (Text)
 import Data.Time.Clock (UTCTime)
 import Data.Maybe (isJust)
 import Control.Eff
+import Text.Email.Validate (EmailAddress)
 
 throwOn err cond =
     if cond
@@ -81,6 +82,14 @@ doLogout = E.doLogout
 -------------------------
 -- operations on channels
 -------------------------
+
+searchChanByName :: (Member Query r, Member Exec r)
+                 => Text -> Eff r (S.Set ChanId)
+searchChanByName n = do
+    -- TODO: this is inefficient ...
+    cids <- fmap S.toList $ Q.searchChanByName n 
+    perms <- sequence $ fmap (flip hasAccess forAllChanPeople) cids
+    return . S.fromList . fmap fst . filter snd . zip cids $ perms
 
 getChanName :: (Member Query r, Member Exec r)
             => ChanId -> Eff r Name
@@ -201,6 +210,12 @@ unsubscribeFromChan uid cid = do
 -- operations on users
 ----------------------
 
+searchUserByLogin :: (Member Query r, Member Exec r)
+                  => Text -> Eff r (S.Set UserId)
+searchUserByLogin l = do
+    forceOperatorId
+    Q.searchUserByLogin l
+
 getUserLogin :: (Member Query r, Member Exec r)
              => UserId -> Eff r Login 
 getUserLogin uid = do
@@ -224,6 +239,13 @@ getUserIcon :: (Member Query r, Member Exec r)
 getUserIcon uid = do
     forceOperatorId
     Q.getUserIcon uid
+
+getUserEmail :: (Member Query r, Member Exec r)
+             => UserId -> Eff r (Maybe EmailAddress) 
+getUserEmail uid = do
+    forceOperatorId
+    Q.getUserEmail uid
+
 
 getUserSubscriptions :: (Member Query r, Member Exec r)
                      => UserId -> Eff r (S.Set ChanId)
@@ -278,6 +300,12 @@ setUserIcon :: (Member Update r, Member Query r, Member Exec r)
 setUserIcon uid v = do
     checkAccess uid forUserSelfOrAdmins
     U.setUserIcon uid v
+
+setUserEmail :: (Member Update r, Member Query r, Member Exec r)
+            => UserId -> Maybe EmailAddress -> Eff r ()
+setUserEmail uid v = do
+    checkAccess uid forUserSelfOrAdmins
+    U.setUserEmail uid v
 
 addUserContact :: (Member Update r, Member Query r, Member Exec r)
                => UserId -> UserId -> Eff r ()

@@ -47,6 +47,7 @@ evalQuery noc q = case q of
     CountAdmins next -> Right . next . countAdminsR $ noc
     GetUserIdByLogin l next -> Right . next . getUserIdByLoginR noc $ l
     SearchUserByLogin l next -> Right . next . searchUserByLoginR noc $ l
+    SearchChanByName n next -> Right . next . searchChanByNameR noc $ n 
     ChanQuery cid q -> evalChanQuery noc q cid
     UserQuery uid q -> evalUserQuery noc q uid
 
@@ -72,6 +73,7 @@ evalUserQuery noc q uid = case q of
     GetUserName next -> fmap next . getUserNameR noc $ uid
     GetUserDesc next -> fmap next . getUserDescR noc $ uid
     GetUserIcon next -> fmap next . getUserIconR noc $ uid
+    GetUserEmail next -> fmap next . getUserEmailR noc $ uid
     GetUserNotifications next -> fmap next . getUserNotificationsR noc $ uid
     GetUserContacts next -> fmap next . getUserContactsR noc $ uid
     GetUserSubscriptions next -> fmap next . getUserSubscriptionsR noc $ uid
@@ -122,6 +124,7 @@ evalUserUpdate noc uid q = case q of
     SetUserName n next -> fmap (fmap next) . setUserNameR noc uid $ n
     SetUserDesc d next -> fmap (fmap next) . setUserDescR noc uid $ d
     SetUserIcon i next -> fmap (fmap next) . setUserIconR noc uid $ i
+    SetUserEmail e next -> fmap (fmap next) . setUserEmailR noc uid $ e
     AddUserNotification n next -> fmap (fmap next) . addUserNotificationR noc uid $ n
     AddUserContact uid' next -> fmap (fmap next) . addUserContactR noc uid $ uid'
     RmUserContact uid' next -> fmap (fmap next) . rmUserContactR noc uid $ uid'

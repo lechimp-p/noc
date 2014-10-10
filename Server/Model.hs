@@ -1,13 +1,10 @@
 module Model
     ( module Model.Operations
+    , module Model.Constraints
     , Login
-    , mkLogin
     , Password
-    , mkPassword
     , Name
-    , mkName
     , Desc
-    , mkDesc
     , UserId
     , ChanId
     , MsgId
@@ -22,3 +19,4 @@ where
 import Model.Operations
 import Model.Message
 import Model.BaseTypes
+import Model.Constraints

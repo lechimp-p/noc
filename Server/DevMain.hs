@@ -7,6 +7,7 @@ import Maintenance
 import API.Config
 import Model
 import Model.Acid
+import Model.BaseTypes
 
 import Data.Time.Format
 import System.Locale
@@ -14,7 +15,7 @@ import Control.Lens
 import Web.Routes.Happstack (implSite)
 import Happstack.Server (simpleHTTP, nullConf, Conf (..))
 
-initialNoC = mkNoC (mkLogin "admin") (mkPassword "admin") 
+initialNoC = mkNoC (Login "admin") (Password "admin") 
 
 accessLog :: FormatTime time
           => String -> String -> time -> String -> Int -> Integer -> String -> String -> IO ()

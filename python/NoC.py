@@ -43,6 +43,10 @@ class user(object):
         op.postR( user.base_path, { "login" : login, "password" : password })
         return user(login, password)         
 
+    @staticmethod
+    def search(op, login):
+        return op.getR( user.base_path, { "login" : login })
+
     # Methods
 
     def set(self, op, **dct):
@@ -111,9 +115,13 @@ class channel(object):
         self.id = id
 
     @staticmethod
-    def create(op, name, description):
-        r = op.postR( channel.base_path, { "name" : name, "description" : description })
+    def create(op, name):
+        r = op.postR( channel.base_path, { "name" : name })
         return channel(r["id"])
+
+    @staticmethod
+    def search(op, name):
+        return op.getR( channel.base_path, { "name" : name })
 
     def set(self, op, **dct):
         op.postR(self.channel_path % self.id, dct)

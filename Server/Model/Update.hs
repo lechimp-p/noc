@@ -6,12 +6,13 @@
 
 module Model.Update where
 
+import Model.BaseTypes
+
 import Data.Text
 import Data.Time.Clock
 import Data.Data (Typeable)
 import Control.Eff
-
-import Model.BaseTypes
+import Text.Email.Validate (EmailAddress)
 
 data Update n
     = CreateChan UserId Name            (ChanId -> n)
@@ -91,6 +92,7 @@ data UserUpdateType n
     | SetUserName Name                  (() -> n) 
     | SetUserDesc Desc                  (() -> n) 
     | SetUserIcon (Maybe Icon)          (() -> n) 
+    | SetUserEmail (Maybe EmailAddress) (() -> n)
     | AddUserNotification Notification  (() -> n) 
     | AddUserContact UserId             (() -> n) 
     | RmUserContact UserId              (() -> n) 
@@ -116,6 +118,9 @@ setUserDesc uid l = userUpdate uid (SetUserDesc l)
 
 setUserIcon :: Member Update r => UserId -> (Maybe Icon) -> Eff r ()
 setUserIcon uid l = userUpdate uid (SetUserIcon l)
+
+setUserEmail :: Member Update r => UserId -> Maybe EmailAddress -> Eff r ()
+setUserEmail uid e = userUpdate uid (SetUserEmail e)
 
 addUserNotification :: Member Update r => UserId -> Notification -> Eff r ()
 addUserNotification uid n = userUpdate uid (AddUserNotification n)

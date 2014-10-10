@@ -103,7 +103,7 @@ withJSONIn eff = do
 -- JSON instances
 -----------------
 
-instance FromJSON Login where
+{--instance FromJSON Login where
     parseJSON (String t) = return . mkLogin $ t
     parseJSON _ = mzero 
 
@@ -118,6 +118,7 @@ instance FromJSON Name where
 instance FromJSON Desc where
     parseJSON (String t) = return . mkDesc $ t
     parseJSON _ = mzero 
+--}
 
 instance FromJSON ChanType where
     parseJSON (String t)
@@ -184,13 +185,16 @@ instance ToJSON ChanType where
 -----------------
 
 userInfo uid = do
-    "id"        <: uid
-    "login"     <$ getUserLogin uid
-    "name"      <$ getUserName uid
-    "icon"      <$ getUserIcon uid
+    "id"            <: uid
+    "login"         <$ getUserLogin uid
+    "name"          <$ getUserName uid
+    "description"   <$ getUserDesc uid
+    "icon"          <$ getUserIcon uid
 
 channelInfo cid = do
     "id"            <: cid
     "name"          <$ getChanName cid
     "description"   <$ getChanDesc cid      
     "type"          <$ getChanType cid
+    "amountOfUsers" <$ amountOfSubscribedUsers cid
+    "lastPost"      <$ lastPostTimestamp cid

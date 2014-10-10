@@ -6,21 +6,22 @@
 
 module Model.Query where
 
+import Model.BaseTypes
+import Model.Message
+
 import Data.Text
 import Data.Time.Clock
 import Data.Data (Typeable)
+import Text.Email.Validate (EmailAddress)
 import qualified Data.Set as S
 import Control.Eff
-
-
-import Model.BaseTypes
-import Model.Message
 
 data Query n
     = IsAdmin UserId (Bool -> n)
     | CountAdmins (Int -> n)
     | GetUserIdByLogin Text (Maybe UserId -> n)
     | SearchUserByLogin Text (S.Set UserId -> n)
+    | SearchChanByName Text (S.Set ChanId -> n)
     | ChanQuery ChanId (ChanQueryType n) 
     | UserQuery UserId (UserQueryType n)
     deriving (Typeable, Functor)
@@ -36,6 +37,9 @@ getUserIdByLogin l = send $ \ next -> inj (GetUserIdByLogin l next)
 
 searchUserByLogin :: Member Query r => Text -> Eff r (S.Set UserId)
 searchUserByLogin l = send $ \ next -> inj (SearchUserByLogin l next)
+
+searchChanByName :: Member Query r => Text -> Eff r (S.Set ChanId)
+searchChanByName n = send $ \ next -> inj (SearchChanByName n next)
 
 data ChanQueryType n
     = GetChanName               (Name -> n)
@@ -95,6 +99,7 @@ data UserQueryType n
     | GetUserName               (Name -> n)
     | GetUserDesc               (Desc -> n)
     | GetUserIcon               (Maybe Icon -> n)
+    | GetUserEmail              (Maybe EmailAddress -> n)
     | GetUserNotifications      ([Notification] -> n)
     | GetUserContacts           (S.Set UserId -> n)
     | GetUserSubscriptions      (S.Set ChanId -> n)
@@ -118,6 +123,9 @@ getUserDesc uid = userQuery uid GetUserDesc
 
 getUserIcon :: Member Query r => UserId -> Eff r (Maybe Icon) 
 getUserIcon uid = userQuery uid GetUserIcon
+
+getUserEmail :: Member Query r => UserId -> Eff r (Maybe EmailAddress)
+getUserEmail uid = userQuery uid GetUserEmail
 
 getUserNotifications :: Member Query r => UserId -> Eff r [Notification] 
 getUserNotifications uid = userQuery uid GetUserNotifications

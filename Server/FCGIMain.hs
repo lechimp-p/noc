@@ -28,6 +28,7 @@ import System.IO
 
 import Maintenance
 import Model
+import Model.BaseTypes
 import API (site)
 import API.Config
 import API.Utils (ACID)
@@ -36,7 +37,7 @@ import API.APIMonad (InnerAPIMonadT)
 import ACID.Query
 import ACID.Update
 
-initialNoC = mkNoC (mkLogin "admin") (mkPassword "admin") 
+initialNoC = mkNoC (Login "admin") (Password "admin") 
 
 simpleFCGI threads = runFastCGIConcurrent threads . serverPartToCGI
 

@@ -13,6 +13,7 @@ import API.Session
 import API.Utils
 import Model.BaseTypes
 import Model.Exec
+import Model.Constraints
 
 import Data.Data (Data, Typeable)
 import Data.Time.Clock (UTCTime)
@@ -51,8 +52,8 @@ authTimestamp = authGet _timestamp
 logUserIn :: (Member API r, Member Exec r)
           => Eff r (Either Error (Maybe Value))
 logUserIn = withJSONIO $ do
-        l <- prop "login"
-        pw <- prop "password"
+        l <- makeLogin =<< prop "login" 
+        pw <- makePassword =<< prop "password" 
         "id" <$ doLogin l pw
         refreshCookie (Just l) (Just pw)
 

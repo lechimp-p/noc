@@ -29,7 +29,8 @@ isAdminR noc uid = S.member uid . _admins $ noc
 countAdminsR noc = S.size . _admins $ noc
 getUserIdByLoginR noc l = fmap U._id . IX.getOne $ _users noc IX.@= (Login l) 
 
-searchUserByLoginR noc l = undefined "Simple.Operations.searchUserByLoginR" 
+searchUserByLoginR noc l = S.map U._id . IX.toSet $ _users noc IX.@= (IxLoginSearch l)
+searchChanByNameR noc n = S.map C._id . IX.toSet $ _channels noc IX.@= (IxChanNameSearch n)
  
 queryChan :: (Channel -> b)
           -> NoC 
@@ -80,6 +81,7 @@ getUserLoginR = queryUser U._login
 getUserNameR = queryUser U._name
 getUserDescR = queryUser U._desc
 getUserIconR = queryUser U._icon
+getUserEmailR = queryUser U._email
 getUserNotificationsR = queryUser U._notifications
 getUserContactsR = queryUser U._contacts
 getUserSubscriptionsR = queryUser U._subscriptions
@@ -88,13 +90,13 @@ getUserSubscriptionsR = queryUser U._subscriptions
 createChanR noc uid name = (noc', cid)
     where
     noc' = over channels (IX.insert chan) (set nextChanId ncid noc)
-    chan = Channel cid name (mkDesc "") None Nothing (S.insert uid S.empty) S.empty S.empty S.empty S.empty  
+    chan = Channel cid name (Desc "") None Nothing (S.insert uid S.empty) S.empty S.empty S.empty S.empty  
     cid = _nextChanId noc
     ncid = ChanId(ciToInt cid + 1) 
 createUserR noc l pw = (noc', uid)
     where
     noc' = over users (IX.insert user) (set nextUserId nuid noc)
-    user = User uid l pw (mkName "") (mkDesc "") Nothing S.empty S.empty S.empty []
+    user = User uid l pw (Name "") (Desc "") Nothing Nothing S.empty S.empty S.empty []
     uid  = _nextUserId noc
     nuid = UserId (uiToInt uid + 1)
 addAdminR noc uid = (over admins (S.insert uid) noc, ()) 
@@ -146,6 +148,7 @@ setUserPasswordR n u pw = updateUser (set password pw) () n u
 setUserNameR n u n' = updateUser (set U.name n') () n u
 setUserDescR n u d = updateUser (set U.desc d) () n u
 setUserIconR n u i = updateUser (set icon i) () n u
+setUserEmailR n u e = updateUser (set email e) () n u
 addUserNotificationR n u n' = updateUser (over notifications ((:) n')) () n u
 addUserContactR n u uid = updateUser (over contacts (S.insert uid)) () n u
 rmUserContactR n u uid = updateUser (over contacts (S.delete uid)) () n u

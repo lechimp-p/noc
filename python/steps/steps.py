@@ -2,14 +2,15 @@ import random
 import string
 from behave import *
 
-def can_to_modifier(can):
-    print can
-    if can == "can":
-        return id
-    elif can == "can not":
+def to_modifier(verb):
+    if "not" in verb:
         return (lambda x : not x)
     else:
-        raise ValueError("Either you can or you can not, but i don't know how you '%s'" % can)
+        return lambda x : x 
+
+def check_verb(verb, word):
+    if not word in ["%s not" % verb, "not %s" % verb, verb]:
+        raise ValueError("Either you %s or you %s not, but i don't know how you '%s'" % (verb, verb, word))
 
 def random_string(length = 10):
     return ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(0, length))
@@ -21,6 +22,11 @@ def step_impl(context, user):
             context.users[user] = context.NoC.user(user, user)
         except context.NoC.NoCError:
             context.users[user] = context.NoC.user.create(context.users["admin"], user, user)
+
+@given("Channel {channel} exists")
+def step_impl(context, channel):
+    if not channel in context.channels:
+        context.channels[channel] = context.NoC.channel.create(context.users["admin"], channel)
 
 @when("I am {user}")
 def step_impl(context, user):
@@ -35,12 +41,13 @@ def step_impl(context, what):
 
 @then("I {can} create a {what} \"{name}\"")
 def step_impl(context, can, what, name):
-    mod = can_to_modifier(can)
+    check_verb("can", can)
+    mod = to_modifier(can)
        
     worked = None 
     if what == "channel":
         try:
-            context.channels[name] = context.NoC.channel.create(context.actor, name, "Description of %s" % name)
+            context.channels[name] = context.NoC.channel.create(context.actor, name)
             worked = True 
         except context.NoC.NoCError:
             worked = False 
@@ -64,14 +71,15 @@ def step_impl(context, name):
 
 @when("{user} creates a channel \"{name}\"")
 def step_impl(context, user, name):
-    create_channel(context.users[user], name)
+    create_channel(context, context.users[user], name)
 
-def create_channel(who, name):
-    context.channels[name] = context.NoC.channel.create(who, name, "Description of %s" % name)
+def create_channel(context, who, name):
+    context.channels[name] = context.NoC.channel.create(who, name)
 
 @then("I {can} set {property} of {what} \"{name}\"")
 def step_imp(context, can, property, what, name):
-    mod = can_to_modifier(can)
+    check_verb("can", can)
+    mod = to_modifier(can)
 
     worked = None 
     if what == "channel":
@@ -100,3 +108,24 @@ def step_imp(context, can, property, what, name):
 
     else:
         raise ValueError("Don't know how i could possibly set something for a %s" % what)
+
+@when("I search for {what} {search}") 
+def step_impl(context, what, search):
+    if what == "channel":
+        res = context.NoC.channel.search(context.actor, search)
+        context.search_result = []
+        for r in res["result"]:
+            context.search_result.append(r["name"]) 
+    elif what == "user":
+        res = context.NoC.user.search(context.actor, search)
+        context.search_result = []
+        for r in res["result"]:
+            context.search_result.append(r["login"]) 
+    else:
+        raise ValueError("Don't know how to search for a %s" % what)
+
+@then("the result will {contain} \"{name}\"")
+def step_impl(context, contain, name):
+    check_verb("contain", contain)
+    mod = to_modifier(contain)
+    assert mod(name in context.search_result)

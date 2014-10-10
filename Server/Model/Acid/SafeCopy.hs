@@ -17,7 +17,9 @@ import Model.Simple.Message
 import Model.Simple.NoC
 
 import Data.SafeCopy (base, deriveSafeCopy)
+import Text.Email.Validate
 
+$(deriveSafeCopy 0 'base ''EmailAddress)
 $(deriveSafeCopy 0 'base ''PermissionViolation)
 $(deriveSafeCopy 0 'base ''Error)
 $(deriveSafeCopy 0 'base ''UserId)

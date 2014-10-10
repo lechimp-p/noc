@@ -17,12 +17,14 @@ import API.Utils
 import API.Auth hiding (timestamp)
 import API.ImageUtils
 
+import qualified Data.Text as T
 import Prelude hiding ( id, (.) )
 import Control.Category ( Category(id, (.)) )
 import Web.Routes
 import Control.Eff
 import Control.Eff.JSON
 import Data.Aeson (Value)
+import qualified Data.Set as S
 import Text.Boomerang.TH (makeBoomerangs)
 import Web.Routes.Boomerang
 import Text.Read (readMaybe)
@@ -68,28 +70,32 @@ genericHandler = do
         POST        -> createHandler
         otherwise   -> methodNotSupported
 
-searchHandler = error "Channel.searchHandler"
+searchHandler = withJSONOut $ do
+    trySessionLogin
+    n <- fmap T.pack $ lookGet "name"
+    -- TODO: set minimal length of search param
+    cids <- searchChanByName n
+    "result" <$: fmap channelInfo (S.toList cids)
 
 createHandler = withJSONIO $ do 
     trySessionLogin
-    n <- prop "name"
-    d <- maybeProp "description"
+    n <- makeName =<< prop "name"
+    d <- maybeProp "description" >>= \ d ->
+        case d of
+            Nothing -> return Nothing
+            Just d -> fmap Just $ makeDesc d
     cid <- createChannel n
     ifIsJust d (setChanDesc cid)
     "id" <: cid 
 
 getHandler cid = withJSONOut $ do
     trySessionLogin
-    "name"          <$ getChanName cid
-    "description"   <$ getChanDesc cid      
-    "type"          <$ getChanType cid
-    "amountOfUsers" <$ amountOfSubscribedUsers cid
-    "lastPost"      <$ lastPostTimestamp cid
+    channelInfo cid
 
 setHandler cid = withJSONIn $ do 
     trySessionLogin
-    "name"          ?> setChanName cid
-    "description"   ?> setChanDesc cid  
+    "name"          ?> \ n -> makeName n >>= setChanName cid
+    "description"   ?> \ d -> makeDesc d >>= setChanDesc cid  
     "type"          ?> setChanType cid
     return Nothing
 

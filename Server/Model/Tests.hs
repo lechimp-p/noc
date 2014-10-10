@@ -26,18 +26,18 @@ nocFuncTests = group "Tests of NoCs functionality."
     [ test "User added." "Could not retreive user after adding."
         $ onFreshNoC $ do
             let name = "xyz"
-            uid <- createUser (mkLogin name) (mkPassword name)
+            uid <- createUser (Login name) (Password name)
             name' <- getUserLogin uid
-            return $ (mkLogin name) == name'  
-    , test "User added." "Could not retreive user by mkLogin after adding."
+            return $ (Login name) == name'  
+    , test "User added." "Could not retreive user by Login after adding."
         $ onFreshNoC $ do
             let name = "xyz"
-            uid <- createUser (mkLogin name) (mkPassword name)
+            uid <- createUser (Login name) (Password name)
             uid' <- getUserIdByLogin name
             return $ uid == uid'
     , test "Admin added." "User is not an admin after adding."
         $ onFreshNoC $ do
-            uid <- createUser (mkLogin "user") (mkPassword "mkPassword") 
+            uid <- createUser (Login "user") (Password "Password") 
             addAdmin uid
             isAdmin uid
     , test "None existing user added as admin." "Could add non existing users as admins."
@@ -56,59 +56,59 @@ nocPermTests = group "Tests of Permissions on NoC"
             isAdmin (UserId 0)
     , test "Admin can run commands on NoC." "Admin can't run commands on NoC."
         $ doesNotFail
-            (let l = mkLogin "admin"
-                 pw = mkPassword "password"
+            (let l = Login "admin"
+                 pw = Password "password"
              in run $ runSimple (mkNoC l pw) Nothing (doLogin l pw >> return ())
             )
     , test "User with wrong password can not run commands on NoC."
            "User with wrong password can run commands on NoC."
-        $ let l = mkLogin "admin"
-              pw = mkPassword "admin"
-              pw' = mkPassword "admin'"
+        $ let l = Login "admin"
+              pw = Password "admin"
+              pw' = Password "admin'"
           in failsWith (CantLogin l) 
            $ run $ runSimple (mkNoC l pw) Nothing (doLogin l pw' >> return ())
     , test "User with non existing username can not run commands on NoC."
            "User with non existing username can run commands on NoC."
-       $  let l = mkLogin "admin"
-              l' = mkLogin "admin'"
-              pw = mkPassword "admin"
+       $  let l = Login "admin"
+              l' = Login "admin'"
+              pw = Password "admin"
           in failsWith (CantLogin l') 
            $ run $ runSimple (mkNoC l pw) Nothing (doLogin l' pw >> return ())
     , test "Admin creates a new user." "Admin can not create a new user."
         $ onFreshNoC $ do
-            uid <- createUser (mkLogin "admin2") (mkPassword "admin2")
+            uid <- createUser (Login "admin2") (Password "admin2")
             getUserLogin uid
             return True 
     , test "A non admin creates a new user." "A non admin can create a new user."
-        $ onFreshNoCFailsSeq [("owner", "owner", createUser (mkLogin "admin2") (mkPassword "admin2"))]
+        $ onFreshNoCFailsSeq [("owner", "owner", createUser (Login "admin2") (Password "admin2"))]
     , test "Admin adds another admin." "Admin can not add another admin."
         $ onFreshNoC $ do
-            uid <- createUser (mkLogin "admin2") (mkPassword "admin2")
+            uid <- createUser (Login "admin2") (Password "admin2")
             addAdmin uid 
             isAdmin uid 
     , test "Admin removes another admin." "Admin can not remove another admin."
         $ onFreshNoC $ do
-            uid <- createUser (mkLogin "admin2") (mkPassword "admin2")
+            uid <- createUser (Login "admin2") (Password "admin2")
             addAdmin uid 
             rmAdmin uid
             not <$> isAdmin uid
     , test "A new user is no admin." "A new user is an admin."
         $ onFreshNoC $ do
-            uid <- createUser (mkLogin "admin2") (mkPassword "admin2")
+            uid <- createUser (Login "admin2") (Password "admin2")
             not <$> isAdmin uid
     , test "Another user adds admin" "User can add admin despite he is no admin."
         $ onFreshNoCFailsSeq 
-            [ ("admin", "admin", createUser (mkLogin "user") (mkPassword "user") >> return ())
+            [ ("admin", "admin", createUser (Login "user") (Password "user") >> return ())
             , ("user", "user", getUserIdByLogin "user" >>= addAdmin)
             ]
     , test "Another user removes admin" "User can remove admin despite he is no admin."
         $ onFreshNoCFailsSeq
-            [ ("admin", "admin", createUser (mkLogin "user") (mkPassword "user") >> return ())
+            [ ("admin", "admin", createUser (Login "user") (Password "user") >> return ())
             , ("user", "user", getUserIdByLogin "admin" >>= rmAdmin)
             ]
     , test "Admin adds another user in two steps." "Assumption that getUserIdByLogin does work fails."
         $ onFreshNoCSeq
-            [ ("admin", "admin", createUser (mkLogin "user") (mkPassword "user") >> return True)
+            [ ("admin", "admin", createUser (Login "user") (Password "user") >> return True)
             , ("admin", "admin", getUserIdByLogin "user" >>= addAdmin >> return True)
             ]
     ]
@@ -178,10 +178,10 @@ chanPermTests = group "Tests of Permissions on Channels" $
                     ]
             , test (u ++ " sets name of channel.") (u ++ w ++ "set name of channel.")
                 $ t $ mkChannel True ++
-                    [ (pack u, pack u, setChanName chanId (mkName "new name") >> return True) ]
+                    [ (pack u, pack u, setChanName chanId (Name "new name") >> return True) ]
             , test (u ++ " sets description of channel.") (u ++ w ++ "set description of channel.")
                 $ t $ mkChannel True ++
-                    [ (pack u, pack u, setChanDesc chanId (mkDesc "new name") >> return True) ]
+                    [ (pack u, pack u, setChanDesc chanId (Desc "new name") >> return True) ]
             ]
         )
     ++ (Prelude.concat . flip fmap [ ("admin", onFreshNoCSeq, " could not ")
@@ -223,9 +223,9 @@ userPermTests = group "Tests of Permissions on Users." $
                                     , ("producer", onFreshNoCFailsSeq, " could")
                                     ]) 
         (\ (u,t,w) ->
-            (flip fmap) [ ("login", \x -> setUserLogin x (mkLogin "owwwwner") >> return True)
-                        , ("name", \x -> setUserName x (mkName "the owwwwner") >> return True)
-                        , ("desc", \x -> setUserDesc x (mkDesc "i aarr the owwwner.") >> return True)
+            (flip fmap) [ ("login", \x -> setUserLogin x (Login "owwwwner") >> return True)
+                        , ("name", \x -> setUserName x (Name "the owwwwner") >> return True)
+                        , ("desc", \x -> setUserDesc x (Desc "i aarr the owwwner.") >> return True)
                         , ("icon", \x -> setUserIcon x Nothing >> return True)
                         ]
                 (\ (n,a) -> 
@@ -249,15 +249,15 @@ userPermTests = group "Tests of Permissions on Users." $
     
 mkChannel ret =
     [ ("admin", "admin", do
-            createUser (mkLogin "owner") (mkPassword "owner")
-            createUser (mkLogin "producer") (mkPassword "producer")
-            createUser (mkLogin "consumer") (mkPassword "consumer")
-            createUser (mkLogin "not related") (mkPassword "not related")
-            createUser (mkLogin "not related too") (mkPassword "not related too")
+            createUser (Login "owner") (Password "owner")
+            createUser (Login "producer") (Password "producer")
+            createUser (Login "consumer") (Password "consumer")
+            createUser (Login "not related") (Password "not related")
+            createUser (Login "not related too") (Password "not related too")
             return ret 
       )
     , ("owner", "owner", do
-            cid <- createChannel (mkName "channel")
+            cid <- createChannel (Name "channel")
             getUserIdByLogin "producer" >>= addChanProducer cid
             getUserIdByLogin "consumer" >>= addChanConsumer cid
             return ret
@@ -291,37 +291,37 @@ failsWith e (Left e') = e == e'
 
 onFreshNoC :: Eff (Query :> Update :> Exec :> ()) Bool -> Bool
 onFreshNoC op = 
-    case run . runSimple (mkNoC (mkLogin "admin") (mkPassword "admin")) (Just (UserId 0)) $ op of
+    case run . runSimple (mkNoC (Login "admin") (Password "admin")) (Just (UserId 0)) $ op of
         Left _ -> False
         Right (_, b) -> b 
 
 onFreshNoCSeq :: [(Text, Text, Eff (Query :> Update :> Exec :> ()) Bool)] -> Bool
-onFreshNoCSeq ops = runSeq ops (mkNoC (mkLogin "admin") (mkPassword "admin"))
+onFreshNoCSeq ops = runSeq ops (mkNoC (Login "admin") (Password "admin"))
     where 
     runSeq :: [(Text, Text, Eff (Query :> Update :> Exec :> ()) Bool)] -> NoC -> Bool
     runSeq ((l, pw, op):[]) noc = 
-        case run . runSimple noc Nothing $ doLogin (mkLogin l) (mkPassword pw) >> op of
+        case run . runSimple noc Nothing $ doLogin (Login l) (Password pw) >> op of
             Left _ -> False
             Right (_, b) -> b
     runSeq ((l, pw, op):xs) noc = 
-        case run . runSimple noc Nothing $ doLogin (mkLogin l) (mkPassword pw) >> op of
+        case run . runSimple noc Nothing $ doLogin (Login l) (Password pw) >> op of
             Left _ -> False
             Right (noc', _) -> runSeq xs noc' 
 
 onFreshNoCFails :: Eff (Query :> Update :> Exec :> ()) a -> Bool
 onFreshNoCFails op =
-    case run . runSimple (mkNoC (mkLogin "admin") (mkPassword "admin")) (Just (UserId 0)) $ op of
+    case run . runSimple (mkNoC (Login "admin") (Password "admin")) (Just (UserId 0)) $ op of
         Left _ -> True
         Right _ -> False
 
 onFreshNoCFailsSeq :: [(Text, Text, Eff (Query :> Update :> Exec :> ()) a)] -> Bool
-onFreshNoCFailsSeq ops = runSeq ops (mkNoC (mkLogin "admin") (mkPassword "admin"))
+onFreshNoCFailsSeq ops = runSeq ops (mkNoC (Login "admin") (Password "admin"))
     where
     runSeq ((l, pw, op):[]) noc =
-        case run . runSimple noc Nothing $ doLogin (mkLogin l) (mkPassword pw) >> op of
+        case run . runSimple noc Nothing $ doLogin (Login l) (Password pw) >> op of
             Left _ -> True
             otherwise -> False
     runSeq ((l, pw, op):xs) noc =
-        case run . runSimple noc Nothing $ doLogin (mkLogin l) (mkPassword pw) >> op of
+        case run . runSimple noc Nothing $ doLogin (Login l) (Password pw) >> op of
             Left _ -> False
             Right (noc', _) -> runSeq xs noc'

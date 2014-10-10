@@ -47,6 +47,8 @@ evalQuery state q = case q of
     IsAdmin uid next -> ffq next (QIsAdmin uid)
     CountAdmins next -> ffq next QCountAdmins
     GetUserIdByLogin l next -> ffq next (QGetUserIdByLogin l)
+    SearchUserByLogin l next -> ffq next (QSearchUserByLogin l)
+    SearchChanByName n next -> ffq next (QSearchChanByName n)
     ChanQuery cid q 
         -> evalChanQuery state q cid
     UserQuery uid q 
@@ -78,6 +80,7 @@ evalUserQuery state q uid = case q of
     GetUserName next -> ffq next (QGetUserName uid)
     GetUserDesc next -> ffq next (QGetUserDesc uid)
     GetUserIcon next -> ffq next (QGetUserIcon uid)
+    GetUserEmail next -> ffq next (QGetUserEmail uid)
     GetUserNotifications next -> ffq next (QGetUserNotifications uid)
     GetUserContacts next -> ffq next (QGetUserContacts uid)
     GetUserSubscriptions next -> ffq next (QGetUserSubscriptions uid)
@@ -139,6 +142,7 @@ evalUserUpdate state uid q = case q of
     SetUserName n next -> ffu next (USetUserName uid n)
     SetUserDesc d next -> ffu next (USetUserDesc uid d)
     SetUserIcon i next -> ffu next (USetUserIcon uid i)
+    SetUserEmail e next -> ffu next (USetUserEmail uid e)
     AddUserNotification n next -> ffu next (UAddUserNotification uid n)
     AddUserContact uid' next -> ffu next (UAddUserContact uid uid')
     RmUserContact uid' next -> ffu next (URmUserContact uid uid')

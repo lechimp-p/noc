@@ -14,6 +14,8 @@ $(makeAcidic ''NoC  [ 'qDoLogin
                     , 'qIsAdmin
                     , 'qCountAdmins
                     , 'qGetUserIdByLogin
+                    , 'qSearchUserByLogin
+                    , 'qSearchChanByName
                     , 'qGetChanName
                     , 'qGetChanDesc
                     , 'qGetChanType
@@ -29,6 +31,7 @@ $(makeAcidic ''NoC  [ 'qDoLogin
                     , 'qGetUserName
                     , 'qGetUserDesc
                     , 'qGetUserIcon
+                    , 'qGetUserEmail
                     , 'qGetUserNotifications
                     , 'qGetUserContacts
                     , 'qGetUserSubscriptions
@@ -52,6 +55,7 @@ $(makeAcidic ''NoC  [ 'qDoLogin
                     , 'uSetUserName
                     , 'uSetUserDesc
                     , 'uSetUserIcon
+                    , 'uSetUserEmail
                     , 'uAddUserNotification
                     , 'uAddUserContact
                     , 'uRmUserContact

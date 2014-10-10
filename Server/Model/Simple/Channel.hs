@@ -37,27 +37,27 @@ instance Ord Channel where
 
 makeLenses ''Channel
 
-newtype IxExactName = IxExactName Text
-                      deriving (Eq, Ord, Data, Typeable) 
+--newtype IxExactName = IxExactName Text
+--                      deriving (Eq, Ord, Data, Typeable) 
 -- An index for words in the name.
-newtype IxName = IxName Text 
-                 deriving (Eq, Ord, Data, Typeable)
+--newtype IxName = IxName Text 
+--                 deriving (Eq, Ord, Data, Typeable)
 -- An index for autocompletion of the name.
-newtype IxAutoComplete = IxAutoComplete Text
+newtype IxChanNameSearch = IxChanNameSearch Text
                  deriving (Eq, Ord, Data, Typeable)
 -- An index for word in the description
-newtype IxDesc = IxDesc Text
-                 deriving (Eq, Ord, Data, Typeable)
+--newtype IxDesc = IxDesc Text
+--                 deriving (Eq, Ord, Data, Typeable)
                   
 instance Indexable Channel where
     empty = ixSet
         [ ixFun $ (:[]) . _id
         , ixFun $ (:[]) . nameToText . _name
-        , ixFun $ fmap IxName . T.words . nameToText . _name
-        , ixFun $ fmap ( IxAutoComplete . T.reverse )  
+--        , ixFun $ fmap IxName . T.words . nameToText . _name
+        , ixFun $ fmap ( IxChanNameSearch . T.reverse )  
                 . filter (not . T.null)
                 . concat
                 . fmap T.tails
                 . T.words . T.reverse . nameToText . _name
-        , ixFun $ fmap IxDesc . T.words . descToText . _desc 
+--        , ixFun $ fmap IxDesc . T.words . descToText . _desc 
         ]
