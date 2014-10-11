@@ -107,7 +107,7 @@ evalAPI config req = case req of
     WriteFile p c n     -> (fmap n $ do
                                 base <- basepath
                                 let dir = takeDirectory p
-                                liftIO $ createDirectoryIfMissing True dir                                
+                                liftIO $ createDirectoryIfMissing True (base </> dir)                                
                                 liftIO $ Data.ByteString.writeFile (base </> p) c
                                 return True 
                            )

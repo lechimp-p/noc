@@ -42,7 +42,7 @@ data ImageError
     deriving (Show)
 
 storeUserIcon uid t = fmap (fmap (Icon . T.pack))
-                    . storeGeneric _userIconDir _userIconSizes (show uid) t
+                    . storeGeneric _userIconDir _userIconSizes (show . uiToInt $ uid) t
 removeUserIcon = removeFile . T.unpack . icnPath
 
 storeMsgImage n t = fmap (fmap (Image . T.pack))
@@ -50,7 +50,7 @@ storeMsgImage n t = fmap (fmap (Image . T.pack))
 removeMsgImage = removeFile . T.unpack . imgPath 
 
 storeChannelImage cid t = fmap (fmap (Image . T.pack))
-                     . storeGeneric _channelImageDir _channelImageSizes (show cid) t 
+                     . storeGeneric _channelImageDir _channelImageSizes (show . ciToInt $ cid) t 
 removeChannelImage = removeFile . T.unpack . imgPath
 
 storeGeneric :: Member API r 
