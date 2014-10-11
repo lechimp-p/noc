@@ -82,11 +82,11 @@
           </ul>
         </div>
         <div class="row pushbottom chatinput lightBar">
-          <form name="post-form" ng-submit="post(message)" novalidate>
+          <form name="post-form" novalidate>
             <div class="input-group">
               <input type="text" class="form-control" ng-model="message">
               <span class="input-group-btn">
-                <button class="btn btn-default" type="submit"><i class="fa fa-send"></i></button>
+                <button class="btn btn-default" type="button" ng-click="post(message)"><i class="fa fa-send"></i></button>
               </span>
             </div>
           </form>

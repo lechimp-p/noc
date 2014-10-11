@@ -19,8 +19,13 @@ controller("channel-controller", [ "$rootScope", "$scope", "$interval", "$routeP
         }
     };
 
-    $scope.post = function(message) {
-        API.post($scope.channel.id, message); 
+    $scope.post = function() {
+        if ($scope.message.length === 0) {
+            return;
+        }    
+
+        API.post($scope.channel.id, $scope.message); 
+        $scope.message = "";
     };
 
     $scope.updateMessages = function() {
