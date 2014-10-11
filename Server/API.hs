@@ -34,6 +34,7 @@ import Control.Lens
 data RootAPI
     = Login 
     | Logout
+    | LoginInfo
     | User Int UserAPI
     | UserGeneric
     | Channel Int ChannelAPI
@@ -49,6 +50,7 @@ apiroutes :: Router () (RootAPI :- ())
 apiroutes = 
     (  "login" . rLogin
     <> "logout" . rLogout
+    <> "logininfo" . rLoginInfo
     <> "user" . user
     <> "channel" . channel 
     <> rDefault
@@ -71,6 +73,9 @@ route url = do
         Logout -> case m of
             POST            -> logUserOut  
             otherwise       -> methodNotSupported 
+        LoginInfo -> case m of
+            GET             -> getLoginInfo
+            otherwise       -> methodNotSupported 
         User uid uapi       -> User.route (UserId uid) uapi 
         UserGeneric         -> User.genericHandler
         Channel cid capi    -> Channel.route (ChanId cid) capi
@@ -82,3 +87,8 @@ helloWorld :: Member API r
            => Eff r (Either Error (Maybe Value)) 
 helloWorld = return . Right . Just . String =<< config _helloWorldMessage
 
+getLoginInfo :: (Member API r, Member Exec r)
+             => Eff r (Either Error (Maybe Value))
+getLoginInfo = withJSONOut $ do
+    trySessionLogin
+    "id" <$ getOperatorId
