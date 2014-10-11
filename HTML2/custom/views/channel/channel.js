@@ -1,10 +1,11 @@
 angular.module("NoC.channel", []).
-controller("channel-controller", [ "$scope", "$interval", "$routeParams", "API"
-         , function($scope, $interval, $routeParams, API) {
+controller("channel-controller", [ "$rootScope", "$scope", "$interval", "$routeParams", "API"
+         , function($rootScope, $scope, $interval, $routeParams, API) {
     "use strict";
 
     var lastTS = {};
     var updateIntervalMS = 5000;
+    var updateTask = { value : null };
  
     var toScope = function(response) {
         if (response.messages.length > 0) {
@@ -18,25 +19,57 @@ controller("channel-controller", [ "$scope", "$interval", "$routeParams", "API"
         }
     };
 
-    var updateMessages = function() {
-        if (typeof lastTS.value === "undefined") {
-            API.messages($scope.channel.id, 0, 10).success(toScope);
-        }
-        else {
-            API.messagesTill($scope.channel.id, lastTS.value).success(toScope);
-        }
-    };
-
-    API.getChannelInfo($routeParams.chanId)
-        .success(function(response) {
-            $scope.channel = response; 
-            $interval(updateMessages, updateIntervalMS);
-        })
-        ;
-
     $scope.post = function(message) {
         API.post($scope.channel.id, message); 
     };
+
+    $scope.updateMessages = function() {
+        if (typeof lastTS.value === "undefined") {
+            return API.messages($scope.channel.id, 0, 10).success(toScope);
+        }
+        else {
+            return API.messagesTill($scope.channel.id, lastTS.value).success(toScope);
+        }
+    };
+
+    $scope.updateChannelInfo = function() {
+        return API.getChannelInfo($routeParams.chanId)
+                    .success(function(response) {
+                        $scope.channel = response; 
+                    });
+    };
+
+    $scope.startUpdateTask = function() {
+        if (updateTask.value !== null) {
+            return;
+        }
+
+        $scope.updateMessages();
+        updateTask.value = $interval($scope.updateMessages, updateIntervalMS);
+    };
+
+    $scope.stopUpdateTask = function() {
+        if (updateTask.value === null) {
+            return;
+        }
+
+        $interval.cancel(updateTask.value);
+    };
+
+    $rootScope.$on("$routeChangeStart", function(event, next, current) {
+        if (next.pathParams.chanId == $scope.channel.id) {
+            $scope.updateChannelInfo();
+            $scope.startUpdateTask(); 
+        }
+        else {
+            $scope.stopUpdateTask();
+        }
+    });
+
+    $scope.updateChannelInfo()
+        .success( function (_) { $scope.startUpdateTask(); });
+
+    //$interval($scope.updateMessages, updateIntervalMS);
 
 /*    $scope.msgs =
         [ { author : 
