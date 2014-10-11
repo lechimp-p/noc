@@ -82,4 +82,4 @@ decodeBase64 dat = do
         Right res -> return $ Right res 
 
 resizeImage :: ByteString -> ImageSize -> ByteString
-resizeImage dat s = undefined
+resizeImage dat s = dat 
