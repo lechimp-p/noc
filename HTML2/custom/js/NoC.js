@@ -57,7 +57,9 @@ angular.module("NoC",
 .run(['$rootScope', '$http', '$location', 'API', function($rootScope, $http, $location, API) {
     //$rootScope.deferred401 = [];
     $rootScope.deferredRoute = "";
-    $rootScope.user = { id : null };
+    $rootScope.user = { id : null 
+                      , UTC_offset : 2
+                      };
 
     API.logininfo().success(function(response) {
         $rootScope.user.id = response.id;
