@@ -17,6 +17,7 @@ class NoCError(Exception):
 class user(object):
     login_path = base_url + "/login"
     logout_path = base_url + "/logout"
+    login_info_path = base_url + "/logininfo"
     base_path = base_url + "/user"
     user_path = base_url + "/user/%i"    
     subscriptions_path = base_url + "/user/%i/subscriptions"
@@ -76,6 +77,9 @@ class user(object):
 
     def getNotifications(self, op):
         return op.getR(self.notifications_path % self.id)
+
+    def getLoginInfo(self):
+        return self.getR(self.login_info_path)
 
     # Request handling
 
