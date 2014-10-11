@@ -24,7 +24,8 @@ controller("channel-controller", [ "$rootScope", "$scope", "$interval", "$routeP
             return;
         }    
 
-        API.post($scope.channel.id, $scope.message); 
+        API.post($scope.channel.id, $scope.message)
+            .success($scope.updateMessages); 
         $scope.message = "";
     };
 
