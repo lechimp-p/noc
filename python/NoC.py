@@ -125,6 +125,9 @@ class channel(object):
         return op.getR( channel.base_path, { "name" : name })
 
     def set(self, op, **dct):
+        if "image" in dct:
+            dct["image"] = image_json(dct["image"])
+
         op.postR(self.channel_path % self.id, dct)
 
     def get(self, op):
