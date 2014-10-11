@@ -9,7 +9,7 @@ controller("login-controller", function ($scope, $rootScope, API) {
     $scope.login = function(username, password) {
         API.login(username, password)
             .success(function(result) {
-                $rootScope.userId = result.id;
+                $rootScope.user.id = result.id;
                 $rootScope.$broadcast("event:login-successfull");
             })
             .error(function(_1, status, _2, _3) {

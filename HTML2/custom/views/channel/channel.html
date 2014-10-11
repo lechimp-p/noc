@@ -76,7 +76,7 @@
           <ul class="list-group pushbottom chatcontent">
             <li class="list-group-item" ng-repeat="msg in msgs">
               <img src="{{msg.author.icon}}" class="pull-left marginright img-circle" alt="Icon of {{msg.author.login}}">
-              <p class="list-group-item-text greytext"><small>{{msg.author.name}}, {{msg.timestamp}}</small></p>
+              <p class="list-group-item-text greytext"><small>{{msg.author | username}}, {{msg.timestamp}}</small></p>
               <p class="list-group-item-text">{{msg.text}}</p>
             </li>
           </ul>

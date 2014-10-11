@@ -20,6 +20,28 @@ factory("API", function($http) {
                 ;
     };
 
+    API.logout = function() {
+        return $http(
+                { method : "POST"
+                , url : "api/logout"
+                })
+                .error( function(data, status, headers, config) {
+                    console.log("Error in API.logout: " + data);
+                })
+                ;
+    };
+
+    API.logininfo = function() {
+        return $http(
+                { method : "GET"
+                , url : "api/logininfo"
+                })
+                .error( function(data, status, headers, config) {
+                    console.log("Error in API.loginInfo: " + data);
+                })
+                ;
+    };
+
     API.messages = function(cid, offset, amount) {
         return $http(
                 { method : "GET"

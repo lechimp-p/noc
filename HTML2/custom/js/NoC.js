@@ -3,6 +3,7 @@ angular.module("NoC",
     , "NoC.channel"
     , "NoC.login"
     , "NoC.services"
+    , "NoC.filters"
     , "mobile-angular-ui"
     ])
 
@@ -56,6 +57,11 @@ angular.module("NoC",
 .run(['$rootScope', '$http', '$location', 'API', function($rootScope, $http, $location, API) {
     //$rootScope.deferred401 = [];
     $rootScope.deferredRoute = "";
+    $rootScope.user = { id : null };
+
+    API.logininfo().success(function(response) {
+        $rootScope.user.id = response.id;
+    }); 
     
     $rootScope.$on("event:login-successfull", function() {
         $location.path($rootScope.deferredRoute);
