@@ -134,7 +134,7 @@ setHandler uid = withJSONIn $ do
         typ <- prop "type"
         dat <- prop "data"
         old <- getUserIcon uid
-        icon <- storeIcon uid typ dat
+        icon <- storeUserIcon uid typ dat
         case icon of
             Left err -> throwJSONError $ CantDecodeProperty "icon" (show err)
             Right r -> setUserIcon uid (Just r)

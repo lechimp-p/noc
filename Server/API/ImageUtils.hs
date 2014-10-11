@@ -2,20 +2,13 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
-module API.ImageUtils
-    ( ImageError (..)
-    , storeIcon
-    , removeIcon
-    , storeImage
-    , removeImage
-    , defaultConfig
-    )
-where
+module API.ImageUtils where
 
 import Model
 import Model.BaseTypes
-import API.Config
+import API.ImageConfig
 import API.Effects
+import API.Config
 
 import Prelude hiding (writeFile)
 import Data.Aeson hiding (decode)
@@ -24,7 +17,6 @@ import Control.Monad
 import Data.Text hiding (any)
 import Data.Text.Encoding
 import qualified Data.Text as T
-import Data.Hashable
 import Data.ByteString hiding (any, writeFile)
 import Data.ByteString.Base64
 import System.FilePath.Posix
@@ -49,34 +41,37 @@ data ImageError
     = Base64Error String
     deriving (Show)
 
-defaultConfig = ImageConfig "./files" "user" "channel" 0
+storeUserIcon uid t = fmap (fmap (Icon . T.pack))
+                    . storeGeneric _userIconDir _userIconSizes (show uid) t
+removeUserIcon = removeFile . T.unpack . icnPath
 
-storeIcon uid typ dat = do
-    cnfg <- config _imageConfig
-    let sub = _userDir cnfg </> (show . uiToInt $ uid)
-    path <- storeGeneric cnfg sub typ dat 
-    return . fmap (Icon . T.pack) $ path
-removeIcon = removeFile . T.unpack . icnPath
+storeMsgImage n t = fmap (fmap (Image . T.pack))
+                  . storeGeneric _msgImageDir _msgImageSizes n t
+removeMsgImage = removeFile . T.unpack . imgPath 
 
-storeImage typ dat = do
-    cnfg <- config _imageConfig
-    path <- storeGeneric cnfg (_channelDir cnfg) typ dat 
-    return . fmap (Image . T.pack) $ path
-removeImage = removeFile . T.unpack . imgPath 
+storeChannelImage cid t = fmap (fmap (Image . T.pack))
+                     . storeGeneric _channelImageDir _channelImageSizes (show cid) t 
+removeChannelImage = removeFile . T.unpack . imgPath
 
 storeGeneric :: Member API r 
-             => ImageConfig -> FilePath -> ImgType -> Text -> Eff r (Either ImageError String)
-storeGeneric cnfg path typ dat = do
-    let hash = hashWithSalt (_salt cnfg) dat
-        filename = show hash <.> getExtension typ 
+             => (ImageConfig -> FilePath)
+             -> (ImageConfig -> [ImageSize])
+             -> String
+             -> ImgType
+             -> Text
+             -> Eff r (Either ImageError String)
+storeGeneric _path _sizes name typ dat = do
+    cnfg <- config _imageConfig
+    let path = _path cnfg
+        sizes = _sizes cnfg
     imgDat <- decodeBase64 dat
-    case imgDat of
-        Right dat -> do
-            -- further processing like scaling goes here
-            writeFile (path </> filename) dat 
-            return . Right $ path </> filename
-        Left err -> do
-            return $ Left err
+    flip (either (return . Left)) imgDat $ \ imgDat' -> do
+        let resized = fmap (resizeImage imgDat') sizes
+            rs = Prelude.zip resized sizes
+            p = path </> name
+        sequence . flip fmap rs $ \(dat, size) ->
+            writeFile (p <.> (getExtension typ ++ maybe "" id (_postfix size))) dat
+        return . Right $ p <.> getExtension typ 
 
 decodeBase64 :: Member API r 
              => Text -> Eff r (Either ImageError ByteString)
@@ -85,3 +80,6 @@ decodeBase64 dat = do
     case dcd of
         Left err -> return . Left . Base64Error $ err
         Right res -> return $ Right res 
+
+resizeImage :: ByteString -> ImageSize -> ByteString
+resizeImage dat s = undefined

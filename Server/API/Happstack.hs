@@ -106,7 +106,7 @@ evalAPI config req = case req of
 --    Abort n             -> (False, fmap n $ return undef)
     WriteFile p c n     -> (fmap n $ do
                                 base <- basepath
-                                let dir = base </> takeDirectory p
+                                let dir = takeDirectory p
                                 liftIO $ createDirectoryIfMissing True dir                                
                                 liftIO $ Data.ByteString.writeFile (base </> p) c
                                 return True 
@@ -123,7 +123,7 @@ evalAPI config req = case req of
                              (_maxBytesFile bpolc)
                              (_maxBytesBody bpolc)
                              (_maxBytesHeader bpolc)
-    basepath' = config ^. imageConfig . basePath      
+    basepath' = config ^. filesPath      
     dontExpandBasePath = not $ head basepath' == '.' 
     basepath = 
         if dontExpandBasePath

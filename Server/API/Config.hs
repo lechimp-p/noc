@@ -3,7 +3,12 @@
 {-# LANGUAGE StandaloneDeriving #-}
 
 module API.Config
+    ( module API.Config
+    , module API.ImageConfig
+    )
 where
+
+import API.ImageConfig
 
 import Data.Text
 import Data.Int
@@ -16,6 +21,7 @@ data APIConfig = APIConfig
     { _helloWorldMessage    :: Text 
     , _sessionConfig        :: SessionConfig
     , _siteConfig           :: SiteConfig
+    , _filesPath            :: FilePath 
     , _acidPath             :: FilePath 
     , _imageConfig          :: ImageConfig
     , _bodyPolicy           :: BodyPolicy
@@ -40,15 +46,6 @@ data SiteConfig = SiteConfig
     , _handlerPath          :: Text 
     } 
     deriving (Show, Data, Typeable)
-
-data ImageConfig = ImageConfig
-    { _basePath             :: FilePath
-    , _userDir              :: FilePath
-    , _channelDir           :: FilePath
-    , _salt                 :: Int
-    }
-    deriving (Show, Data, Typeable)
-
 data BodyPolicy = BodyPolicy
     { _uploadPath           :: FilePath
     , _maxBytesFile         :: Int64
@@ -67,6 +64,5 @@ data ServerConfig = ServerConfig
 makeLenses ''APIConfig
 makeLenses ''SessionConfig
 makeLenses ''SiteConfig
-makeLenses ''ImageConfig
 makeLenses ''BodyPolicy
 makeLenses ''ServerConfig

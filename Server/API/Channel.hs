@@ -24,6 +24,7 @@ import Web.Routes
 import Control.Eff
 import Control.Eff.JSON
 import Data.Aeson (Value)
+import Data.Hashable (hash)
 import qualified Data.Set as S
 import Text.Boomerang.TH (makeBoomerangs)
 import Web.Routes.Boomerang
@@ -106,7 +107,7 @@ setHandler cid = withJSONIn $ do
     "image"         .?> do
         typ <- prop "type"
         dat <- prop "data"
-        img <- storeImage typ dat 
+        img <- storeChannelImage cid typ dat 
         case img of
             Left err -> throwJSONError $ CantDecodeProperty "image" (show err)
             Right r -> setChanImage cid (Just r)
@@ -134,7 +135,7 @@ postHandler cid = withJSONIn $ do
     img <- "image" .??> do
         typ <- prop "type"
         dat <- prop "data"
-        storeImage typ dat 
+        storeMsgImage (show . hash $ dat) typ dat 
     oid <- forceOperatorId
     post cid oid ts t img
     return Nothing

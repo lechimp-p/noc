@@ -1,4 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Maintenance where
 
@@ -14,7 +15,7 @@ import Model.Acid
 import System.Console.GetOpt
 import System.Environment
 import Control.Eff.Lift (runLift)
-import Control.Monad (join)
+import Control.Monad (join, mzero)
 import Control.Monad.IO.Class
 import Control.Exception (bracket)
 import Control.Lens
@@ -55,9 +56,23 @@ readOptions = do
     let (actions, nonOptions, errors) = getOpt RequireOrder options args
     return $ (foldr (.) id actions) defaultOptions
 
+instance FromJSON ScaleType where
+    parseJSON (String t)
+        | t == "fixed-size" = return FixedSize
+        | t == "scale-to-x" = return ScaleToX 
+        | t == "scale-to-y" = return ScaleToY 
+        | otherwise = mzero
+    parseJSON _ = mzero
+
+instance ToJSON ScaleType where
+    toJSON FixedSize = String "fixed-size"
+    toJSON ScaleToX = String "scale-to-x"
+    toJSON ScaleToY = String "scale-to-y"
+
 
 $(TH.deriveJSON TH.defaultOptions{TH.fieldLabelModifier = drop 1} ''SessionConfig)
 $(TH.deriveJSON TH.defaultOptions{TH.fieldLabelModifier = drop 1} ''SiteConfig)
+$(TH.deriveJSON TH.defaultOptions{TH.fieldLabelModifier = drop 1} ''ImageSize)
 $(TH.deriveJSON TH.defaultOptions{TH.fieldLabelModifier = drop 1} ''ImageConfig)
 $(TH.deriveJSON TH.defaultOptions{TH.fieldLabelModifier = drop 1} ''BodyPolicy)
 $(TH.deriveJSON TH.defaultOptions{TH.fieldLabelModifier = drop 1} ''ServerConfig)
