@@ -10,24 +10,27 @@
 
 * make permission handling more flexible
 
-* think about body policy and get body for images and other requests
-
-* add more tests on models functionality
-* adjust size of http input to fit images (better: make it depend on usecase)
-
-* implement statistics functions for admins
-
 * delete users and channels
 
 * The session handling needs some kind of review:
     - login and password should not be stored in session
     - make session an effect?
 
+To be done:
+
+* more tests on api
+* add more tests on models functionality
+* implement statistics functions for admins
+* adjust size of http input to fit images (better: make it depend on usecase)
+
 To be thought about:
 
 * How to deal with images of different size when resizing? (scale up, down, crop...?)
+* how the model is represented
+* body policy and get body for images and other requests
 
 Refactoring:
 
-* think about how the model is represented
+* instead of the various get/set methods for channels and users, use one get/set
+  plus a record for 'core'-data 
 * implement constraints in model
