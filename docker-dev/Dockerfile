@@ -3,7 +3,8 @@ MAINTAINER Richard Klees <richard.klees@rwth-aachen.de>
 RUN sed -i "/^# deb.*multiverse/ s/^# //" /etc/apt/sources.list
 RUN apt-get update && apt-get install -y \
     haskell-platform \
-    git 
+    git \
+    libgd-dev
 RUN cabal update && \
     cabal install transformers
 RUN cd /opt/ && \

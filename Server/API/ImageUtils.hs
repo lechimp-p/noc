@@ -10,6 +10,8 @@ import API.ImageConfig
 import API.Effects
 import API.Config
 
+import System.IO.Error (tryIOError)
+import System.IO.Unsafe (unsafePerformIO)
 import Prelude hiding (writeFile)
 import Data.Aeson hiding (decode)
 import Control.Monad.IO.Class
@@ -20,6 +22,9 @@ import qualified Data.Text as T
 import Data.ByteString hiding (any, writeFile)
 import Data.ByteString.Base64
 import System.FilePath.Posix
+import qualified Graphics.GD as GD 
+
+type ProcImage = GD.Image
 
 data ImgType 
     = PNG
@@ -39,6 +44,7 @@ getExtension typ = case typ of
 
 data ImageError 
     = Base64Error String
+    | DecodingError String
     deriving (Show)
 
 storeUserIcon uid t = fmap (fmap (Icon . T.pack))
@@ -65,13 +71,19 @@ storeGeneric _path _sizes name typ dat = do
     let path = _path cnfg
         sizes = _sizes cnfg
     imgDat <- decodeBase64 dat
-    flip (either (return . Left)) imgDat $ \ imgDat' -> do
-        let resized = fmap (resizeImage imgDat') sizes
-            rs = Prelude.zip resized sizes
-            p = path </> name
-        sequence . flip fmap rs $ \(dat, size) ->
-            writeFile (p <.> (getExtension typ ++ maybe "" id (_postfix size))) dat
-        return . Right $ p <.> getExtension typ 
+    check imgDat $ \ imgDat' -> do
+        check (loadImage typ imgDat') $ \ img' -> do
+            let resized = rights $ fmap (\s -> (resizeImage img' s, s)) sizes
+                save = rights $ fmap (\(i,s) -> (saveImage typ i, s)) resized
+                p = path </> name
+            sequence . flip fmap save $ \(dat, size) ->
+                writeFile (p <.> (getExtension typ ++ maybe "" id (_postfix size))) dat
+            return . Right $ p <.> getExtension typ 
+    where
+    check val fun = either (return . Left) fun val
+    rights = fmap (\ (Right v, s) -> (v,s)) . Prelude.filter (isRight . fst)
+    isRight (Right _) = True
+    isRight _ = False 
 
 decodeBase64 :: Member API r 
              => Text -> Eff r (Either ImageError ByteString)
@@ -81,5 +93,56 @@ decodeBase64 dat = do
         Left err -> return . Left . Base64Error $ err
         Right res -> return $ Right res 
 
-resizeImage :: ByteString -> ImageSize -> ByteString
-resizeImage dat s = dat 
+-- ATTENTION: If there ever is an error occuring during image scaling,
+-- i should tryIOError to blame it on these 'functions' first.
+
+unsafeTry :: IO a -> Either ImageError a
+unsafeTry = either (Left . DecodingError . show) Right . unsafePerformIO . tryIOError
+
+loadImage :: ImgType -> ByteString -> Either ImageError ProcImage
+loadImage typ bs = unsafeTry $ case typ of
+    PNG -> GD.loadPngByteString bs 
+    JPEG -> GD.loadJpegByteString bs 
+
+saveImage :: ImgType -> ProcImage -> Either ImageError ByteString
+saveImage typ img = unsafeTry $ case typ of
+    PNG -> GD.savePngByteString img 
+    JPEG -> GD.saveJpegByteString 95 img 
+
+resizeImage :: ProcImage -> ImageSize -> Either ImageError ProcImage 
+resizeImage dat s =
+    case (_scaleType s) of
+        FixedSize -> resizeImageFixed dat (_sizeX s, _sizeY s)
+        ScaleToX -> resizeImageToX dat (_sizeX s)
+        ScaleToY -> resizeImageToY dat (_sizeY s)
+
+resizeImageFixed :: ProcImage -> (Int, Int) -> Either ImageError ProcImage
+resizeImageFixed img to_size@(to_x, to_y) = res
+    where
+    (x, y) = unsafePerformIO $ GD.imageSize img 
+    to_ratio = to_x `div` to_y
+    ratio = x `div` y
+    crop_width = to_ratio > ratio 
+    scale = if crop_width
+            then y `div` to_y
+            else x `div` to_x
+    up_left = ( if crop_width
+                then (x - size_x) `div` 2  
+                else 0
+              , if crop_width
+                then 0
+                else (y - size_y) `div` 2 
+              ) 
+    size_x = scale * to_x;
+    size_y = scale * to_y;
+    size = (size_x, size_y) 
+    res = unsafeTry $ do
+            new <- GD.newImage to_size
+            GD.copyRegionScaled up_left size img (0,0) to_size new
+            return new 
+
+resizeImageToX :: ProcImage -> Int -> Either ImageError ProcImage
+resizeImageToX img to_x = resizeImageFixed img (to_x, to_x)
+
+resizeImageToY :: ProcImage -> Int -> Either ImageError ProcImage
+resizeImageToY img to_y = resizeImageFixed img (to_y, to_y)
