@@ -145,6 +145,22 @@ resizeImageFixed img to_size@(to_x', to_y') = res
         GD.copyRegionScaled up_left size img (0,0) to_size new
         return new 
 
+resizeImageToX :: ProcImage -> Int -> Either ImageError ProcImage
+resizeImageToX img to_x' = resizeImageFixed img size
+    where
+    (x', y') = unsafePerformIO $ GD.imageSize img
+    (x, y) = (fromIntegral x', fromIntegral y')
+    to_x = fromIntegral to_x'
+    size = (to_x', round $ to_x * y / x) 
+
+resizeImageToY :: ProcImage -> Int -> Either ImageError ProcImage
+resizeImageToY img to_y' = resizeImageFixed img size
+    where
+    (x', y') = unsafePerformIO $ GD.imageSize img
+    (x, y) = (fromIntegral x', fromIntegral y')
+    to_y = fromIntegral to_y'
+    size = (round $ to_y * x / y, to_y') 
+
 transparentImage :: (Int, Int) -> IO (ProcImage)
 transparentImage size = do
     new <- GD.newImage size
@@ -155,8 +171,3 @@ transparentImage size = do
     return new
  
 
-resizeImageToX :: ProcImage -> Int -> Either ImageError ProcImage
-resizeImageToX img to_x = resizeImageFixed img (to_x, to_x)
-
-resizeImageToY :: ProcImage -> Int -> Either ImageError ProcImage
-resizeImageToY img to_y = resizeImageFixed img (to_y, to_y)
