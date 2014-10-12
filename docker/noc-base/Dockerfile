@@ -26,5 +26,5 @@ RUN cd /opt/NoC-Server-git/Server && \
     cabal install --only-dependencies 
 RUN rm -r /opt/NoC-Server-git
 VOLUME /opt/NoC-data
-CMD ["/opt/NoC-server-src/dist/build/NoC-Server-dev/NoC-Server-dev", "-c", "/opt/NoC.conf"]
+CMD ["/opt/NoC-Server-src/Server/dist/build/NoC-Server-dev/NoC-Server-dev", "-c", "/opt/NoC.conf"]
 EXPOSE 8000
