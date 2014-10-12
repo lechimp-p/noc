@@ -4,8 +4,6 @@
 
 module API.ImageUtils where
 
-import Debug.Trace
-
 import Model
 import Model.BaseTypes
 import API.ImageConfig
@@ -47,6 +45,8 @@ getExtension typ = case typ of
 data ImageError 
     = Base64Error String
     | DecodingError String
+    | EncodingError String
+    | ResizeError String
     deriving (Show)
 
 storeUserIcon uid t = fmap (fmap (Icon . T.pack))
@@ -98,16 +98,16 @@ decodeBase64 dat = do
 -- ATTENTION: If there ever is an error occuring during image scaling,
 -- i should tryIOError to blame it on these 'functions' first.
 
-unsafeTry :: IO a -> Either ImageError a
-unsafeTry = either (Left . DecodingError . show) Right . unsafePerformIO . tryIOError
+unsafeTry :: (String -> ImageError) -> IO a -> Either ImageError a
+unsafeTry err = either (Left . err . show) Right . unsafePerformIO . tryIOError
 
 loadImage :: ImgType -> ByteString -> Either ImageError ProcImage
-loadImage typ bs = unsafeTry $ case typ of
+loadImage typ bs = unsafeTry DecodingError $ case typ of
     PNG -> GD.loadPngByteString bs 
     JPEG -> GD.loadJpegByteString bs 
 
 saveImage :: ImgType -> ProcImage -> Either ImageError ByteString
-saveImage typ img = unsafeTry $ case typ of
+saveImage typ img = unsafeTry EncodingError $ case typ of
     PNG -> GD.savePngByteString img 
     JPEG -> GD.saveJpegByteString 95 img 
 
@@ -139,11 +139,21 @@ resizeImageFixed img to_size@(to_x', to_y') = res
               ) 
     size_x = scale * to_x;
     size_y = scale * to_y;
-    size = trace ("size_x: " ++ show size_x ++ " size_y: " ++ show size_y) (round size_x, round size_y) 
-    res = unsafeTry $ do
-            new <- GD.newImage to_size
-            GD.copyRegionScaled (trace (show up_left) up_left) size img (0,0) to_size new
-            return new 
+    size = (round size_x, round size_y) 
+    res = unsafeTry ResizeError$ do
+        new <- transparentImage to_size
+        GD.copyRegionScaled up_left size img (0,0) to_size new
+        return new 
+
+transparentImage :: (Int, Int) -> IO (ProcImage)
+transparentImage size = do
+    new <- GD.newImage size
+    GD.alphaBlending True new
+    tr <- GD.colorAllocate 255 255 255 127 new
+    GD.fillImage tr new
+    GD.saveAlpha True new
+    return new
+ 
 
 resizeImageToX :: ProcImage -> Int -> Either ImageError ProcImage
 resizeImageToX img to_x = resizeImageFixed img (to_x, to_x)
