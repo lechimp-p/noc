@@ -12,15 +12,19 @@ RUN cd /opt/ && \
     cd extensible-effects-1.7.1 && \
     sed -i 's/0.4.1.*/0.4.2.*/' *.cabal && \
     cabal install
-COPY src/ /opt/NoC-Server
+COPY src/ /opt/NoC-Server-git
+COPY install-noc-server.sh /opt/install-noc-server.sh
+COPY NoC.conf /opt/NoC.conf
+COPY update-noc-server.sh /opt/update-noc-server.sh
 RUN cd /opt/ && \
     git clone https://github.com/lechimp-p/json-effects.git && \
     cd json-effects && \
     cabal install --only-dependencies && \
     cabal configure && \
     cabal install
-RUN cd /opt/NoC-Server && \
-    cabal install --only-dependencies && \
-    cabal configure && \
-    cabal build
+RUN cd /opt/NoC-Server-git/Server && \
+    cabal install --only-dependencies 
+RUN rm -r /opt/NoC-Server-git
+VOLUME /opt/NoC-data
+CMD ["/opt/NoC-server-src/dist/build/NoC-Server-dev/NoC-Server-dev", "-c", "/opt/NoC.conf"]
 EXPOSE 8000
