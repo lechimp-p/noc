@@ -4,6 +4,8 @@
 
 module API.ImageUtils where
 
+import Debug.Trace
+
 import Model
 import Model.BaseTypes
 import API.ImageConfig
@@ -117,28 +119,30 @@ resizeImage dat s =
         ScaleToY -> resizeImageToY dat (_sizeY s)
 
 resizeImageFixed :: ProcImage -> (Int, Int) -> Either ImageError ProcImage
-resizeImageFixed img to_size@(to_x, to_y) = res
+resizeImageFixed img to_size@(to_x', to_y') = res
     where
-    (x, y) = unsafePerformIO $ GD.imageSize img 
-    to_ratio = to_x `div` to_y
-    ratio = x `div` y
+    (x', y') = unsafePerformIO $ GD.imageSize img 
+    (to_x, to_y) = (fromIntegral to_x', fromIntegral to_y') :: (Float, Float)
+    (x, y) = (fromIntegral x', fromIntegral y') :: (Float, Float)
+    to_ratio = to_x / to_y
+    ratio = x / y
     crop_width = to_ratio > ratio 
     scale = if crop_width
-            then y `div` to_y
-            else x `div` to_x
+            then y / to_y
+            else x / to_x
     up_left = ( if crop_width
-                then (x - size_x) `div` 2  
+                then round $ (x - size_x) / 2  
                 else 0
               , if crop_width
                 then 0
-                else (y - size_y) `div` 2 
+                else round $ (y - size_y) / 2 
               ) 
     size_x = scale * to_x;
     size_y = scale * to_y;
-    size = (size_x, size_y) 
+    size = trace ("size_x: " ++ show size_x ++ " size_y: " ++ show size_y) (round size_x, round size_y) 
     res = unsafeTry $ do
             new <- GD.newImage to_size
-            GD.copyRegionScaled up_left size img (0,0) to_size new
+            GD.copyRegionScaled (trace (show up_left) up_left) size img (0,0) to_size new
             return new 
 
 resizeImageToX :: ProcImage -> Int -> Either ImageError ProcImage
