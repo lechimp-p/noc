@@ -11,7 +11,12 @@ angular.module("NoC.filters", [])
         return "Du";
     }
     else {
-        return input.name;
+        if (input.name.length > 0) {
+            return input.name;
+        }
+        else {
+            return input.login;
+        }
     }
 };}])
 .filter("rel_timestamp", [ "$rootScope", function($rootScope) { return function(input) {
