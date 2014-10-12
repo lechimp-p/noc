@@ -22,11 +22,11 @@ import Control.Eff
 import Control.Eff.JSON
 import Data.Text (Text)
 import qualified Data.Text as T
-import Data.Aeson (Value (..), FromJSON, ToJSON
-                  , parseJSON, toJSON)
+import Data.Aeson 
+import Data.Aeson.Types
 import Control.Monad (mzero)
 import Data.Scientific (isInteger, toBoundedInteger)
-import Control.Lens
+import Control.Lens hiding ((.=))
 import Data.Data (Typeable)
 import Data.Time.Clock (UTCTime)
 import Data.Monoid
@@ -65,12 +65,122 @@ methodNotSupported :: Member API r
 methodNotSupported = return . Left $ MethodNotSupported
 
 errorJSON :: Error -> Value
-errorJSON = String . T.pack . show
+errorJSON err = object $ ("error" .= errorType err) : moreInfo err
+
+errorType :: Error -> String
+errorType err = case err of
+    (ModelError' err) -> "ModelError/" ++ modelErrorType err
+    (JSONError' err)  -> "JSONError/" ++ jsonErrorType err
+    (ImageError' err) -> "ImageError/" ++ imageErrorType err
+    MethodNotSupported  -> "MethodNotSupported"
+    JustStopped -> "JustStopped"
+
+modelErrorType :: ME.Error -> String
+modelErrorType err = case err of
+    (ME.InsufficientPermissions _) -> "InsufficientPermissions" 
+    (ME.UnknownChannel _) -> "UnknownChannel"
+    (ME.UnknownUser _) -> "UnknownUser"
+    (ME.UnknownLogin _) -> "UnknownLogin"
+    (ME.UnknownMessage _) -> "UnknownMessage"
+    (ME.OnlyOneChannelOwnerLeft _) -> "OnlyOneChannelOwnerLeft"
+    (ME.OnlyOneNoCAdminLeft) -> "OnlyOneNoCAdminLeft"
+    (ME.DuplicateLogin _) -> "DuplicateLogin"
+    (ME.CantLogin _) -> "CantLogin"
+    (ME.AlreadyLoggedIn) -> "AlreadyLoggedIn"
+    (ME.NotLoggedIn) -> "NotLoggedIn"
+    (ME.ConstraintViolation _) -> "ConstraintViolation"
+    (ME.Custom _) -> "Custom"
+
+jsonErrorType :: JSONError -> String
+jsonErrorType err = case err of
+    (MissingProperty _) -> "MissingProperty" 
+    (CantDecodeProperty _ _) -> "CantDecodeProperty"
+    (CantDecodeObject _) -> "CantDecodeObject" 
+
+imageErrorType :: ImageError -> String
+imageErrorType err = case err of
+    (Base64Error _) -> "Base64Error"
+    (DecodingError _) -> "DecodingError"
+    (EncodingError _) -> "EncodingError"
+    (ResizeError _) -> "ResizeError"
+
+moreInfo :: Error -> [Pair]
+moreInfo err = case err of
+    (ModelError' err) -> modelErrorInfo err
+    (JSONError' err)  -> jsonErrorInfo err
+    (ImageError' err) -> imageErrorInfo err
+    otherwise -> []
+
+modelErrorInfo :: ME.Error -> [Pair]
+modelErrorInfo err = case err of
+    (ME.InsufficientPermissions p) -> ["violations" .= toJSON (permissionViolationInfo p)]
+    (ME.UnknownChannel v) -> ["chanId" .= toJSON (ciToInt v)]
+    (ME.UnknownUser v) -> ["userId" .= toJSON (uiToInt v)]
+    (ME.UnknownLogin v) -> ["login" .= toJSON v]
+    (ME.UnknownMessage v) -> ["msgId" .= toJSON (miToInt v)]
+    (ME.OnlyOneChannelOwnerLeft v) -> ["chanId" .= toJSON (ciToInt v)]
+    (ME.OnlyOneNoCAdminLeft) -> []
+    (ME.DuplicateLogin v) -> ["login" .= toJSON (loginToText v)]
+    (ME.CantLogin v) -> ["login" .= toJSON (loginToText v)]
+    (ME.AlreadyLoggedIn) -> []
+    (ME.NotLoggedIn) -> []
+    (ME.ConstraintViolation v) -> ["reason" .= toJSON v] 
+    (ME.Custom v) -> ["reason" .= toJSON v] 
+
+permissionViolationInfo :: ME.PermissionViolation -> [Value] 
+permissionViolationInfo viol = case viol of
+    ME.JustForbidden
+        -> [object [ "reason" .= toJSON ("just forbidden" :: Text)]]
+    (ME.NoNoCAdmin v)
+        -> [object [ "reason" .= toJSON ("no noc admin" :: Text)
+                   , "userId" .= toJSON (uiToInt v) ]]
+    (ME.NoChanAdmin v v')
+        -> [object [ "reason" .= toJSON ("no channel admin" :: Text)
+                   , "opId" .= toJSON (uiToInt v)
+                   , "chanId" .= toJSON (ciToInt v') ]]
+    (ME.NoChanOwner v v')
+        ->  [object [ "reason" .= toJSON ("no channel owner" :: Text)
+                    , "opId" .= toJSON (uiToInt v)
+                    , "chanId" .= toJSON (ciToInt v') ]]
+    (ME.NoChanProducer v v')
+        -> [object [ "reason" .= toJSON ("no channel producer" :: Text)
+                   , "opId" .= toJSON (uiToInt v)
+                   , "chanId" .= toJSON (ciToInt v') ]]
+    (ME.NoChanConsumer v v')
+        -> [object [ "reason" .= toJSON ("no channel consumer" :: Text)
+                   , "opId" .= toJSON (uiToInt v)
+                   , "chanId" .= toJSON (ciToInt v') ]]
+    (ME.NoUserAdmin v v')
+        -> [object [ "reason" .= toJSON ("no user admin" :: Text)
+                   , "opId" .= toJSON (uiToInt v)
+                   , "userId" .= toJSON (uiToInt v') ]]
+    (ME.NoUserSelf v v')
+        -> [object [ "reason" .= toJSON ("not user herself" :: Text)
+                   , "opId" .= toJSON (uiToInt v)
+                   , "userId" .= toJSON (uiToInt v') ]]
+    (ME.NotOnContactList v v')
+        -> [object [ "reason" .= toJSON ("not on contact list" :: Text)
+                   , "opId" .= toJSON (uiToInt v)
+                   , "userId" .= toJSON (uiToInt v') ]]
+    (ME.PVAnd v v')
+        -> permissionViolationInfo v ++ permissionViolationInfo v'
+
+jsonErrorInfo :: JSONError -> [Pair] 
+jsonErrorInfo err = case err of
+    (MissingProperty v) -> ["name" .= toJSON v] 
+    (CantDecodeProperty v v') -> ["name" .= toJSON v, "reason" .= toJSON v']
+    (CantDecodeObject _) -> [] 
+
+imageErrorInfo :: ImageError -> [Pair] 
+imageErrorInfo err = case err of
+    (Base64Error v) -> ["reason" .= toJSON v]  
+    (DecodingError v) -> ["reason" .= toJSON v] 
+    (EncodingError v) -> ["reason" .= toJSON v]
+    (ResizeError v) -> ["reason" .= toJSON v]
 
 normalizeError :: Either Error (Maybe Value) -> (Maybe Value)
 normalizeError (Left err) = Just $ errorJSON err
 normalizeError (Right v) = v
-
 
 normalizeResponse :: Member API r
                   => Eff r (Either Error (Maybe Value)) -> Eff r (Maybe Value)

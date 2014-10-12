@@ -12,7 +12,7 @@ class NoCError(Exception):
     def __init__(self, response):
         self.response = response
     def __str__(self):
-        return "NoCError = %s" % self.response
+        return self.response
 
 class user(object):
     login_path = base_url + "/login"
