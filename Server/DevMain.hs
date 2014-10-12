@@ -25,6 +25,7 @@ accessLog host user time request response size referer useragent =
 
 main :: IO Int 
 main = do
+    putStrLn "Starting NoC development server..."
     opts <- readOptions
     withConfig (optConfigFile opts) $ \ cfg -> do
         withACID (_acidPath cfg) initialNoC $ \acid -> do
@@ -34,4 +35,5 @@ main = do
                                  }
                        )
                        $ runAcidAPISite cfg acid
+    putStrLn "Terminated NoC development server..."
     return 0
