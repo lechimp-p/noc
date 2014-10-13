@@ -11,6 +11,7 @@ import Model.BaseTypes
 
 import Data.Time.Format
 import System.Locale
+import System.IO
 import Control.Lens
 import Web.Routes.Happstack (implSite)
 import Happstack.Server (simpleHTTP, nullConf, Conf (..))
@@ -19,13 +20,15 @@ initialNoC = mkNoC (Login "admin") (Password "admin")
 
 accessLog :: FormatTime time
           => String -> String -> time -> String -> Int -> Integer -> String -> String -> IO ()
-accessLog host user time request response size referer useragent =
+accessLog host user time request response size referer useragent = do
     putStrLn $ formatTime defaultTimeLocale "%T" time 
                ++ " - " ++ request ++ " : " ++ show response
+    hFlush stdout
 
 main :: IO Int 
 main = do
     putStrLn "Starting NoC development server..."
+    hFlush stdout
     opts <- readOptions
     withConfig (optConfigFile opts) $ \ cfg -> do
         withACID (_acidPath cfg) initialNoC $ \acid -> do
@@ -36,4 +39,5 @@ main = do
                        )
                        $ runAcidAPISite cfg acid
     putStrLn "Terminated NoC development server..."
+    hFlush stdout
     return 0
