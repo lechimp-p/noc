@@ -19,6 +19,7 @@ import Control.Concurrent
 import Control.Concurrent.MVar
 import Control.Lens
 import Control.Monad
+import Control.Exception.Base
 import Web.Routes.Happstack (implSite)
 import Happstack.Server (simpleHTTP, nullConf, Conf (..))
 
@@ -48,7 +49,8 @@ main = do
     putStrLn "Starting NoC development server..."
     hFlush stdout
     opts <- readOptions
-    mt <- forkIO $ do
+    waitVar <- newEmptyMVar
+    mt <- flip forkFinally (\ _ -> putMVar waitVar ()) $ do
         withConfig (optConfigFile opts) $ \ cfg -> do
             withACID (_acidPath cfg) initialNoC $ \acid -> do
                 simpleHTTP (nullConf { Happstack.Server.port = cfg ^. serverConfig . API.Config.port
@@ -61,7 +63,8 @@ main = do
     waitForTermination
     putStrLn "Terminating NoC development server..."
     hFlush stdout
-    killThread mt 
+    throwTo mt UserInterrupt
+    takeMVar waitVar
     putStrLn "Done."
     hFlush stdout
     return 0
