@@ -60,6 +60,7 @@ main = do
         return ()
     waitForTermination
     putStrLn "Terminating NoC development server..."
+    hFlush stdout
     killThread mt 
     putStrLn "Done."
     hFlush stdout
