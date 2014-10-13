@@ -7,7 +7,7 @@ docker run -d --name noc-server \
            /opt/NoC-Server-src/Server/dist/build/NoC-Server-dev/NoC-Server-dev -c /opt/NoC.conf
 docker run -d -p 80:80 --name nginx-server \
            -v $(pwd)/../HTML2/dist:/usr/share/nginx/html:ro \
-           -v $(pwd)/data/files:/opt/NoC-data/files:rw \
+           -v $(pwd)/data/files:/opt/NoC-data/files:ro \
            --link noc-server:noc-server \
            noc-nginx
 docker logs --follow=true --timestamps=true noc-server 
