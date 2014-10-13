@@ -3,7 +3,7 @@
 cd noc-base 
 git clone ../.. src
 docker build -t noc-base .
-rm -r src* 
+rm -rf src* 
 cd ..
 docker run -t -i --name noc-build -v $(pwd)/..:/opt/NoC-Server-git noc-base /bin/sh /opt/install-noc-server.sh 
 docker commit noc-build noc-installed

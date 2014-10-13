@@ -3,7 +3,6 @@
 mkdir data
 docker run -d --name noc-server \
            -v $(pwd)/data:/opt/NoC-data:rw \
-           --sig-proxy=true \
            noc-installed \
            /opt/NoC-Server-src/Server/dist/build/NoC-Server-dev/NoC-Server-dev -c /opt/NoC.conf
 docker run -d -p 80:80 --name nginx-server \
