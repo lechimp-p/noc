@@ -3,11 +3,25 @@ bodyPolicy:
   maxBytesBody: 100000
   uploadPath: /tmp/NoC-Server-dev
   maxBytesHeader: 100000
+filesPath: ./files
 imageConfig:
-  salt: 0
-  channelDir: channel
-  basePath: ./files
-  userDir: user
+  userIconDir: user
+  userIconSizes:
+    - postfix: -icon
+      sizeX: 64
+      sizeY: 64
+      scaleType: fixed-size
+  channelImageDir: channel
+  channelImageSizes:
+    - postfix: -icon
+      sizeX: 64
+      sizeY: 64
+      scaleType: fixed-size
+  msgImageDir: msg
+  msgImageSizes:
+    - sizeX: 200
+      sizeY: 200
+      scaleType: scale-to-y
 acidPath: ./state
 sessionConfig:
   cookieName: NoCSession
@@ -23,6 +37,6 @@ siteConfig:
   handlerPath: ''
   location: http://localhost:8000
 serverConfig:
-  numThreads: 1
+  numThreads: 1 
   threadTimeout: 1
   port: 8000
