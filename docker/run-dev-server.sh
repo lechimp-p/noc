@@ -25,3 +25,4 @@ docker stop noc-server
 docker rm noc-server
 docker stop nginx-server
 docker rm nginx-server
+docker stop noc-data
