@@ -12,9 +12,9 @@ def before_all(context):
 def after_all(context):
     context.server_process.terminate()
     context.server_process.wait()
-#    shutil.rmtree(path.abspath("./state"))   
-#    shutil.rmtree(path.abspath("./files"))   
-#    os.remove(path.abspath("./client_session_key.aes"))
+    shutil.rmtree(path.abspath("./state"))   
+    shutil.rmtree(path.abspath("./files"))   
+    os.remove(path.abspath("./client_session_key.aes"))
 
 def before_scenario(context, feature):
     context.users = {}
