@@ -1,52 +1,342 @@
-html, body {
-	overflow-x: hidden; /* prevents horizontal scroll bars */
-	-webkit-tap-highlight-color: rgba(0,0,0,0); /* disable webkit tap highlight */
-	height: 100%; /* fixes focus scrolling in Safari (OS X) */
+/*-------------------------------------------------*/
+/* 	GENERAL  */
+
+* {padding:0; margin:0; border:none; outline:none;}
+
+body {
+	background:#eee;
 }
 
-.marginright {
-	margin-right:10px;
+::-webkit-scrollbar { 
+    display: none; 
 }
 
-.marginleft {
-	margin-left:10px;
+.floatleft {
+	float:left;
 }
 
-.nopadding {
-	padding:0px;
+.clear {
+	clear:both;
 }
 
-.noborder {
-	border:none;
-}
-
-.greytext {
-	color:#999;
-}
-
-.pushbottom {
+.pullright {
 	position:absolute;
-	bottom:0px;
-	left:0px;
-	right:0px;
+	right:15px;
 }
 
-.chatcontent {
-	bottom:54px;
+/* Typo  */
+
+@font-face {
+    font-family: 'Rambla';
+    src: url('../fonts/rambla-bold-webfont.eot');
+    src: url('../fonts/rambla-bold-webfont.eot?#iefix') format('embedded-opentype'),
+         url('../fonts/rambla-bold-webfont.woff2') format('woff2'),
+         url('../fonts/rambla-bold-webfont.woff') format('woff'),
+         url('../fonts/rambla-bold-webfont.ttf') format('truetype'),
+         url('../fonts/rambla-bold-webfont.svg#ramblabold') format('svg');
+    font-weight: bold;
+    font-style: normal;
 }
 
-.chatinput {
-	padding:20px 30px;
+@font-face {
+    font-family: 'Rambla';
+    src: url('../fonts/rambla-regular-webfont.eot');
+    src: url('../fonts/rambla-regular-webfont.eot?#iefix') format('embedded-opentype'),
+         url('../fonts/rambla-regular-webfont.woff2') format('woff2'),
+         url('../fonts/rambla-regular-webfont.woff') format('woff'),
+         url('../fonts/rambla-regular-webfont.ttf') format('truetype'),
+         url('../fonts/rambla-regular-webfont.svg#ramblaregular') format('svg');
+    font-weight: normal;
+    font-style: normal;
 }
 
-.lightBar {
-	background:#f2f2f2;
+h1, h2, h3, h4, h5, h6, p, a, li, span, div, button, textarea {
+	font-family: 'Rambla', sans-serif;
+	color:#333;
+	font-size: 1em;
+	margin:0;
+	padding:0;
+	text-decoration:none;
 }
 
-.app-body {
-	background:#fff;
+p, a, li, div, button, textarea {
+	line-height:1.5em;
+}
+
+h1 {
+	margin-top:2px;
+}
+
+h2 {
+	font-size:2em;
+	color:#fff;
+}
+
+.small {
+	font-size:0.8em;
+}
+
+hr {
+	left:0;
+	right:0;
+	height:1px;
+	background-color:#eee;
+}
+
+/*-------------------------------------------------*/
+/* 	RESPONSIVE  */
+
+/* Desktops and laptops  */
+@media only screen 
+and (min-width : 1401px) {
+	.topmargin {
+		margin:80px auto 0; }
+}
+
+/* Desktops and laptops  */
+@media only screen 
+and (max-width : 1400px) {
+	.topmargin {
+		margin:50px auto 0; }
+}
+
+/* Wrapper  */
+
+.widget {
+	left:0;
+	right:0;
+}
+
+.wrapper {
+	position:absolute;
+	left:0;
+	right:0;
+}
+
+.all {
+	top:0;
+	bottom:0;
+}
+
+.content {
+	top:44px;
+	bottom:0;
+}
+
+.topbar {
+	padding:10px 20px;
+	height:24px;
+	z-index:5;
+	position:fixed;
+}
+
+.widgets {
+	left:0;
+	right:0;
+	padding:0 10px;
+}
+
+/* --------------- (CHANNEL-)INTRO ------------------------------ */
+
+.intro {
+	position:relative;
+	left:0;
+	right:0;
+	text-align:center;
+	padding:50px 30px 170px;
+	background:url(../img/introbg.jpg) no-repeat center top;
+}
+
+.introelements {
+	text-align:left;
+	position:absolute;
+	bottom:0;
+	background: rgba(0,0,0,0.4);
+	border-bottom:1px solid #ccc;
+	padding:10px;
+	z-index:2;
+}
+
+.whitetext, .introelements p, button {
+	color:#fff;
+}
+
+.introcontrols {
+	margin-top:15px;
+}
+
+.sticky.stick {
+  position: fixed;
+  top: 44px;
+  z-index: 10000;
+}
+
+/* --------------- MESSAGE-INPUT ------------------------------ */
+
+.placeholder {
+	height:65px;
+	width:100%;
+	z-index:10;
+	background:#ddd;
+	display:none;
+}
+
+.inputgroup {
+	width:100%;
+	position:relative;
+    display:-webkit-flex;
+    display:flex;
+
+}
+
+.postmessage {
+	left:0;
+	right:0;
+	padding:10px 15px;
+	background-color:#ddd;
+}
+
+.postmessage textarea {
+	padding:10px 15px;
+	resize:none;
+    -webkit-flex:1;
+    flex:1;
+	border:1px solid #ccc;
+	line-height:24px;
+}
+
+/* CLONE */
+
+.hiddendiv {
+	padding:10px 15px;
+	background:red;
+    -webkit-flex:1;
+    flex:1;
+	line-height:24px;
+}
+
+.hidden {
+	position:absolute;
+	top:-99999px;
+	visibility: hidden;
+}
+
+/* ---- */
+
+.sendbutton {
+	padding:7px 15px 5px;
+	right:10px;
+	background:none;
+	font-size:20px;
+	color:#888;
+	line-height:20px;
+	height:44px;
+	border-top:1px solid #ccc;
+	border-right:1px solid #ccc;
+	border-bottom:1px solid #ccc;
+}
+
+/* --------------- CARDS ------------------------------ */
+
+.card {
+	left:0;
+	right:0;
+	margin-top:8px;
+}
+
+.cardcontent {
+	left:0;
+	right:0;
+	padding:15px;
+}
+
+.cardfooter {
+	padding:0 15px 20px;
+	height:36px;
+}
+
+.cardfooter p {
+	line-height:18px;
 }
 
 
+/* --------------- ICONS & BUTTONS ------------------------------ */
 
+.circular {
+	width: 36px;
+	height: 36px;
+	border-radius: 18px;
+	-webkit-border-radius: 18px;
+	-moz-border-radius: 18px;
+	margin-right:15px;
+}
+
+.lgicon {
+	font-size:1.3em;
+}
+
+.btn
+{
+	vertical-align: middle;
+	padding:5px 15px;
+	background:none;
+}
+
+.whiteborder {
+	border:1px solid #fff;
+}
+
+.btnimage {
+	text-indent:25px;
+}
+
+.watchers {
+	background:url(../img/eye.svg) no-repeat 5px 0;
+}
+
+
+/* --------------- STYLES & COLORS ------------------------------ */
+
+.greyed {
+	color:#888;
+}
+
+.bgcolor {
+	background:white;
+	top:0;
+}
+
+.roundcorners {
+	border-radius: 2px; 
+	-moz-border-radius: 2px; 
+	-webkit-border-radius: 2px; 
+ }
+
+.roundcornersright {
+	border-radius: 0 2px 2px 0; 
+	-moz-border-radius: 0 2px 2px 0; 
+	-webkit-border-radius: 0 2px 2px 0; 
+ }
+
+ .roundcornersleft {
+	border-radius: 2px 0 0 2px; 
+	-moz-border-radius: 2px 0 0 2px; 
+	-webkit-border-radius: 2px 0 0 2px; 
+ }
+
+.medopacity {
+	-ms-filter:"progid:DXImageTransform.Microsoft.Alpha(Opacity=60)";
+	filter: alpha(opacity=40);
+	-moz-opacity:0.4;
+	-khtml-opacity: 0.4;
+	opacity: 0.4;
+}
+
+.link:hover {
+	-ms-filter:"progid:DXImageTransform.Microsoft.Alpha(Opacity=100)";
+	filter: alpha(opacity=100);
+	-moz-opacity:1;
+	-khtml-opacity:1;
+	opacity:1;
+}
 

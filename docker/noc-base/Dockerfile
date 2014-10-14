@@ -23,7 +23,8 @@ RUN cd /opt/ && \
     cabal configure && \
     cabal install
 RUN cd /opt/NoC-Server-git/Server && \
-    cabal install --only-dependencies 
+    cabal install --only-dependencies
+    cabal build 
 RUN rm -r /opt/NoC-Server-git
 VOLUME /opt/NoC-data
 CMD ["/opt/NoC-Server-src/Server/dist/build/NoC-Server-dev/NoC-Server-dev", "-c", "/opt/NoC.conf"]
