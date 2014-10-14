@@ -1,7 +1,5 @@
 #!/bin/bash
 
-mkdir data
-
 docker start noc-data
 docker run -d --name noc-server \
            --volumes-from noc-data \
