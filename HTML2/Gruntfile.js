@@ -141,6 +141,18 @@ module.exports = function (grunt) {
             , filter : 'isFile'
             },
             { expand : true
+            , cwd : 'custom/views/channel-overview'
+            , src : '*.js'
+            , dest : 'dist/js'
+            , filter : 'isFile'
+            },
+            { expand : true
+            , cwd : 'custom/views/chat'
+            , src : '*.js'
+            , dest : 'dist/js'
+            , filter : 'isFile'
+            },
+            { expand : true
             , cwd : 'custom/views/login'
             , src : '*.js'
             , dest : 'dist/js'
@@ -149,6 +161,18 @@ module.exports = function (grunt) {
         , 'views-html' : { files : [
             { expand : true
             , cwd : 'custom/views/channel'
+            , src : '*.html'
+            , dest : 'dist/partials'
+            , filter : 'isFile'
+            },
+            { expand : true
+            , cwd : 'custom/views/channel-overview'
+            , src : '*.html'
+            , dest : 'dist/partials'
+            , filter : 'isFile'
+            },
+            { expand : true
+            , cwd : 'custom/views/chat'
             , src : '*.html'
             , dest : 'dist/partials'
             , filter : 'isFile'
@@ -164,31 +188,31 @@ module.exports = function (grunt) {
         watch :
         { 'custom-html' :
             { files : ['custom/*.html']
-            , tasks : ['copy:custom-html', 'ftp-deploy']
+            , tasks : ['copy:custom-html', 'upload-dist']
             }
         , 'custom-js' :
             { files : ['custom/js/*.js']
-            , tasks : ['jshint:custom', 'copy:custom-js', 'ftp-deploy']
+            , tasks : ['jshint:custom', 'copy:custom-js', 'upload-dist']
             }
         , 'custom-css' :
             { files : ['custom/*.css']
-            , tasks : ['copy:custom-css', 'ftp-deploy']
+            , tasks : ['copy:custom-css', 'upload-dist']
             }
         , 'custom-fonts' :
             { files : ['custom/*']
-            , tasks : ['copy:custom-fonts', 'ftp-deploy']
+            , tasks : ['copy:custom-fonts', 'upload-dist']
             }
         , 'custom-img' :
             { files : ['custom/img/*']
-            , tasks : ['copy:custom-img', 'ftp-deploy']
+            , tasks : ['copy:custom-img', 'upload-dist']
             }
         , 'views-js' :
             { files : ['custom/views/*/*.js']
-            , tasks : ['jshint:views', 'copy:views-js']
+            , tasks : ['jshint:views', 'copy:views-js', 'upload-dist']
             }
         , 'views-html' :
             { files : ['custom/views/*/*.html']
-            , tasks : ['copy:views-html']
+            , tasks : ['copy:views-html', 'upload-dist']
             }
         },
 
@@ -244,6 +268,16 @@ module.exports = function (grunt) {
             console.log(stderr);
             cb();
         }); 
+    });
+
+    grunt.registerTask('upload-dist', function() {
+        var cb = this.async();
+        exec("./upload-dist.sh",
+        function(error, result, stderr) {
+            console.log(result.stdout);
+            console.log(stderr);
+            cb();
+        });
     });
 
     grunt.registerTask('setup', ['setup-self', 'setup-bootstrap']);
