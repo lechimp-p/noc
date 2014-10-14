@@ -207,7 +207,7 @@ module.exports = function (grunt) {
             , tasks : ['jshint:custom', 'copy:custom-js', 'upload-dist']
             }
         , 'custom-css' :
-            { files : ['custom/*.css']
+            { files : ['custom/css/*.css']
             , tasks : ['copy:custom-css', 'upload-dist']
             }
         , 'custom-fonts' :
