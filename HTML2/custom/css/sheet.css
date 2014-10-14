@@ -202,7 +202,7 @@ and (max-width : 1400px) {
     -webkit-flex:1;
     flex:1;
 	border:1px solid #ccc;
-	line-height:24px;
+	line-height:22px;
 }
 
 /* CLONE */
@@ -212,7 +212,7 @@ and (max-width : 1400px) {
 	background:red;
     -webkit-flex:1;
     flex:1;
-	line-height:24px;
+	line-height:22px;
 }
 
 .hidden {
@@ -236,7 +236,7 @@ and (max-width : 1400px) {
 	border-bottom:1px solid #ccc;
 }
 
-/* --------------- CARDS ------------------------------ */
+/* --------------- CHANNEL-CARDS ------------------------------ */
 
 .card {
 	left:0;
@@ -259,6 +259,56 @@ and (max-width : 1400px) {
 	line-height:18px;
 }
 
+/* --------------- CHAT ------------------------------ */
+
+.chatintro {
+	position:fixed;
+	top:44px;
+	left:0;
+	right:0;
+	text-align:center;
+	padding:15px 30px;
+	background:url(../img/introbg.jpg) no-repeat center top;
+	z-index:10;
+}
+
+.chatintro h2 {
+	font-size:1.3em;
+}
+
+.chatentry {
+	padding:15px;
+    display:-webkit-flex;
+    display:flex;
+}
+
+.chatimage {
+	height:40px;
+	width:40px;
+}
+
+.chatcontent {
+	-webkit-flex:1;
+    flex:1;
+    padding:0 15px;
+}
+
+.chatlist {
+	position:absolute;
+	bottom:60px;
+}
+
+.chatlistwrapper {
+	height:100%;
+}
+
+li {border-bottom:1px solid #eee;}
+
+.pullbottom {
+	position:absolute;
+	bottom:0;
+	z-index:10;
+}
 
 /* --------------- ICONS & BUTTONS ------------------------------ */
 
