@@ -54,6 +54,7 @@ logUserIn :: (Member API r, Member Exec r)
 logUserIn = withJSONIO $ do
         l <- makeLogin =<< prop "login" 
         pw <- makePassword =<< prop "password" 
+        writeLog $ "login: " ++ show l ++ " " ++ show pw 
         "id" <$ doLogin l pw
         refreshCookie (Just l) (Just pw)
 

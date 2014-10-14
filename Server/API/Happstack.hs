@@ -26,6 +26,7 @@ import Data.ByteString (writeFile)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad (MonadPlus)
 import Control.Lens
+import System.IO
 import System.FilePath.Posix
 import System.Directory ( getCurrentDirectory
                         , createDirectoryIfMissing
@@ -102,6 +103,10 @@ evalAPI config req = case req of
                                     HS.TRACE -> TRACE
                                     HS.OPTIONS -> OPTIONS
                                     HS.CONNECT -> CONNECT
+                           )
+    WriteLog l n        -> (fmap n $ do
+                                liftIO $ putStrLn l
+                                liftIO $ hFlush stdout
                            )
 --    Abort n             -> (False, fmap n $ return undef)
     WriteFile p c n     -> (fmap n $ do

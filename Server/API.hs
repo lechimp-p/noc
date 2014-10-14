@@ -85,7 +85,9 @@ route url = do
 
 helloWorld :: Member API r 
            => Eff r (Either Error (Maybe Value)) 
-helloWorld = return . Right . Just . String =<< config _helloWorldMessage
+helloWorld = do
+    writeLog "Hello World!"
+    return . Right . Just . String =<< config _helloWorldMessage
 
 getLoginInfo :: (Member API r, Member Exec r)
              => Eff r (Either Error (Maybe Value))

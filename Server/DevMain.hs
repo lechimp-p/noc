@@ -46,7 +46,7 @@ waitForTermination = do
 
 main :: IO Int 
 main = do
-    putStrLn "Starting NoC development server..."
+    putStrLn "*** Starting NoC development server..."
     hFlush stdout
     opts <- readOptions
     waitVar <- newEmptyMVar
@@ -61,7 +61,7 @@ main = do
                            (runAcidAPISite cfg acid)
         return ()
     waitForTermination
-    putStrLn "Terminating NoC development server..."
+    putStrLn "*** Terminating NoC development server..."
     hFlush stdout
     throwTo mt UserInterrupt
     takeMVar waitVar

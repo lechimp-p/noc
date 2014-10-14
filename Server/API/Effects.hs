@@ -48,6 +48,8 @@ data API n
     | forall a. Config (APIConfig -> a)         (a -> n)
     | GetBody                                   (L.ByteString -> n)               
     | Method                                    (HTTPMethod -> n)                         
+    | WriteLog String                           (() -> n)
+
     -- | forall a. Abort                           (a -> n)
     | WriteFile FilePath B.ByteString           (Bool -> n)
     | RemoveFile FilePath                       (Bool -> n)
@@ -63,6 +65,7 @@ instance Functor API where
     fmap f (Config f' n)        = Config f' (f . n)
     fmap f (GetBody n)          = GetBody (f . n)
     fmap f (Method n)           = Method (f . n)
+    fmap f (WriteLog l n)       = WriteLog l (f . n)
     -- fmap f (Abort n)            = Abort (f . n)
     fmap f (WriteFile p c n)    = WriteFile p c (f . n)
     fmap f (RemoveFile p n)     = RemoveFile p (f . n)
@@ -117,6 +120,9 @@ method :: Member API r
        => Eff r HTTPMethod
 method = send $ \ next -> inj (Method next)
 
+writeLog :: Member API r
+         => String -> Eff r ()
+writeLog l = send $ \ next -> inj (WriteLog l next)
 
 --abort :: Member API r
 --      => Eff r a 

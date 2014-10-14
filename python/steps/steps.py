@@ -21,12 +21,12 @@ def step_impl(context, user):
         try:
             context.users[user] = context.NoC.user(user, user)
         except context.NoC.NoCError:
-            context.users[user] = context.NoC.user.create(context.users["admin"], user, user)
+            context.users[user] = context.NoC.createUser(context.users["admin"], user, user)
 
 @given("Channel {channel} exists")
 def step_impl(context, channel):
     if not channel in context.channels:
-        context.channels[channel] = context.NoC.channel.create(context.users["admin"], channel)
+        context.channels[channel] = context.NoC.createChannel(context.users["admin"], channel)
 
 @when("I am {user}")
 def step_impl(context, user):
@@ -47,7 +47,7 @@ def step_impl(context, can, what, name):
     worked = None 
     if what == "channel":
         try:
-            context.channels[name] = context.NoC.channel.create(context.actor, name)
+            context.channels[name] = context.NoC.createChannel(context.actor, name)
             worked = True 
         except context.NoC.NoCError:
             worked = False 
@@ -55,12 +55,11 @@ def step_impl(context, can, what, name):
         
     elif what == "user":
         try: 
-            context.users[name] = context.NoC.user.create(context.actor, name, name)
+            context.users[name] = context.NoC.createUser(context.actor, name, name)
             worked = True 
         except context.NoC.NoCError:
             worked = False 
         assert mod(worked)
-
     else:
         raise ValueError("Don't know how i could possibly create a %s" % what)
 
@@ -74,7 +73,7 @@ def step_impl(context, user, name):
     create_channel(context, context.users[user], name)
 
 def create_channel(context, who, name):
-    context.channels[name] = context.NoC.channel.create(who, name)
+    context.channels[name] = context.NoC.createChannel(who, name)
 
 @then("I {can} set {property} of {what} \"{name}\"")
 def step_imp(context, can, property, what, name):
@@ -112,12 +111,12 @@ def step_imp(context, can, property, what, name):
 @when("I search for {what} {search}") 
 def step_impl(context, what, search):
     if what == "channel":
-        res = context.NoC.channel.search(context.actor, search)
+        res = context.NoC.searchChannel(context.actor, search)
         context.search_result = []
         for r in res["result"]:
             context.search_result.append(r["name"]) 
     elif what == "user":
-        res = context.NoC.user.search(context.actor, search)
+        res = context.NoC.searchUser(context.actor, search)
         context.search_result = []
         for r in res["result"]:
             context.search_result.append(r["login"]) 

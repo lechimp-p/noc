@@ -12,12 +12,12 @@ def before_all(context):
 def after_all(context):
     context.server_process.terminate()
     context.server_process.wait()
-    shutil.rmtree(path.abspath("./state"))   
-    shutil.rmtree(path.abspath("./files"))   
-    os.remove(path.abspath("./client_session_key.aes"))
+#    shutil.rmtree(path.abspath("./state"))   
+#    shutil.rmtree(path.abspath("./files"))   
+#    os.remove(path.abspath("./client_session_key.aes"))
 
 def before_scenario(context, feature):
     context.users = {}
     context.channels = {}
-    context.users["admin"] = NoC.user("admin", "admin")
-    context.NoC = NoC
+    context.NoC = NoC.noc("http://localhost:8000")
+    context.users["admin"] = context.NoC.user("admin", "admin")
