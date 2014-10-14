@@ -4,10 +4,10 @@ mkdir data
 
 docker start noc-data
 docker run -d --name noc-server \
-           --volumes-from noc-data
+           --volumes-from noc-data \
            noc-server 
 docker run -d -p 80:80 --name nginx-server \
-           --volumes-from noc-data
+           --volumes-from noc-data \
            --link noc-server:noc-server \
            noc-nginx
 echo "  "
