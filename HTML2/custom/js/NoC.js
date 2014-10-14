@@ -4,7 +4,6 @@ angular.module("NoC",
     , "NoC.login"
     , "NoC.services"
     , "NoC.filters"
-    , "mobile-angular-ui"
     ])
 
 .config([ '$routeProvider', function($routeProvider) {

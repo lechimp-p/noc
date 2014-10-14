@@ -31,7 +31,7 @@ module.exports = function (grunt) {
         },
 
         copy: 
-        { 'bs-css' :
+        { /*'bs-css' :
             { expand : true
             , cwd : 'bower_components/bootstrap/dist/css'
             , src : '*.css'
@@ -44,8 +44,8 @@ module.exports = function (grunt) {
             , src : '*'
             , dest : 'dist/fonts'
             , filter : 'isFile'
-            }
-        , 'ng-css' :
+            }*/
+          'ng-css' :
             { expand : true
             , cwd : 'bower_components/angular'
             , src : 'angular-csp.css'
@@ -62,7 +62,7 @@ module.exports = function (grunt) {
             , src : 'angular.min.js.map'
             , dest : 'dist/js'
             }]}*/
-        , 'ng-bs-js' : { files : [
+        /*, 'ng-bs-js' : { files : [
             { expand : true
             , cwd : 'bower_components/angular-bootstrap'
             , src : 'ui-bootstrap.js'
@@ -73,14 +73,14 @@ module.exports = function (grunt) {
             , cwd : 'bower_components/angular-bootstrap'
             , src : 'ui-bootstrap-tpls.js'
             , dest : 'dist/js'
-            }]}
+            }]}*/
         , 'ng-route-js' : { files : [
             { expand : true
             , cwd : 'bower_components/angular-route'
             , src : 'angular-route.js'
             , dest : 'dist/js'
             }]}
-        , 'ng-mobile-js' :
+        /*, 'ng-mobile-js' :
             { expand : true
             , cwd : 'bower_components/mobile-angular-ui/dist/js'
             , src : '*.min.js'
@@ -97,7 +97,7 @@ module.exports = function (grunt) {
             , cwd : 'bower_components/mobile-angular-ui/dist/fonts'
             , src : '*'
             , dest : 'dist/fonts'
-            }
+            }*/
         , 'custom-css' :
             { expand : true
             , cwd : 'custom/css'
@@ -109,7 +109,7 @@ module.exports = function (grunt) {
             { expand : true
             , cwd : 'custom/fonts'
             , src : '*'
-            , dest : 'dist/css'
+            , dest : 'dist/fonts'
             , filter : 'isFile'
             }
         , 'custom-img' :
@@ -153,6 +153,12 @@ module.exports = function (grunt) {
             , filter : 'isFile'
             },
             { expand : true
+            , cwd : 'custom/views/topbar'
+            , src : '*.js'
+            , dest : 'dist/js'
+            , filter : 'isFile'
+            },
+            { expand : true
             , cwd : 'custom/views/login'
             , src : '*.js'
             , dest : 'dist/js'
@@ -173,6 +179,12 @@ module.exports = function (grunt) {
             },
             { expand : true
             , cwd : 'custom/views/chat'
+            , src : '*.html'
+            , dest : 'dist/partials'
+            , filter : 'isFile'
+            },
+            { expand : true
+            , cwd : 'custom/views/topbar'
             , src : '*.html'
             , dest : 'dist/partials'
             , filter : 'isFile'
@@ -310,16 +322,16 @@ module.exports = function (grunt) {
     //});
 
     // JS distribution task.
-    grunt.registerTask('dist-js', ['copy:custom-js', 'copy:ng-js', 'copy:ng-bs-js', 'copy:ng-route-js', 'copy:ng-mobile-js', 'copy:views-js']);
+    grunt.registerTask('dist-js', ['copy:custom-js', 'copy:ng-js', 'copy:ng-route-js', 'copy:views-js']);
 
     // CSS distribution task.
-    grunt.registerTask('dist-css', ['copy:bs-css', 'copy:ng-css', 'copy:custom-css', 'copy:ng-mobile-css']);
+    grunt.registerTask('dist-css', ['copy:ng-css', 'copy:custom-css']);
 
     // IMG distribution task.
     grunt.registerTask('dist-img', ['copy:custom-img']);
 
     // FONT distribution task.
-    grunt.registerTask('dist-fonts', ['copy:bs-fonts', 'copy:custom-fonts', 'copy:ng-mobile-fonts']);
+    grunt.registerTask('dist-fonts', ['copy:custom-fonts']);
 
     // HTML distribution task.
     grunt.registerTask('dist-html', ['copy:custom-html', 'copy:views-html']);

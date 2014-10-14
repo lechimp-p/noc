@@ -1,214 +1,53 @@
-<!DOCTYPE html>
-<head>
-	<title>urban communication network</title>
-
-	<!-- CUSTOM-CSS -->
-    <link rel="stylesheet" href="css/sheet.css" type="text/css" />
-    <link rel="stylesheet" href="http://code.ionicframework.com/ionicons/1.5.2/css/ionicons.min.css" type="text/css" />
-</head>
-
-<body>
-	<div class="wrapper all">
-
-		<!-- TOPBAR -->
-		<div class="wrapper topbar bgcolor">
-			<h1 class="floatleft">urbanoid</h1>
-			<i class="icon ion-navicon lgicon floatleft pullright"></i>
+<!-- CHANNEL-HEADER -->
+<div class="intro">
+    <h2>{{channel.name}}</h2>
+    <div class="widget introelements">
+	    <p>{{channel.description}}</p>
+	    <div class="introcontrols">
+	        <button class="btn roundcorners whiteborder medopacity link" ng-click="subscribe()">Abonnieren</button>
+			<button class="btn btnimage watchers pullright whitetext medopacity link">{{channel.amountOfUsers}}</button>
 			<div class="clear"></div>
-		</div>
-
-		<!-- ALLES-WRAPPER -->
-		<div class="wrapper content">
-
-			<!-- CHANNEL-HEADER -->
-			<div class="intro">
-				<h2>Grillen in K&ouml;lle</h2>
-				<div class="widget introelements">
-					<p>Wir wollen ab und zu mal bei uns im sch&ouml;nen K&ouml;lle grillen und chillen. Am liebstem im Gr&uuml;ng&uuml;rtel.</p>
-					<div class="introcontrols">
-						<button class="btn roundcorners whiteborder medopacity link">Abonnieren</button>
-						<button class="btn btnimage watchers pullright whitetext medopacity link">18</button>
-						<div class="clear"></div>
-					</div>
-				</div>
-			</div>
-
-			<!-- EINGABEFELD -->
-			<div id="sticky-anchor"></div>
-
-			<div class="placeholder"></div>
-
-			<div class="postmessage hidden">
-				<div class="inputgroup">
-					<div class="hiddendiv">placeholder</div>
-					<button class="sendbutton"><i class="icon ion-ios7-paperplane roundcornersright"></i></button>
-				</div>
-			</div>
-
-			<div class="postmessage sticky">
-				<div class="inputgroup">
-					<textarea id="postmessage" class="roundcornersleft" rows="1" placeholder="Was m&ouml;chtest du schreiben?"></textarea>
-					<button class="sendbutton"><i class="icon ion-ios7-paperplane roundcornersright"></i></button>
-				</div>
-			</div>
-
-			<!-- CHANNEL-BEITRÄGE -->
-			<div class="widgets">
-
-				<!-- CARD BEGIN -->
-				<div class="card bgcolor roundcorners">
-					<div class="cardcontent">
-						Hey Leute! Das ist ja wirklich eine total krasse Seite hier! Echt neat. Hier komme ich nun immer und immer wieder hin!
-					</div>
-					<div class="cardfooter">
-						<img src="img/fjs.jpg" alt "Franz-Joseph" class="circular floatleft">
-						<p>
-							<strong>Franz Joseph Strauss</strong><br />
-							<span class="greyed small">vor 32 Jahren</span>
-						</p>
-					</div>
-				</div>
-				<div class="card bgcolor roundcorners">
-					<div class="cardcontent">
-						Hey Leute! Das ist ja wirklich eine total krasse Seite hier! Echt neat. Hier komme ich nun immer und immer wieder hin!
-					</div>
-					<div class="cardfooter">
-						<img src="img/fjs.jpg" alt "Franz-Joseph" class="circular floatleft">
-						<p>
-							<strong>Franz Joseph Strauss</strong><br />
-							<span class="greyed small">vor 32 Jahren</span>
-						</p>
-					</div>
-				</div>
-				<div class="card bgcolor roundcorners">
-					<div class="cardcontent">
-						Hey Leute! Das ist ja wirklich eine total krasse Seite hier! Echt neat. Hier komme ich nun immer und immer wieder hin!
-					</div>
-					<div class="cardfooter">
-						<img src="img/fjs.jpg" alt "Franz-Joseph" class="circular floatleft">
-						<p>
-							<strong>Franz Joseph Strauss</strong><br />
-							<span class="greyed small">vor 32 Jahren</span>
-						</p>
-					</div>
-				</div>
-				<div class="card bgcolor roundcorners">
-					<div class="cardcontent">
-						Hey Leute! Das ist ja wirklich eine total krasse Seite hier! Echt neat. Hier komme ich nun immer und immer wieder hin!
-					</div>
-					<div class="cardfooter">
-						<img src="img/fjs.jpg" alt "Franz-Joseph" class="circular floatleft">
-						<p>
-							<strong>Franz Joseph Strauss</strong><br />
-							<span class="greyed small">vor 32 Jahren</span>
-						</p>
-					</div>
-				</div>
-				<div class="card bgcolor roundcorners">
-					<div class="cardcontent">
-						Hey Leute! Das ist ja wirklich eine total krasse Seite hier! Echt neat. Hier komme ich nun immer und immer wieder hin!
-					</div>
-					<div class="cardfooter">
-						<img src="img/fjs.jpg" alt "Franz-Joseph" class="circular floatleft">
-						<p>
-							<strong>Franz Joseph Strauss</strong><br />
-							<span class="greyed small">vor 32 Jahren</span>
-						</p>
-					</div>
-				</div>
-				<div class="card bgcolor roundcorners">
-					<div class="cardcontent">
-						Hey Leute! Das ist ja wirklich eine total krasse Seite hier! Echt neat. Hier komme ich nun immer und immer wieder hin!
-					</div>
-					<div class="cardfooter">
-						<img src="img/fjs.jpg" alt "Franz-Joseph" class="circular floatleft">
-						<p>
-							<strong>Franz Joseph Strauss</strong><br />
-							<span class="greyed small">vor 32 Jahren</span>
-						</p>
-					</div>
-				</div>
-				<div class="card bgcolor roundcorners">
-					<div class="cardcontent">
-						Hey Leute! Das ist ja wirklich eine total krasse Seite hier! Echt neat. Hier komme ich nun immer und immer wieder hin!
-					</div>
-					<div class="cardfooter">
-						<img src="img/fjs.jpg" alt "Franz-Joseph" class="circular floatleft">
-						<p>
-							<strong>Franz Joseph Strauss</strong><br />
-							<span class="greyed small">vor 32 Jahren</span>
-						</p>
-					</div>
-				</div>
-				<div class="card bgcolor roundcorners">
-					<div class="cardcontent">
-						Hey Leute! Das ist ja wirklich eine total krasse Seite hier! Echt neat. Hier komme ich nun immer und immer wieder hin!
-					</div>
-					<div class="cardfooter">
-						<img src="img/fjs.jpg" alt "Franz-Joseph" class="circular floatleft">
-						<p>
-							<strong>Franz Joseph Strauss</strong><br />
-							<span class="greyed small">vor 32 Jahren</span>
-						</p>
-					</div>
-				</div>
-				<div class="card bgcolor roundcorners">
-					<div class="cardcontent">
-						Hey Leute! Das ist ja wirklich eine total krasse Seite hier! Echt neat. Hier komme ich nun immer und immer wieder hin!
-					</div>
-					<div class="cardfooter">
-						<img src="img/fjs.jpg" alt "Franz-Joseph" class="circular floatleft">
-						<p>
-							<strong>Franz Joseph Strauss</strong><br />
-							<span class="greyed small">vor 32 Jahren</span>
-						</p>
-					</div>
-				</div>
-				<div class="card bgcolor roundcorners">
-					<div class="cardcontent">
-						Hey Leute! Das ist ja wirklich eine total krasse Seite hier! Echt neat. Hier komme ich nun immer und immer wieder hin!
-					</div>
-					<div class="cardfooter">
-						<img src="img/fjs.jpg" alt "Franz-Joseph" class="circular floatleft">
-						<p>
-							<strong>Franz Joseph Strauss</strong><br />
-							<span class="greyed small">vor 32 Jahren</span>
-						</p>
-					</div>
-				</div>
-				<div class="card bgcolor roundcorners">
-					<div class="cardcontent">
-						Hey Leute! Das ist ja wirklich eine total krasse Seite hier! Echt neat. Hier komme ich nun immer und immer wieder hin!
-					</div>
-					<div class="cardfooter">
-						<img src="img/fjs.jpg" alt "Franz-Joseph" class="circular floatleft">
-						<p>
-							<strong>Franz Joseph Strauss</strong><br />
-							<span class="greyed small">vor 32 Jahren</span>
-						</p>
-					</div>
-				</div>
-				<div class="card bgcolor roundcorners">
-					<div class="cardcontent">
-						Hey Leute! Das ist ja wirklich eine total krasse Seite hier! Echt neat. Hier komme ich nun immer und immer wieder hin!
-					</div>
-					<div class="cardfooter">
-						<img src="img/fjs.jpg" alt "Franz-Joseph" class="circular floatleft">
-						<p>
-							<strong>Franz Joseph Strauss</strong><br />
-							<span class="greyed small">vor 32 Jahren</span>
-						</p>
-					</div>
-				</div>
-				<!-- CARD END -->
-
-
-
-			</div>
-    	</div>
+	    </div>
 	</div>
+</div>
 
-<script src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
+<!-- EINGABEFELD -->
+<div id="sticky-anchor"></div>
+
+<div class="placeholder"></div>
+
+<div class="postmessage hidden">
+    <div class="inputgroup">
+        <div class="hiddendiv">placeholder</div>
+	    <button class="sendbutton"><i class="icon ion-ios7-paperplane roundcornersright"></i></button>
+	</div>
+</div>
+
+<div class="postmessage sticky">
+    <div class="inputgroup">
+        <textarea id="postmessage" class="roundcornersleft" rows="1" placeholder="Was m&ouml;chtest du schreiben?" ng-model="message"></textarea>
+        <button class="sendbutton" ng-click="post()"><i class="icon ion-ios7-paperplane roundcornersright"></i></button>
+	</div>
+</div>
+
+<!-- CHANNEL-BEITRÄGE -->
+<div class="widgets">
+
+    <!-- CARD BEGIN -->
+    <div class="card bgcolor roundcorners" ng-repeat="msg in msgs">
+        <div class="cardcontent">{{msg.text}}</div>
+        <div class="cardfooter">
+            <img src="{{msg.author.icon}}-icon" alt="icon of {{msg.author.name}}" class="circular floatleft">
+            <p>
+                <strong>{{msg.author | username}}</strong><br />
+                <span class="greyed small">{{msg.timestamp | rel_timestamp}}</span>
+            </p>
+        </div>
+    </div>
+    <!-- CARD END -->
+</div>
+
+<!--<script src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>-->
 
 <script>
 

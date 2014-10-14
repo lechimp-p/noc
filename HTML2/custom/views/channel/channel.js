@@ -29,6 +29,10 @@ controller("channel-controller", [ "$rootScope", "$scope", "$interval", "$routeP
         $scope.message = "";
     };
 
+    $scope.subscribe = function() {
+        API.subscribe($scope.channel.id);
+    }
+
     $scope.updateMessages = function() {
         if (typeof lastTS.value === "undefined") {
             return API.messages($scope.channel.id, 0, 10).success(toScope);
