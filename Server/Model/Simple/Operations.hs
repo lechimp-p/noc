@@ -155,7 +155,7 @@ rmUserContactR n u uid = updateUser (over contacts (S.delete uid)) () n u
 addUserSubscriptionR n u cid = do
     s <- getChanSubscribers n cid  
     (n', _) <- updateChan (over subscribers (S.insert u)) () n cid
-    updateUser (over subscriptions (S.insert cid)) () n u
+    updateUser (over subscriptions (S.insert cid)) () n' u
 rmUserSubscriptionR n u cid = do
     (n',_) <- updateChan (over subscribers (S.delete u)) () n cid
     updateUser (over subscriptions (S.delete cid)) () n' u
