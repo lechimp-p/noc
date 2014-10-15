@@ -22,6 +22,7 @@ import Control.Eff
 import Control.Eff.JSON
 import Data.Text (Text)
 import qualified Data.Text as T
+import qualified Data.Set as S
 import Data.Aeson 
 import Data.Aeson.Types
 import Control.Monad (mzero)
@@ -303,6 +304,7 @@ userInfo uid = do
     "icon"          <$ getUserIcon uid
 
 channelInfo cid = do
+    uid <- forceOperatorId
     "id"            <: cid
     "name"          <$ getChanName cid
     "description"   <$ getChanDesc cid      
@@ -310,3 +312,4 @@ channelInfo cid = do
     "image"         <$ getChanImage cid
     "amountOfUsers" <$ amountOfSubscribedUsers cid
     "lastPost"      <$ lastPostTimestamp cid
+    "subscribed"    <$ fmap (S.member cid) .$ getUserSubscriptions uid 
