@@ -55,7 +55,7 @@ class user(object):
         self.base_path = noc.base_url + "/user"
         self.user_path = noc.base_url + "/user/%i"    
         self.subscriptions_path = noc.base_url + "/user/%i/subscriptions"
-        self.channels_path = noc.base_url + "/user/%i/channels"
+        self.contacts_path = noc.base_url + "/user/%i/contacts"
         self.notifications_path = noc.base_url + "/user/%i/notifications"
 
         self.noc = noc
@@ -88,10 +88,10 @@ class user(object):
         return op.postR(self.contacts_path % self.id, {"add" : add, "remove" : remove})
 
     def getSubscriptions(self, op):
-        return op.getR(self.contacts_path % self.id)
+        return op.getR(self.subscriptions_path % self.id)
 
     def modifySubscriptions(self, op, subscribe = [], unsubscribe = []):
-        return op.postR(self.contacts_path % self.id, {"subscribe" : subscribe, "unsubscribe" : unsubscribe})
+        return op.postR(self.subscriptions_path % self.id, {"subscribe" : subscribe, "unsubscribe" : unsubscribe})
 
     def getChannels(self, op):
         return op.getR(self.contacts_path % self.id)
