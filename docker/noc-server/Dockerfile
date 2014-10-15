@@ -13,7 +13,6 @@ RUN cd /opt/ && \
     sed -i 's/0.4.1.*/0.4.2.*/' *.cabal && \
     cabal install
 COPY src/ /opt/NoC-Server-git
-COPY NoC.conf /opt/NoC.conf
 COPY update-noc-server.sh /opt/update-noc-server.sh
 RUN cd /opt/ && \
     git clone https://github.com/lechimp-p/json-effects.git && \
@@ -24,5 +23,5 @@ RUN cd /opt/ && \
 RUN cd /opt/NoC-Server-git/Server && \
     cabal install --only-dependencies
 RUN rm -r /opt/NoC-Server-git
-CMD ["/opt/NoC-Server-src/Server/dist/build/NoC-Server-dev/NoC-Server-dev", "-c", "/opt/NoC.conf"]
+CMD ["/opt/NoC-Server-src/Server/dist/build/NoC-Server-dev/NoC-Server-dev", "-c", "/opt/NoC-data/NoC.conf"]
 EXPOSE 8000

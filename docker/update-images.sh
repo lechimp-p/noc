@@ -6,6 +6,7 @@ docker run -d -p 50022:22 --name noc-ssh \
            --volumes-from noc-data \
            noc-ssh
 git push -f devsrv master
+scp -P 50022 noc-data/NoC.conf root@localhost:/opt/NoC-data/NoC.conf
 docker stop noc-ssh
 docker rm noc-ssh
 
