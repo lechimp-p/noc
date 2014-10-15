@@ -87,6 +87,16 @@ factory("API", function($http) {
                 ;
     };
 
+    API.subscribe = function(cid) {
+        return $http(
+                { method
+                })
+                .error( function(data, status, headers, config) {
+                    console.log("Error in API.subscribe: " + data);
+                })
+                ;
+    }
+
     API.getChannelInfo = function(cid) {
         return $http(
                 { methof : "GET"

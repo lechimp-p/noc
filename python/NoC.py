@@ -68,7 +68,6 @@ class user(object):
         else:
             if login is None or password is None:
                 raise err
-            print login + " " + password + " " + self.login_path
             self.id = self.postR(self.login_path, {"login":login, "password":password})["id"]
 
     # Methods
