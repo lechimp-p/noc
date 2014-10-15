@@ -48,4 +48,4 @@ docker run -t -i --name noc-build \
            /bin/sh /opt/update-noc-server.sh 
 docker rm noc-build
 
- docker build -t noc-nginx noc-nginx 
+docker build -t noc-nginx noc-nginx 
