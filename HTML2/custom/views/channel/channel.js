@@ -33,6 +33,7 @@ controller("channel-controller", [ "$rootScope", "$scope", "$interval", "$routeP
         API.subscribe($rootScope.user.id, $scope.channel.id)
                 .success(function(response) { 
                     $scope.channel.subscribed = true;
+                    $scope.updateChannelInfo();
                 })
                 ;
     };
@@ -41,6 +42,7 @@ controller("channel-controller", [ "$rootScope", "$scope", "$interval", "$routeP
         API.unsubscribe($rootScope.user.id, $scope.channel.id)
                 .success(function(response) { 
                     $scope.channel.subscribed = false;
+                    $scope.updateChannelInfo();
                 })
                 ;
     };
