@@ -30,7 +30,19 @@ controller("channel-controller", [ "$rootScope", "$scope", "$interval", "$routeP
     };
 
     $scope.subscribe = function() {
-        API.subscribe($rootScope.user.id, $scope.channel.id);
+        API.subscribe($rootScope.user.id, $scope.channel.id)
+                .success(function(response) { 
+                    $scope.channel.subscribed = true;
+                })
+                ;
+    };
+
+    $scope.unsubscribe = function() {
+        API.unsubscribe($rootScope.user.id, $scope.channel.id)
+                .success(function(response) { 
+                    $scope.channel.subscribed = false;
+                })
+                ;
     };
 
     $scope.updateMessages = function() {

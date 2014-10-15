@@ -102,6 +102,21 @@ factory("API", function($http) {
                 ;
     };
 
+    API.unsubscribe = function(uid, cid) {
+        return $http(
+                { method : "POST"
+                , url : "api/user/"+uid+"/subscriptions"
+                , data : JSON.stringify(
+                            { "unsubscribe" : [cid]
+                            })
+                , headers : {"Content-Type" : "application/json"}
+                })
+                .error( function(data, status, headers, config) {
+                    console.log("Error in API.unsubscribe: " + data);
+                })
+                ;
+    };
+
     API.getChannelInfo = function(cid) {
         return $http(
                 { methof : "GET"
