@@ -87,15 +87,20 @@ factory("API", function($http) {
                 ;
     };
 
-    API.subscribe = function(cid) {
+    API.subscribe = function(uid, cid) {
         return $http(
-                { method
+                { method : "POST"
+                , url : "api/user/"+uid+"/subscriptions"
+                , data : JSON.stringify(
+                            { "subscribe" : [cid]
+                            })
+                , headers : {"Content-Type" : "application/json"}
                 })
                 .error( function(data, status, headers, config) {
                     console.log("Error in API.subscribe: " + data);
                 })
                 ;
-    }
+    };
 
     API.getChannelInfo = function(cid) {
         return $http(
