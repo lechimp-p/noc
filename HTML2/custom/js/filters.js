@@ -68,4 +68,7 @@ angular.module("NoC.filters", [])
     diff = diff / 7;
     return "vor " + Math.floor(diff) + "w";
 };}])
+.filter("icon", [function() { return function(input) {
+    return input + "-icon";
+};}])
 ;
