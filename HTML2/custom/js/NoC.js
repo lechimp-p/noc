@@ -1,6 +1,7 @@
 angular.module("NoC", 
     [ "ngRoute"
     , "NoC.channel"
+    , "NoC.chat"
     , "NoC.login"
     , "NoC.services"
     , "NoC.filters"
@@ -15,6 +16,10 @@ angular.module("NoC",
             .when("/channel/:chanId", 
                 { templateUrl: "partials/channel.html"
                 , controller : "channel-controller"
+                })
+            .when("/chat/:chanId", 
+                { templateUrl: "partials/chat.html"
+                , controller : "chat-controller"
                 })
             .otherwise(
                 { redirectTo : "/login"
