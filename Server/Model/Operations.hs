@@ -199,6 +199,12 @@ amountOfSubscribedUsers cid = do
     checkAccess cid forAllChanPeople 
     Q.amountOfSubscribedUsers cid
 
+getChanSubscribers :: (Member Query r, Member Exec r)
+                        => ChanId -> Eff r (S.Set UserId) 
+getChanSubscribers cid = do
+    checkAccess cid forChanOwnersOrAdmins
+    Q.getChanSubscribers cid
+
 lastPostTimestamp :: (Member Query r, Member Exec r)
                   => ChanId -> Eff r (Maybe UTCTime)
 lastPostTimestamp cid = do

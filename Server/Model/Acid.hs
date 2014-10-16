@@ -67,6 +67,7 @@ evalChanQuery state q cid = case q of
     IsChanProducer uid next -> ffq next (QIsChanProducer cid uid)
     IsChanConsumer uid next -> ffq next (QIsChanConsumer cid uid)
     AmountOfSubscribedUsers next -> ffq next (QAmountOfSubscribedUsers cid)
+    GetChanSubscribers next -> ffq next (QGetChanSubscribers cid)
     LastPostTimestamp next ->  ffq next (QLastPostTimestamp cid)
     Messages ofs am next -> ffq next (QMessages cid ofs am) 
     MessagesTill ts next -> ffq next (QMessagesTill cid ts)
