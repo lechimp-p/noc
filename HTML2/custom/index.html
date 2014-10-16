@@ -25,7 +25,11 @@
     <script src="js/angular-route.js"></script>
     <script src="js/NoC.js"></script>
     <script src="js/channel.js"></script>
+    <script src="js/channel-overview.js"></script>
     <script src="js/chat.js"></script>
+    <script src="js/contact-overview.js"></script>
+    <script src="js/profile.js"></script>
+    <script src="js/my-profile.js"></script>
     <script src="js/login.js"></script>
     <script src="js/services.js"></script>
     <script src="js/filters.js"></script>
@@ -34,6 +38,14 @@
 	<div class="wrapper all">
 
         <div class="wrapper topbar bgcolor" ng-include src="'partials/topbar.html'"></div>
+
+        <div class="wrapper sidebar-left" style="display:none">
+            <div ng-include src="'partials/channel-overview.html'" ng-controller="channel-overview-controller"></div>
+        </div>
+
+        <div class="wrapper sidebar-right" style="display:none">
+            <div ng-include src="'partials/contact-overview.html'" ng-controller="contact-overview-controller"></div>
+        </div>
 
         <!-- ALLES-WRAPPER -->
         <div class="wrapper content" ng-view></div>

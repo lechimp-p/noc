@@ -1,7 +1,11 @@
 angular.module("NoC", 
     [ "ngRoute"
     , "NoC.channel"
+    , "NoC.channel-overview"
     , "NoC.chat"
+    , "NoC.contact-overview"
+    , "NoC.profile"
+    , "NoC.my-profile"
     , "NoC.login"
     , "NoC.services"
     , "NoC.filters"
@@ -20,6 +24,14 @@ angular.module("NoC",
             .when("/chat/:chanId", 
                 { templateUrl: "partials/chat.html"
                 , controller : "chat-controller"
+                })
+            .when("/user/:userId",
+                { templateUrl : "partials/profile.html"
+                , controller : "profile-controller"
+                })
+            .when("/profile",
+                { templateUrl : "partials/my-profile.html"
+                , controller : "my-profile-controller"
                 })
             .otherwise(
                 { redirectTo : "/login"

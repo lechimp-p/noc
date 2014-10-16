@@ -153,7 +153,25 @@ module.exports = function (grunt) {
             , filter : 'isFile'
             },
             { expand : true
+            , cwd : 'custom/views/contact-overview'
+            , src : '*.js'
+            , dest : 'dist/js'
+            , filter : 'isFile'
+            },
+            { expand : true
             , cwd : 'custom/views/topbar'
+            , src : '*.js'
+            , dest : 'dist/js'
+            , filter : 'isFile'
+            },
+            { expand : true
+            , cwd : 'custom/views/profile'
+            , src : '*.js'
+            , dest : 'dist/js'
+            , filter : 'isFile'
+            },
+            { expand : true
+            , cwd : 'custom/views/my-profile'
             , src : '*.js'
             , dest : 'dist/js'
             , filter : 'isFile'
@@ -184,7 +202,25 @@ module.exports = function (grunt) {
             , filter : 'isFile'
             },
             { expand : true
+            , cwd : 'custom/views/contact-overview'
+            , src : '*.html'
+            , dest : 'dist/partials'
+            , filter : 'isFile'
+            },
+            { expand : true
             , cwd : 'custom/views/topbar'
+            , src : '*.html'
+            , dest : 'dist/partials'
+            , filter : 'isFile'
+            },
+            { expand : true
+            , cwd : 'custom/views/profile'
+            , src : '*.html'
+            , dest : 'dist/partials'
+            , filter : 'isFile'
+            },
+            { expand : true
+            , cwd : 'custom/views/my-profile'
             , src : '*.html'
             , dest : 'dist/partials'
             , filter : 'isFile'
