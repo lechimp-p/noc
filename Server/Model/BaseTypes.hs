@@ -54,7 +54,7 @@ data Notification
 
 data Contact = Contact
     { _userId :: UserId
-    , _channel :: Maybe ChanId
+    , _channelId :: Maybe ChanId
     }
     deriving ( Data, Typeable)
 
