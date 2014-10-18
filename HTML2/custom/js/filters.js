@@ -1,5 +1,5 @@
 angular.module("NoC.filters", [])
-.filter("username", [ "$rootScope", function($rootScope) { return function(input) {
+.filter("username", [ "user", function(user) { return function(input) {
     "use strict";
 
     if (typeof input.id == "undefined") {
@@ -7,7 +7,7 @@ angular.module("NoC.filters", [])
         return input;
     }
 
-    if (input.id == $rootScope.user.id ) {
+    if (input.id == user.getId() ) {
         return "Du";
     }
     else {
@@ -19,7 +19,7 @@ angular.module("NoC.filters", [])
         }
     }
 };}])
-.filter("rel_timestamp", [ "$rootScope", function($rootScope) { return function(input) {
+.filter("rel_timestamp", [ "user", function(user) { return function(input) {
     "use strict";
 
     var utc_pattern = /(\d\d\d\d)-(\d\d)-(\d\d) (\d\d):(\d\d):(\d\d)\.(\d+) UTC/;  
@@ -37,7 +37,7 @@ angular.module("NoC.filters", [])
 
     var now = new Date();
     var ts = new Date(parseInt(match[1]), parseInt(match[2]) - 1, parseInt(match[3]), // year month day
-                      parseInt(match[4]) + $rootScope.user.UTC_offset, // hours
+                      parseInt(match[4]) + user.getUTC_offset(), // hours
                       parseInt(match[5]), parseInt(match[6]), parseInt(match[7]) / 1000); // minutes seconds milliseconds
 
     // in seconds
@@ -70,5 +70,10 @@ angular.module("NoC.filters", [])
 };}])
 .filter("icon", [function() { return function(input) {
     return input + "-icon";
+};}])
+.filter("streams_only", [function() { return function(input) {
+    return input.filter(function(chan) {
+        return chan.type == "stream";
+    });
 };}])
 ;

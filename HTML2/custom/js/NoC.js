@@ -55,7 +55,7 @@ angular.module("NoC",
 //                                  };
 
 //                    $rootScope.deferred401.push(request);
-                    $rootScope.$broadcast("event:login-required");
+                    $rootScope.$broadcast("user:login-required");
 //                    return deferred.promise;
                 }
 //                else {
@@ -70,25 +70,19 @@ angular.module("NoC",
     $httpProvider.interceptors.push( 'unauthInterceptor');
 }])
 
-.run(['$rootScope', '$http', '$location', 'API', function($rootScope, $http, $location, API) {
+.run(['$rootScope', '$http', '$location', "user-events", 
+       function($rootScope, $http, $location, userEvents) {
     //$rootScope.deferred401 = [];
     $rootScope.deferredRoute = "";
-    $rootScope.user = { id : null 
-                      , UTC_offset : 2
-                      };
 
-    API.logininfo().success(function(response) {
-        $rootScope.user.id = response.id;
-    }); 
-    
-    $rootScope.$on("event:login-successfull", function() {
+    $rootScope.$on(userEvents.loginSuccessfull, function() {
         $location.path($rootScope.deferredRoute);
         /*$http(req.config).then(function(response) {
             req.deferred.resolve(reponse);
         });*/ 
     });
 
-    $rootScope.$on("event:login-required", function() {
+    $rootScope.$on(userEvents.loginRequired, function() {
         $rootScope.deferredRoute = $location.path();
         $location.path("/login");
     });
