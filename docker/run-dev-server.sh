@@ -1,5 +1,7 @@
 #!/bin/bash
 
+ssh-add ~/.ssh/noc_dev_rsa
+
 docker start noc-data
 docker run -d --name noc-server \
            --volumes-from noc-data \
@@ -15,7 +17,7 @@ echo "  "
 echo "  "
 echo " You can view your page at:"
 echo "  "
-echo $(boot2docker ip)
+echo $(boot2docker_ip)
 echo "  "
 echo "  "
 echo "Press Ctrl-C to stop the environment."

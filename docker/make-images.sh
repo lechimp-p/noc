@@ -34,7 +34,7 @@ echo ""
 echo ""
 
 git clone .. noc-server/src
-docker build -t noc-server noc-server 
+docker build -t noc-server noc-server
 rm -rf noc-server/src 
 
 echo ""
@@ -53,12 +53,12 @@ docker run -d -p 50022:22  \
            --name noc-ssh \
            noc-ssh 
 
-sleep 1s
+sleep 5s
 echo ""
 echo " Type 'yes' and press Enter!"
 echo ""
-ssh root@localhost -p 50022 echo ssh connection to noc works
-ssh root@localhost -p 50022 /usr/bin/git init --bare /opt/NoC-Server-git
+ssh root@$(boot2docker_ip) -p 50022 echo ssh connection to noc works
+ssh root@$(boot2docker_ip) -p 50022 /usr/bin/git init --bare /opt/NoC-Server-git
 
 echo ""
 echo ""
@@ -72,9 +72,9 @@ echo ""
 
 
 git remote remove devsrv
-git remote add devsrv ssh://root@$(boot2docker ip):50022/opt/NoC-Server-git
+git remote add devsrv ssh://root@$(boot2docker_ip):50022/opt/NoC-Server-git
 git push -f devsrv master
-ssh -p 50022 root@$(boot2docker ip) git clone /opt/NoC-Server-git /opt/NoC-Server-src/
+ssh -p 50022 root@$(boot2docker_ip) git clone /opt/NoC-Server-git /opt/NoC-Server-src/
 
 echo ""
 echo ""
