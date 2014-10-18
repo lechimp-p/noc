@@ -6,24 +6,25 @@
 
 <!-- CHANNEL-BEITRÄGE -->
 <div class="chatlistwrapper bgcolor">
-<div class="postmessage pullbottom">
-    <div class="inputgroup">
-        <textarea id="postmessage" class="roundcornersleft" rows="1" placeholder="Was m&ouml;chtest du schreiben?" ng-model="message"></textarea>
-        <button class="sendbutton" ng-click="post()"><i class="icon ion-ios7-paperplane roundcornersright"></i></button>
-    </div>
-</div>
-<ul class="chatlist">
-    <!-- ENTRY BEGIN -->
-    <li class="chatentry"  ng-repeat="msg in msgs" >
-        <div class="chatimage floatleft"><img src="{{msg.author.icon | icon}}" alt "icon of {{msg.author.name}}" class="circular"></div>
-        <div class="chatcontent floatleft">
-            <p>
-                <strong>{{msg.author | username}}</strong>
-                <span class="greyed small">{{msg.timestamp | rel_timestamp}}</span><br />
-                {{msg.text}}
-            </p>
+    <div class="postmessage pullbottom">
+        <div class="inputgroup">
+            <textarea id="postmessage" autoresize class="roundcornersleft" rows="1" placeholder="Was m&ouml;chtest du schreiben?" ng-model="message"></textarea>
+            <button class="sendbutton" ng-click="post()"><i class="icon ion-ios7-paperplane roundcornersright"></i></button>
         </div>
-        <div class="clear"></div>
-    </li>
-    <!-- ENTRY / -->
-</ul>
+    </div>
+    <ul class="chatlist">
+        <!-- ENTRY BEGIN -->
+        <li class="chatentry"  ng-repeat="msg in msgs" >
+            <div class="chatimage floatleft"><img src="{{msg.author.icon | icon}}" alt "icon of {{msg.author.name}}" class="circular"></div>
+            <div class="chatcontent floatleft">
+                <p>
+                    <strong>{{msg.author | username}}</strong>
+                    <span class="greyed small">{{msg.timestamp | rel_timestamp}}</span><br />
+                    {{msg.text}}
+                </p>
+            </div>
+            <div class="clear"></div>
+        </li>
+        <!-- ENTRY / -->
+    </ul>
+</div>
