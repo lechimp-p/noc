@@ -7,18 +7,36 @@
 <script>
 	$(window).ready(function() {
 		$(".shownavbtn").on("click", function(ev) {
+			//Add Animations
 			$("#nav").addClass("movenav");
-			$("#nav").removeClass("pullleft300");
-			$("#contentwrapper").addClass("movecontent");
 			$(".topbar").addClass("movecontent");
+			$("#contentwrapper").addClass("movecontent");
+			//Remove Animations
+			$("#nav").removeClass("movenavback");
+			$(".topbar").removeClass("movecontentback");
+			$("#contentwrapper").removeClass("movecontentback");
+			//Change Positions
+			$("#nav").removeClass("pullleft300");
+			$(".topbar").addClass("pushleft300");
+			$("#contentwrapper").addClass("pushleft300");
+			//Toggle Buttons
 			$(".shownavbtn").addClass("hidden");
 			$(".hidenavbtn").removeClass("hidden");
 		});
 		$(".hidenavbtn").on("click", function(ev) {
+			//Add Animations
 			$("#nav").addClass("movenavback");
-			$("#nav").addClass("pullleft300");
-			$("#contentwrapper").addClass("movecontentback");
 			$(".topbar").addClass("movecontentback");
+			$("#contentwrapper").addClass("movecontentback");
+			//Remove Animations
+			$("#nav").removeClass("movenav");
+			$(".topbar").removeClass("movecontent");
+			$("#contentwrapper").removeClass("movecontent");
+			//Change Positions
+			$("#nav").addClass("pullleft300");
+			$(".topbar").removeClass("pushleft300");
+			$("#contentwrapper").removeClass("pushleft300");
+			//Toggle Buttons
 			$(".hidenavbtn").addClass("hidden");
 			$(".shownavbtn").removeClass("hidden");
 		});
