@@ -16,6 +16,7 @@ module Model.BaseTypes
     , checkPassword
     , ChanType (..)
     , Notification (..)
+    , Contact (..)
     )
 where
 
@@ -50,3 +51,15 @@ data ChanType
 data Notification
     = AddedToChannel UTCTime UserId ChanId
     deriving (Eq, Data, Typeable)
+
+data Contact = Contact
+    { _userId :: UserId
+    , _channel :: Maybe ChanId
+    }
+    deriving ( Data, Typeable)
+
+instance Eq Contact where
+    a == b = _userId a == _userId b
+
+instance Ord Contact where
+    compare a = compare (_userId a) . _userId

@@ -84,6 +84,7 @@ evalUserQuery state q uid = case q of
     GetUserEmail next -> ffq next (QGetUserEmail uid)
     GetUserNotifications next -> ffq next (QGetUserNotifications uid)
     GetUserContacts next -> ffq next (QGetUserContacts uid)
+    GetUserContactByContactId cid next -> ffq next (QGetUserContactByContactId uid cid)
     GetUserSubscriptions next -> ffq next (QGetUserSubscriptions uid)
     where
     ffq n = fmap (fmap n) . AA.query' state
@@ -145,8 +146,8 @@ evalUserUpdate state uid q = case q of
     SetUserIcon i next -> ffu next (USetUserIcon uid i)
     SetUserEmail e next -> ffu next (USetUserEmail uid e)
     AddUserNotification n next -> ffu next (UAddUserNotification uid n)
-    AddUserContact uid' next -> ffu next (UAddUserContact uid uid')
-    RmUserContact uid' next -> ffu next (URmUserContact uid uid')
+    SetUserContact uid' next -> ffu next (USetUserContact uid uid')
+    RmUserContactTo uid' next -> ffu next (URmUserContactTo uid uid')
     AddUserSubscription cid next -> ffu next (UAddUserSubscription uid cid)
     RmUserSubscription cid next -> ffu next (URmUserSubscription uid cid)
     where

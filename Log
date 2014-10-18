@@ -1,0 +1,5 @@
+[2014-10-18]
+
+cd ~/NoC-Server/docker
+boot2docker up      (und evtl. export ... machen)
+./update-images.sh

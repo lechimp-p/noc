@@ -13,6 +13,7 @@ module Model
     , Image (Image, imgPath)
     , Notification (..)
     , ChanType (..)
+    , Contact (..)
     )
 where
 

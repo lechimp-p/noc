@@ -98,15 +98,16 @@ messagesTill cid ts = chanQuery cid (MessagesTill ts)
 
 
 data UserQueryType n
-    = GetUserLogin              (Login -> n)
+    = GetUserLogin                      (Login -> n)
 --    | IsUserPassword Password   (Bool -> n)
-    | GetUserName               (Name -> n)
-    | GetUserDesc               (Desc -> n)
-    | GetUserIcon               (Maybe Icon -> n)
-    | GetUserEmail              (Maybe EmailAddress -> n)
-    | GetUserNotifications      ([Notification] -> n)
-    | GetUserContacts           (S.Set UserId -> n)
-    | GetUserSubscriptions      (S.Set ChanId -> n)
+    | GetUserName                       (Name -> n)
+    | GetUserDesc                       (Desc -> n)
+    | GetUserIcon                       (Maybe Icon -> n)
+    | GetUserEmail                      (Maybe EmailAddress -> n)
+    | GetUserNotifications              ([Notification] -> n)
+    | GetUserContacts                   (S.Set Contact -> n)
+    | GetUserContactByContactId UserId  (Maybe Contact -> n)
+    | GetUserSubscriptions              (S.Set ChanId -> n)
     deriving (Typeable, Functor)
 
 userQuery :: Member Query r 
@@ -134,8 +135,11 @@ getUserEmail uid = userQuery uid GetUserEmail
 getUserNotifications :: Member Query r => UserId -> Eff r [Notification] 
 getUserNotifications uid = userQuery uid GetUserNotifications
 
-getUserContacts :: Member Query r => UserId -> Eff r (S.Set UserId)
+getUserContacts :: Member Query r => UserId -> Eff r (S.Set Contact)
 getUserContacts uid = userQuery uid GetUserContacts
+
+getUserContactByContactId :: Member Query r => UserId -> UserId -> Eff r (Maybe Contact)
+getUserContactByContactId uid cid = userQuery uid (GetUserContactByContactId cid)
  
 getUserSubscriptions :: Member Query r => UserId -> Eff r (S.Set ChanId)
 getUserSubscriptions uid = userQuery uid GetUserSubscriptions

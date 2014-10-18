@@ -272,7 +272,7 @@ getUserSubscriptions uid = do
     Q.getUserSubscriptions uid
 
 getUserContacts :: (Member Query r, Member Exec r)
-                     => UserId -> Eff r (S.Set UserId)
+                     => UserId -> Eff r (S.Set Contact)
 getUserContacts uid = do
     checkAccess uid forUserSelfOrAdmins
     Q.getUserContacts uid
@@ -325,17 +325,17 @@ setUserEmail uid v = do
     checkAccess uid forUserSelfOrAdmins
     U.setUserEmail uid v
 
-addUserContact :: (Member Update r, Member Query r, Member Exec r)
-               => UserId -> UserId -> Eff r ()
-addUserContact uid other = do
+setUserContact :: (Member Update r, Member Query r, Member Exec r)
+               => UserId -> Contact -> Eff r ()
+setUserContact uid other = do
     checkAccess uid forUserSelfOrAdmins
-    U.addUserContact uid other
+    U.setUserContact uid other
 
-rmUserContact :: (Member Update r, Member Query r, Member Exec r)
+rmUserContactTo :: (Member Update r, Member Query r, Member Exec r)
               => UserId -> UserId -> Eff r ()
-rmUserContact uid other = do
+rmUserContactTo uid other = do
     checkAccess uid forUserSelfOrAdmins
-    U.rmUserContact uid other
+    U.rmUserContactTo uid other
 
 addUserNotification :: (Member Update r, Member Query r, Member Exec r)
                     => UserId -> Notification -> Eff r ()

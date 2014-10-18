@@ -87,11 +87,11 @@ uSetUserEmail uid e = modify $ \ noc -> setUserEmailR noc uid e
 uAddUserNotification :: UserId -> Notification -> Update NoC (Either Error ())
 uAddUserNotification uid n = modify $ \ noc -> addUserNotificationR noc uid n
 
-uAddUserContact :: UserId -> UserId -> Update NoC (Either Error ())
-uAddUserContact uid c = modify $ \ noc -> addUserContactR noc uid c
+uSetUserContact :: UserId -> Contact -> Update NoC (Either Error ())
+uSetUserContact uid c = modify $ \ noc -> setUserContactR noc uid c
 
-uRmUserContact :: UserId -> UserId -> Update NoC (Either Error ())
-uRmUserContact uid c = modify $ \ noc -> rmUserContactR noc uid c
+uRmUserContactTo :: UserId -> UserId -> Update NoC (Either Error ())
+uRmUserContactTo uid c = modify $ \ noc -> rmUserContactToR noc uid c
 
 uAddUserSubscription :: UserId -> ChanId -> Update NoC (Either Error ())
 uAddUserSubscription uid c = modify $ \ noc -> addUserSubscriptionR noc uid c

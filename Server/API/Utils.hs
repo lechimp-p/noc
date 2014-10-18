@@ -25,6 +25,7 @@ import qualified Data.Set as S
 import qualified Data.List as L
 import Data.Aeson 
 import Data.Aeson.Types
+import qualified Data.Aeson.TH as TH 
 import Control.Monad (mzero)
 import Data.Scientific (isInteger, toBoundedInteger)
 import Control.Lens hiding ((.=))
@@ -322,3 +323,4 @@ instance ToJSON ChanType where
     toJSON Stream       = String "stream"
     toJSON Conversation = String "conversation"
 
+$(TH.deriveJSON TH.defaultOptions{TH.fieldLabelModifier = drop 1} ''Contact)

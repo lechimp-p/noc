@@ -62,7 +62,7 @@ evalChanQuery noc q cid = case q of
     IsChanProducer uid next -> fmap next . isChanProducerR noc cid $ uid 
     IsChanConsumer uid next -> fmap next . isChanConsumerR noc cid $ uid
     AmountOfSubscribedUsers next -> fmap next . amountOfSubscribedUsersR noc $ cid
-    GetChanSubscribers next -> fmap next . getChanSubscribers noc $ cid
+    GetChanSubscribers next -> fmap next . getChanSubscribersR noc $ cid
     LastPostTimestamp next -> fmap next . lastPostTimestampR noc $ cid 
     Messages ofs am next -> fmap next . messagesR noc cid ofs $ am
     MessagesTill ts next -> fmap next . messagesTillR noc cid $ ts
@@ -77,6 +77,7 @@ evalUserQuery noc q uid = case q of
     GetUserEmail next -> fmap next . getUserEmailR noc $ uid
     GetUserNotifications next -> fmap next . getUserNotificationsR noc $ uid
     GetUserContacts next -> fmap next . getUserContactsR noc $ uid
+    GetUserContactByContactId uid next -> fmap next . getUserContactByContactIdR noc $ uid
     GetUserSubscriptions next -> fmap next . getUserSubscriptionsR noc $ uid
 
 
@@ -127,8 +128,8 @@ evalUserUpdate noc uid q = case q of
     SetUserIcon i next -> fmap (fmap next) . setUserIconR noc uid $ i
     SetUserEmail e next -> fmap (fmap next) . setUserEmailR noc uid $ e
     AddUserNotification n next -> fmap (fmap next) . addUserNotificationR noc uid $ n
-    AddUserContact uid' next -> fmap (fmap next) . addUserContactR noc uid $ uid'
-    RmUserContact uid' next -> fmap (fmap next) . rmUserContactR noc uid $ uid'
+    SetUserContact c next -> fmap (fmap next) . setUserContactR noc uid $ c 
+    RmUserContactTo uid' next -> fmap (fmap next) . rmUserContactToR noc uid $ uid'
     AddUserSubscription cid next -> fmap (fmap next) . addUserSubscriptionR noc uid $ cid
     RmUserSubscription cid next -> fmap (fmap next) . rmUserSubscriptionR noc uid $ cid
 

@@ -106,7 +106,7 @@ forUserSelf = Permission (\ o -> return . (==) o) (ret NoUserSelf)
 
 forUsersOnContactList :: Member Query m => Permission UserId m
 forUsersOnContactList = Permission
-    (\ oid uid -> (getUserContacts uid >>= \ u -> return (oid `S.member` u)))
+    (\ oid uid -> (getUserContacts uid >>= \ u -> return (oid `S.member` (S.map _userId u))))
     (ret NotOnContactList)
 
 forUserSelfOrAdmins :: Member Query m => Permission UserId m

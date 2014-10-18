@@ -87,8 +87,11 @@ qGetUserEmail uid = ask >>= \ noc -> return $ getUserEmailR noc uid
 qGetUserNotifications :: UserId -> Query NoC (Either Error [Notification])
 qGetUserNotifications uid = ask >>= \ noc -> return $ getUserNotificationsR noc uid
 
-qGetUserContacts :: UserId -> Query NoC (Either Error (S.Set UserId))
+qGetUserContacts :: UserId -> Query NoC (Either Error (S.Set Contact))
 qGetUserContacts uid = ask >>= \ noc -> return $ getUserContactsR noc uid
+
+qGetUserContactByContactId :: UserId -> UserId -> Query NoC (Either Error (Maybe Contact))
+qGetUserContactByContactId uid cid = ask >>= \ noc -> return $ getUserContactByContactIdR noc uid cid
 
 qGetUserSubscriptions :: UserId -> Query NoC (Either Error (S.Set ChanId))
 qGetUserSubscriptions uid = ask >>= \ noc -> return $ getUserSubscriptionsR noc uid

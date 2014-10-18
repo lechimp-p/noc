@@ -136,8 +136,8 @@ setHandler uid = withJSONIn $ do
 
 getContactsHandler uid = withJSONOut $ do
     trySessionLogin
-    uids <- getUserContacts uid
-    "contacts" <$: fmap userInfo (S.toList uids) 
+    cts <- getUserContacts uid
+    "contacts" <$: fmap userInfo (S.toList . S.map _userId $ cts) 
     --"contacts" <$: flip fmap (S.toList uids) .$ \ uid -> do
     --    "login"         <$ getUserLogin uid
     --    "description"   <$ getUserDesc uid
@@ -145,8 +145,8 @@ getContactsHandler uid = withJSONOut $ do
 
 setContactsHandler uid = withJSONIn $ do
     trySessionLogin
-    "add"       ?> sequence . fmap (addUserContact uid)
-    "remove"    ?> sequence . fmap (rmUserContact uid)
+    "add"       ?> sequence . fmap (setUserContact uid . (flip Contact Nothing))
+    "remove"    ?> sequence . fmap (rmUserContactTo uid)
     return Nothing
 
 getSubscriptionsHandler uid = withJSONOut $ do

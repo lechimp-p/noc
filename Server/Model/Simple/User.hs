@@ -27,7 +27,7 @@ data User = User
     , _email         :: Maybe EmailAddress
     , _ownedChannels :: S.Set ChanId
     , _subscriptions :: S.Set ChanId
-    , _contacts      :: S.Set UserId
+    , _contacts      :: S.Set Contact 
     , _notifications :: [Notification]
     }
     deriving (Data, Typeable)
@@ -71,3 +71,28 @@ instance Indexable User where
 --        , ixFun $ fmap IxName . T.words . nameToText . _name
 --        , ixFun $ fmap IxDesc . T.words . descToText . _desc 
         ]
+
+-- Old datatypes for migrations
+
+data User1 = User1
+    { _id1            :: UserId
+    , _login1         :: Login
+    , _password1      :: Password
+    , _name1          :: Name
+    , _desc1          :: Desc
+    , _icon1          :: Maybe Icon
+    , _email1         :: Maybe EmailAddress
+    , _ownedChannels1 :: S.Set ChanId
+    , _subscriptions1 :: S.Set ChanId
+    , _contacts1      :: S.Set UserId
+    , _notifications1 :: [Notification]
+    }
+    deriving (Data, Typeable)
+
+instance Eq User1 where
+    u == u' = _id1 u == _id1 u'
+
+instance Ord User1 where
+    compare u u' = compare (_id1 u) (_id1 u')
+
+
