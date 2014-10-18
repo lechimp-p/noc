@@ -85,6 +85,9 @@ class user(object):
         return op.getR(self.contacts_path % self.id)
 
     def modifyContacts(self, op, add = [], remove = []):
+        def toContact(a):
+            return { "userId" : a[0], "contactId" : a[1]}
+        add = map(toContact, add)
         return op.postR(self.contacts_path % self.id, {"add" : add, "remove" : remove})
 
     def getSubscriptions(self, op):
