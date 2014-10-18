@@ -12,10 +12,10 @@ controller("chat-controller", [ "$rootScope", "$scope", "$interval", "$routePara
             lastTS.value = response.messages[0].timestamp;
         }
         if ($scope.msgs) {
-            $scope.msgs = response.messages.concat($scope.msgs);
+            $scope.msgs = $scope.msgs.concat(response.messages.reverse());
         }
         else {
-            $scope.msgs = response.messages;
+            $scope.msgs = response.messages.reverse();
         }
     };
 
