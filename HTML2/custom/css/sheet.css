@@ -207,8 +207,6 @@ and (max-width : 1400px) {
 .hiddendiv {
 	padding:10px 15px;
 	background:red;
-    -webkit-flex:1;
-    flex:1;
 	line-height:22px;
 }
 

@@ -10,6 +10,7 @@ angular.module("NoC",
     , "NoC.services"
     , "NoC.filters"
     , "sticky"
+    , "autoresize"
     ])
 
 .config([ '$routeProvider', function($routeProvider) {
