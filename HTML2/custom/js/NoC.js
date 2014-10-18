@@ -9,6 +9,7 @@ angular.module("NoC",
     , "NoC.login"
     , "NoC.services"
     , "NoC.filters"
+    , "sticky"
     ])
 
 .config([ '$routeProvider', function($routeProvider) {

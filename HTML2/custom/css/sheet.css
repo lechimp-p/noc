@@ -164,7 +164,7 @@ and (max-width : 1400px) {
 	margin-top:15px;
 }
 
-.sticky.stick {
+.stick {
   position: fixed;
   top: 44px;
   z-index: 10000;
