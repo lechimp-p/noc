@@ -1,5 +1,7 @@
 #!/bin/bash
 
+ssh-add ~/.ssh/noc_dev_rsa
+
 docker start noc-data
 
 docker run -d -p 50022:22 --name noc-ssh \
