@@ -72,6 +72,9 @@ angular.module("NoC.filters", [])
     return input + "-icon";
 };}])
 .filter("streams_only", [function() { return function(input) {
+    if (typeof input === "undefined") {
+        return;
+    }
     return input.filter(function(chan) {
         return chan.type == "stream";
     });
