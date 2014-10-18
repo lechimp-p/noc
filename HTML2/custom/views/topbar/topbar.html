@@ -1,4 +1,26 @@
+	<i class="icon ion-navicon-round lgicon floatleft pullright shownavbtn"></i>
+	<i class="icon ion-close lgicon floatleft pullright hidenavbtn hidden"></i>
+	<h1 class="floatleft flexelement">urbanoid</h1>
+	<div class="clear"></div>
 
-<h1 class="floatleft">urbanoid</h1>
-<i class="icon ion-navicon lgicon floatleft pullright"></i>
-<div class="clear"></div>
+
+<script>
+	$(window).ready(function() {
+		$(".shownavbtn").on("click", function(ev) {
+			$("#nav").addClass("movenav");
+			$("#nav").removeClass("pullleft300");
+			$("#contentwrapper").addClass("movecontent");
+			$(".topbar").addClass("movecontent");
+			$(".shownavbtn").addClass("hidden");
+			$(".hidenavbtn").removeClass("hidden");
+		});
+		$(".hidenavbtn").on("click", function(ev) {
+			$("#nav").addClass("movenavback");
+			$("#nav").addClass("pullleft300");
+			$("#contentwrapper").addClass("movecontentback");
+			$(".topbar").addClass("movecontentback");
+			$(".hidenavbtn").addClass("hidden");
+			$(".shownavbtn").removeClass("hidden");
+		});
+	});
+</script>
