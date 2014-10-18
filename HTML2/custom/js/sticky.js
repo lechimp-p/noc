@@ -7,10 +7,10 @@ angular.module("sticky", [])
         var window = angular.element($window);
 
         elem.addClass(cl);
-        placeholder.css("height", elem.outerHeight() + "px");
-        placeholder.insertBefore(elem);
+        placeholder.css("height", elem.outerHeight() + "px")
+                   .addClass(plcl)
+                   .insertBefore(elem);
 
-        console.log("here: " + code);
         window.off("scoll.stick" + code);
         window.on("scroll.stick" + code, function(ev) {
             if(window.scrollTop() + offset <= placeholder.offset().top) {
