@@ -68,10 +68,53 @@ factory("API", function($http) {
                             });
     };
 
+    API.getSubscriptions = function(uid) {
+        return makeAPICall("getSubscriptions", "GET", "user/" + uid + "/subscriptions", {});
+    };
+
     API.getChannelInfo = function(cid) {
         return makeAPICall("getChahnelInfo", "GET", "channel/"+cid, {});
     }; 
 
     return API;
+})
+.factory("user", ["$rootScope", "API", "user-events", function($rootScope, API, userEvents) {
+    "use strict";
+
+    var user_data = { id : null
+                    , UTC_offset : 2
+                    };
+
+    var user = {};
+
+    API.logininfo().success(function(response) {
+        user_data.id = response.id;
+        $rootScope.$broadcast(userEvents.idAcquired);
+    });
+    
+    user.login = function(login, password) {
+        return API.login(login,password)
+            .success(function(response) {
+                user_data.id = response.id;
+                $rootScope.$broadcast(userEvents.idAcquired);
+                $rootScope.$broadcast(userEvents.loginSuccessfull);
+            });    
+    };
+
+    user.getId = function() {
+        return user_data.id;
+    };
+
+    user.getUTC_offset = function() {
+        return user_data.UTC_offset;
+    };
+
+    return user;
+}])
+.factory("user-events", function() {
+    return { loginRequired : "user:login-required"
+           , loginSuccessfull : "user:login-successfull"
+           , idAcquired : "user:id-acquired"
+           };
 })
 ;
