@@ -24,6 +24,7 @@ $(makeAcidic ''NoC  [ 'qDoLogin
                     , 'qIsChanProducer
                     , 'qIsChanConsumer
                     , 'qAmountOfSubscribedUsers
+                    , 'qGetChanSubscribers
                     , 'qLastPostTimestamp
                     , 'qMessages
                     , 'qMessagesTill

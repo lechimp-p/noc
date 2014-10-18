@@ -10,18 +10,19 @@ module API.Utils
 where
 
 import Model
+import qualified Model.Query as QueryUnsecure
 import qualified Model.Errors as ME
 import Model.BaseTypes
 import API.Config
 import API.Effects
 import API.ImageUtils
 
-import qualified Data.ByteString.Lazy.Char8 as L 
-import qualified Data.ByteString as BL 
 import Control.Eff
 import Control.Eff.JSON
 import Data.Text (Text)
 import qualified Data.Text as T
+import qualified Data.Set as S
+import qualified Data.List as L
 import Data.Aeson 
 import Data.Aeson.Types
 import Control.Monad (mzero)
@@ -39,6 +40,36 @@ ifIsJust v op =
         Nothing -> return () 
 
 ifIsJust' = flip ifIsJust
+
+-----------------
+-- Common outputs
+-----------------
+
+userInfo uid = do
+    "id"            <: uid
+    "login"         <$ getUserLogin uid
+    "name"          <$ getUserName uid
+    "description"   <$ getUserDesc uid
+    "icon"          <$ getUserIcon uid
+
+channelInfo cid = do
+    uid <- forceOperatorId
+    "id"            <: cid
+    "name"          <$ do
+        t <- getChanType cid
+        case t of
+            Conversation    -> do
+                subsc <- fmap (S.delete uid) $ QueryUnsecure.getChanSubscribers cid
+                names <- sequence . (fmap getUserName) .S.toList $ subsc
+                let n = mconcat . L.intersperse ", " . fmap nameToText $ names
+                makeName n
+            otherwise       -> getChanName cid
+    "description"   <$ getChanDesc cid      
+    "type"          <$ getChanType cid
+    "image"         <$ getChanImage cid
+    "amountOfUsers" <$ amountOfSubscribedUsers cid
+    "lastPost"      <$ lastPostTimestamp cid
+    "subscribed"    <$ fmap (S.member cid) .$ getUserSubscriptions uid 
 
 -----------------
 -- Error handling
@@ -291,22 +322,3 @@ instance ToJSON ChanType where
     toJSON Stream       = String "stream"
     toJSON Conversation = String "conversation"
 
------------------
--- Common outputs
------------------
-
-userInfo uid = do
-    "id"            <: uid
-    "login"         <$ getUserLogin uid
-    "name"          <$ getUserName uid
-    "description"   <$ getUserDesc uid
-    "icon"          <$ getUserIcon uid
-
-channelInfo cid = do
-    "id"            <: cid
-    "name"          <$ getChanName cid
-    "description"   <$ getChanDesc cid      
-    "type"          <$ getChanType cid
-    "image"         <$ getChanImage cid
-    "amountOfUsers" <$ amountOfSubscribedUsers cid
-    "lastPost"      <$ lastPostTimestamp cid

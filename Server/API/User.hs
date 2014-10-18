@@ -34,7 +34,6 @@ data UserAPI
     = Base 
     | Contacts
     | Subscriptions
-    | Channels
     | Notifications -- when a user in my contact list added me to a channel
     deriving (Generic)
 
@@ -47,7 +46,6 @@ userroutes =
     (  rBase 
     <> "contacts" . rContacts
     <> "subscriptions" . rSubscriptions
-    <> "channels" . rChannels
     <> "notifications" . rNotifications
     )
 
@@ -67,9 +65,6 @@ route uid url = do
         Subscriptions -> case m of
             GET     -> getSubscriptionsHandler uid
             POST    -> setSubscriptionsHandler uid
-            otherwise -> methodNotSupported
-        Channels -> case m of
-            GET     -> getChannelsHandler uid
             otherwise -> methodNotSupported
         Notifications -> case m of
             GET     -> getNotificationsHandler uid
@@ -157,25 +152,13 @@ setContactsHandler uid = withJSONIn $ do
 getSubscriptionsHandler uid = withJSONOut $ do
    trySessionLogin
    cids <- getUserSubscriptions uid
-   showChannels cids
+   "subscriptions" <$: fmap channelInfo (S.toList cids)
 
 setSubscriptionsHandler uid = withJSONIn $ do
     trySessionLogin
     "subscribe"     ?> sequence . fmap (subscribeToChan uid)
     "unsubscribe"   ?> sequence . fmap (unsubscribeFromChan uid)
     return Nothing
-
-getChannelsHandler uid = withJSONOut $ do
-    trySessionLogin
-    cids <- getUserSubscriptions uid
-    showChannels cids
-
-showChannels cids = do         
-    "subscriptions" <$: fmap channelInfo (S.toList cids)
---    "subscriptions" <$: flip fmap (S.toList cids) .$ \ cid -> do
---        "name"          <$ getChanName cid
---        "description"   <$ getChanDesc cid
---        "type"          <$ getChanType cid
 
 getNotificationsHandler uid = withJSONOut $ do
     trySessionLogin

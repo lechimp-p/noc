@@ -62,6 +62,7 @@ evalChanQuery noc q cid = case q of
     IsChanProducer uid next -> fmap next . isChanProducerR noc cid $ uid 
     IsChanConsumer uid next -> fmap next . isChanConsumerR noc cid $ uid
     AmountOfSubscribedUsers next -> fmap next . amountOfSubscribedUsersR noc $ cid
+    GetChanSubscribers next -> fmap next . getChanSubscribers noc $ cid
     LastPostTimestamp next -> fmap next . lastPostTimestampR noc $ cid 
     Messages ofs am next -> fmap next . messagesR noc cid ofs $ am
     MessagesTill ts next -> fmap next . messagesTillR noc cid $ ts

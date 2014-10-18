@@ -80,6 +80,12 @@ module.exports = function (grunt) {
             , src : 'angular-route.js'
             , dest : 'dist/js'
             }]}
+        , 'jquery' : 
+            { expand : true
+            , cwd : 'bower_components/jquery/dist'
+            , src : 'jquery.min.js'
+            , dest : 'dist/js'
+            }
         /*, 'ng-mobile-js' :
             { expand : true
             , cwd : 'bower_components/mobile-angular-ui/dist/js'
@@ -153,7 +159,25 @@ module.exports = function (grunt) {
             , filter : 'isFile'
             },
             { expand : true
+            , cwd : 'custom/views/contact-overview'
+            , src : '*.js'
+            , dest : 'dist/js'
+            , filter : 'isFile'
+            },
+            { expand : true
             , cwd : 'custom/views/topbar'
+            , src : '*.js'
+            , dest : 'dist/js'
+            , filter : 'isFile'
+            },
+            { expand : true
+            , cwd : 'custom/views/profile'
+            , src : '*.js'
+            , dest : 'dist/js'
+            , filter : 'isFile'
+            },
+            { expand : true
+            , cwd : 'custom/views/my-profile'
             , src : '*.js'
             , dest : 'dist/js'
             , filter : 'isFile'
@@ -184,7 +208,25 @@ module.exports = function (grunt) {
             , filter : 'isFile'
             },
             { expand : true
+            , cwd : 'custom/views/contact-overview'
+            , src : '*.html'
+            , dest : 'dist/partials'
+            , filter : 'isFile'
+            },
+            { expand : true
             , cwd : 'custom/views/topbar'
+            , src : '*.html'
+            , dest : 'dist/partials'
+            , filter : 'isFile'
+            },
+            { expand : true
+            , cwd : 'custom/views/profile'
+            , src : '*.html'
+            , dest : 'dist/partials'
+            , filter : 'isFile'
+            },
+            { expand : true
+            , cwd : 'custom/views/my-profile'
             , src : '*.html'
             , dest : 'dist/partials'
             , filter : 'isFile'
@@ -322,7 +364,7 @@ module.exports = function (grunt) {
     //});
 
     // JS distribution task.
-    grunt.registerTask('dist-js', ['copy:custom-js', 'copy:ng-js', 'copy:ng-route-js', 'copy:views-js']);
+    grunt.registerTask('dist-js', ['copy:custom-js', 'copy:ng-js', 'copy:ng-route-js', 'copy:jquery', 'copy:views-js']);
 
     // CSS distribution task.
     grunt.registerTask('dist-css', ['copy:ng-css', 'copy:custom-css']);

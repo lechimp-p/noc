@@ -1,8 +1,21 @@
 #!/bin/bash
 
 docker start noc-data
-docker run -t -i --name noc-server \
+
+docker run -d -p 50022:22 --name noc-ssh \
            --volumes-from noc-data \
-           noc-build \
+           noc-ssh
+sleep 1s
+git push -f devsrv master
+scp -P 50022 noc-data/NoC.conf root@localhost:/opt/NoC-data/NoC.conf
+docker stop noc-ssh
+docker rm noc-ssh
+
+docker run -t -i --name noc-build \
+           --volumes-from noc-data \
+           noc-server \
            /bin/sh /opt/update-noc-server.sh 
+docker stop noc-build
 docker rm noc-build
+
+

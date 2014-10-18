@@ -57,6 +57,9 @@ qIsChanConsumer cid uid = ask >>= \ noc -> return $ isChanConsumerR noc cid uid
 qAmountOfSubscribedUsers :: ChanId -> Query NoC (Either Error Int)
 qAmountOfSubscribedUsers cid = ask >>= \ noc -> return $ amountOfSubscribedUsersR noc cid
 
+qGetChanSubscribers :: ChanId -> Query NoC (Either Error (S.Set UserId))
+qGetChanSubscribers cid = ask >>= \ noc -> return $ getChanSubscribersR noc cid
+
 qLastPostTimestamp :: ChanId -> Query NoC (Either Error (Maybe UTCTime))
 qLastPostTimestamp cid = ask >>= \ noc -> return $ lastPostTimestampR noc cid
 

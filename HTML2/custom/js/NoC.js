@@ -1,9 +1,16 @@
 angular.module("NoC", 
     [ "ngRoute"
     , "NoC.channel"
+    , "NoC.channel-overview"
+    , "NoC.chat"
+    , "NoC.contact-overview"
+    , "NoC.profile"
+    , "NoC.my-profile"
     , "NoC.login"
     , "NoC.services"
     , "NoC.filters"
+    , "sticky"
+    , "autoresize"
     ])
 
 .config([ '$routeProvider', function($routeProvider) {
@@ -15,6 +22,18 @@ angular.module("NoC",
             .when("/channel/:chanId", 
                 { templateUrl: "partials/channel.html"
                 , controller : "channel-controller"
+                })
+            .when("/chat/:chanId", 
+                { templateUrl: "partials/chat.html"
+                , controller : "chat-controller"
+                })
+            .when("/user/:userId",
+                { templateUrl : "partials/profile.html"
+                , controller : "profile-controller"
+                })
+            .when("/profile",
+                { templateUrl : "partials/my-profile.html"
+                , controller : "my-profile-controller"
                 })
             .otherwise(
                 { redirectTo : "/login"
@@ -38,7 +57,7 @@ angular.module("NoC",
 //                                  };
 
 //                    $rootScope.deferred401.push(request);
-                    $rootScope.$broadcast("event:login-required");
+                    $rootScope.$broadcast("user:login-required");
 //                    return deferred.promise;
                 }
 //                else {
@@ -53,25 +72,19 @@ angular.module("NoC",
     $httpProvider.interceptors.push( 'unauthInterceptor');
 }])
 
-.run(['$rootScope', '$http', '$location', 'API', function($rootScope, $http, $location, API) {
+.run(['$rootScope', '$http', '$location', "user-events", 
+       function($rootScope, $http, $location, userEvents) {
     //$rootScope.deferred401 = [];
     $rootScope.deferredRoute = "";
-    $rootScope.user = { id : null 
-                      , UTC_offset : 2
-                      };
 
-    API.logininfo().success(function(response) {
-        $rootScope.user.id = response.id;
-    }); 
-    
-    $rootScope.$on("event:login-successfull", function() {
+    $rootScope.$on(userEvents.loginSuccessfull, function() {
         $location.path($rootScope.deferredRoute);
         /*$http(req.config).then(function(response) {
             req.deferred.resolve(reponse);
         });*/ 
     });
 
-    $rootScope.$on("event:login-required", function() {
+    $rootScope.$on(userEvents.loginRequired, function() {
         $rootScope.deferredRoute = $location.path();
         $location.path("/login");
     });

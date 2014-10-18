@@ -1,15 +1,7 @@
-  <div class="sidebar sidebar-left lightBar" toggleable parent-active-class="sidebar-left-in" id="mainSidebar">
-    <div class="scrollable">
-      <div class="scrollable-content">
-        <div class="list-group" toggle="off" bubble target="mainSidebar">
-
-          <a href="#" class="list-group-item" ng-show="channel">
-              <img src="{{channel.image}}-icon" class="pull-left marginright img-circle" alt="Image of channel {{channel.name}}">
-              <h4 class="list-group-item-text">{{channel.name}}</h4>
-              <p class="list-group-item-text greytext">{{channel.description}}</p>
-          </a>
-
-        </div>
-      </div>
-    </div>
-  </div>
+<div class="list-group" ng-show="channels" ng-repeat="channel in channels | streams_only "> 
+    <a href="#/channel/{{channel.id}}" class="list-group-item">
+        <img src="{{channel.image | icon}}" class="pull-left marginright img-circle" alt="Image of channel {{channel.name}}">
+        <h4 class="list-group-item-text">{{channel.name}}</h4>
+        <p class="list-group-item-text greytext">{{channel.description}}</p>
+    </a>
+</div>

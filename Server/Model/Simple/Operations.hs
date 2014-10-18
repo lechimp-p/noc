@@ -50,6 +50,7 @@ isChanOwnerR n c u = queryChan (S.member u . C._owners) n c
 isChanProducerR n c u = queryChan (S.member u . C._producers) n c 
 isChanConsumerR n c u = queryChan (S.member u . C._consumers) n c
 amountOfSubscribedUsersR n c = queryChan (S.size . C._subscribers) n c
+getChanSubscribersR n c = queryChan (C._subscribers) n c
 lastPostTimestampR n c = queryChan (lastPostTimestamp' c) n c 
     where
     lastPostTimestamp' cid _ = do
@@ -151,8 +152,13 @@ setUserEmailR n u e = updateUser (set email e) () n u
 addUserNotificationR n u n' = updateUser (over notifications ((:) n')) () n u
 addUserContactR n u uid = updateUser (over contacts (S.insert uid)) () n u
 rmUserContactR n u uid = updateUser (over contacts (S.delete uid)) () n u
-addUserSubscriptionR n u cid = updateUser (over subscriptions (S.insert cid)) () n u
-rmUserSubscriptionR n u cid = updateUser (over subscriptions (S.delete cid)) () n u
+addUserSubscriptionR n u cid = do
+    s <- getChanSubscribersR n cid  
+    (n', _) <- updateChan (over subscribers (S.insert u)) () n cid
+    updateUser (over subscriptions (S.insert cid)) () n' u
+rmUserSubscriptionR n u cid = do
+    (n',_) <- updateChan (over subscribers (S.delete u)) () n cid
+    updateUser (over subscriptions (S.delete cid)) () n' u
 
     
 head' []     = Nothing

@@ -50,6 +50,7 @@ data ChanQueryType n
     | IsChanProducer UserId     (Bool -> n)
     | IsChanConsumer UserId     (Bool -> n)
     | AmountOfSubscribedUsers   (Int -> n)
+    | GetChanSubscribers        (S.Set UserId -> n)
     | LastPostTimestamp         (Maybe UTCTime -> n)
     | Messages Offset Amount    ([Message] -> n) 
     | MessagesTill UTCTime      ([Message] -> n)
@@ -82,6 +83,9 @@ isChanConsumer cid uid = chanQuery cid (IsChanConsumer uid)
 
 amountOfSubscribedUsers :: Member Query r => ChanId -> Eff r Int
 amountOfSubscribedUsers cid = chanQuery cid AmountOfSubscribedUsers
+
+getChanSubscribers :: Member Query r => ChanId -> Eff r (S.Set UserId) 
+getChanSubscribers cid = chanQuery cid GetChanSubscribers 
 
 lastPostTimestamp :: Member Query r => ChanId -> Eff r (Maybe UTCTime)
 lastPostTimestamp cid = chanQuery cid LastPostTimestamp

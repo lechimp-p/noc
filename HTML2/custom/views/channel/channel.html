@@ -1,10 +1,11 @@
 <!-- CHANNEL-HEADER -->
-<div class="intro">
+<div class="intro" style="background:url(../{{channel.image}}) no-repeat center top; background-size: cover;">
     <h2>{{channel.name}}</h2>
     <div class="widget introelements">
 	    <p>{{channel.description}}</p>
 	    <div class="introcontrols">
-	        <button class="btn roundcorners whiteborder medopacity link" ng-click="subscribe()">Abonnieren</button>
+	        <button ng-hide="channel.subscribed" class="btn roundcorners whiteborder medopacity link" ng-click="subscribe()">Abonnieren</button>
+	        <button ng-show="channel.subscribed" class="btn roundcorners whiteborder medopacity link" ng-click="unsubscribe()">Nicht mehr abonnieren</button>
 			<button class="btn btnimage watchers pullright whitetext medopacity link">{{channel.amountOfUsers}}</button>
 			<div class="clear"></div>
 	    </div>
@@ -12,20 +13,9 @@
 </div>
 
 <!-- EINGABEFELD -->
-<div id="sticky-anchor"></div>
-
-<div class="placeholder"></div>
-
-<div class="postmessage hidden">
+<div sticky offset="44" stick-class="stick" placeholder-class="placeholder"  class="postmessage">
     <div class="inputgroup">
-        <div class="hiddendiv">placeholder</div>
-	    <button class="sendbutton"><i class="icon ion-ios7-paperplane roundcornersright"></i></button>
-	</div>
-</div>
-
-<div class="postmessage sticky">
-    <div class="inputgroup">
-        <textarea id="postmessage" class="roundcornersleft" rows="1" placeholder="Was m&ouml;chtest du schreiben?" ng-model="message"></textarea>
+        <textarea autoresize hidden-class="hiddendiv" id="postmessage" class="roundcornersleft" rows="1" placeholder="Was m&ouml;chtest du schreiben?" ng-model="message"></textarea>
         <button class="sendbutton" ng-click="post()"><i class="icon ion-ios7-paperplane roundcornersright"></i></button>
 	</div>
 </div>
@@ -37,7 +27,7 @@
     <div class="card bgcolor roundcorners" ng-repeat="msg in msgs">
         <div class="cardcontent">{{msg.text}}</div>
         <div class="cardfooter">
-            <img src="{{msg.author.icon}}-icon" alt="icon of {{msg.author.name}}" class="circular floatleft">
+            <img src="{{msg.author.icon | icon}}" alt="icon of {{msg.author.name}}" class="circular floatleft">
             <p>
                 <strong>{{msg.author | username}}</strong><br />
                 <span class="greyed small">{{msg.timestamp | rel_timestamp}}</span>
@@ -46,48 +36,6 @@
     </div>
     <!-- CARD END -->
 </div>
-
-<!--<script src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>-->
-
-<script>
-
-//TEXTAREA-RESIZE
-
-$(function() {
-    var txt = $('#postmessage'),
-        //hiddenDiv = $(document.createElement('div')),
-        hiddenDiv = $('.hiddendiv');
-        content = null;
-    txt.on('keyup', function () {
-        content = $(this).val();
-        content = content.replace(/\n/g, '');
-        if (content.length === 0) {
-        	content = "placeholder";
-        }
-        hiddenDiv.html(content + '');
-        $(this).css('height', hiddenDiv.height());
-    });
-});
-
-// STICKY
-
-function sticky_relocate() {
-  var window_top = $(window).scrollTop()+44;
-  var div_top = $('#sticky-anchor').offset().top;
-  if (window_top > div_top) {
-    $('.sticky').addClass('stick');
-    $('.placeholder').css('display','block');
-  } else {
-    $('.sticky').removeClass('stick');
-    $('.placeholder').css('display','none');
-  }
-}
-
-$(function() {
-  $(window).scroll(sticky_relocate);
-  sticky_relocate();
-});
-</script>
 
 </body>
 </html>

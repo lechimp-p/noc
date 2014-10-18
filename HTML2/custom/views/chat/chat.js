@@ -1,5 +1,5 @@
-angular.module("NoC.channel", []).
-controller("channel-controller", [ "$rootScope", "$scope", "$interval", "$routeParams", "API"
+angular.module("NoC.chat", []).
+controller("chat-controller", [ "$rootScope", "$scope", "$interval", "$routeParams", "API"
          , function($rootScope, $scope, $interval, $routeParams, API) {
     "use strict";
 
@@ -12,10 +12,10 @@ controller("channel-controller", [ "$rootScope", "$scope", "$interval", "$routeP
             lastTS.value = response.messages[0].timestamp;
         }
         if ($scope.msgs) {
-            $scope.msgs = response.messages.concat($scope.msgs);
+            $scope.msgs = $scope.msgs.concat(response.messages.reverse());
         }
         else {
-            $scope.msgs = response.messages;
+            $scope.msgs = response.messages.reverse();
         }
     };
 
@@ -27,24 +27,6 @@ controller("channel-controller", [ "$rootScope", "$scope", "$interval", "$routeP
         API.post($scope.channel.id, $scope.message)
             .success($scope.updateMessages); 
         $scope.message = "";
-    };
-
-    $scope.subscribe = function() {
-        API.subscribe($rootScope.user.id, $scope.channel.id)
-                .success(function(response) { 
-                    $scope.channel.subscribed = true;
-                    $scope.updateChannelInfo();
-                })
-                ;
-    };
-
-    $scope.unsubscribe = function() {
-        API.unsubscribe($rootScope.user.id, $scope.channel.id)
-                .success(function(response) { 
-                    $scope.channel.subscribed = false;
-                    $scope.updateChannelInfo();
-                })
-                ;
     };
 
     $scope.updateMessages = function() {
