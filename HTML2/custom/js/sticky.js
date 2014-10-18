@@ -35,8 +35,8 @@ angular.module("sticky", [])
 
     var link = function(scope, elem, attrs) {
         var window = angular.element($window);
-        var offset = parseInt(attrs.offset);
         var code = "" + Math.random();
+        var offset = parseInt(attrs.offset);
         if (typeof offset == "undefined") {
             offset = 0;
         }
