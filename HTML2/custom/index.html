@@ -40,38 +40,16 @@
 <body>
 
     <nav class="pullleft300" id="nav" role="navigation">
-        <h3 class="block-title">Chapters</h3>
-            <ul>
-                <li class="is-active">
-                    <a href="#">Chapter 1</a>
-                </li><!--
-             --><li>
-                    <a href="#">Chapter 2</a>
-                </li><!--
-             --><li>
-                    <a href="#">Chapter 3</a>
-                </li><!--
-             --><li>
-                    <a href="#">Chapter 4</a>
-                </li><!--
-             --><li>
-                    <a href="#">Chapter 5</a>
-                </li>
-            </ul>
-            <a class="close-btn" id="nav-close-btn" href="#top">Return to Content</a>
+        <div ng-include src="'partials/channel-overview.html'" ng-controller="channel-overview-controller"></div>
+    </nav>
+
+    <nav class="sidebar-right" style="display:none">
+        <div ng-include src="'partials/contact-overview.html'" ng-controller="contact-overview-controller"></div>
     </nav>
 
 	<div class="wrapper all" id="contentwrapper">
 
         <div class="wrapper topbar bgcolor flexcontainer" ng-include src="'partials/topbar.html'"></div>
-
-        <div class="wrapper sidebar-left" style="display: none">
-            <div ng-include src="'partials/channel-overview.html'" ng-controller="channel-overview-controller"></div>
-        </div>
-
-        <div class="wrapper sidebar-right" style="display:none">
-            <div ng-include src="'partials/contact-overview.html'" ng-controller="contact-overview-controller"></div>
-        </div>
 
         <!-- ALLES-WRAPPER -->
         <div class="wrapper content" id="mainview" ng-view></div>
