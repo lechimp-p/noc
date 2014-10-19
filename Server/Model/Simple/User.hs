@@ -74,25 +74,25 @@ instance Indexable User where
 
 -- Old datatypes for migrations
 
-data User1 = User1
-    { _id1            :: UserId
-    , _login1         :: Login
-    , _password1      :: Password
-    , _name1          :: Name
-    , _desc1          :: Desc
-    , _icon1          :: Maybe Icon
-    , _email1         :: Maybe EmailAddress
-    , _ownedChannels1 :: S.Set ChanId
-    , _subscriptions1 :: S.Set ChanId
-    , _contacts1      :: S.Set UserId
-    , _notifications1 :: [Notification]
+data User0 = User0
+    { _id0            :: UserId
+    , _login0         :: Login
+    , _password0      :: Password
+    , _name0          :: Name
+    , _desc0          :: Desc
+    , _icon0          :: Maybe Icon
+    , _email0         :: Maybe EmailAddress
+    , _ownedChannels0 :: S.Set ChanId
+    , _subscriptions0 :: S.Set ChanId
+    , _contacts0      :: S.Set UserId
+    , _notifications0 :: [Notification]
     }
     deriving (Data, Typeable)
 
-instance Eq User1 where
-    u == u' = _id1 u == _id1 u'
+instance Eq User0 where
+    u == u' = _id0 u == _id0 u'
 
-instance Ord User1 where
-    compare u u' = compare (_id1 u) (_id1 u')
+instance Ord User0 where
+    compare u u' = compare (_id0 u) (_id0 u')
 
 
