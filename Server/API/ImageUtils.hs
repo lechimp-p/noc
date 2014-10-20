@@ -159,7 +159,7 @@ resizeImageFixed img to_size@(to_x', to_y') = res
               ) 
     res = unsafeTry ResizeError$ do
         new <- transparentImage to_size
-        GD.copyRegionScaled (trace (show up_left) up_left) (trace (show size) size) img (0,0) (trace (show to_size) size) new
+        GD.copyRegionScaled up_left size img (0,0) to_size new
         return new 
 
 resizeImageToX :: ProcImage -> Int -> Either ImageError ProcImage
