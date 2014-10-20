@@ -4,6 +4,8 @@
 
 module API.ImageUtils where
 
+import Debug.Trace
+
 import Model
 import Model.BaseTypes
 import API.ImageConfig
@@ -121,15 +123,33 @@ resizeImage dat s =
 resizeImageFixed :: ProcImage -> (Int, Int) -> Either ImageError ProcImage
 resizeImageFixed img to_size@(to_x', to_y') = res
     where
+    -- actual size
     (x', y') = unsafePerformIO $ GD.imageSize img 
-    (to_x, to_y) = (fromIntegral to_x', fromIntegral to_y') :: (Float, Float)
     (x, y) = (fromIntegral x', fromIntegral y') :: (Float, Float)
+    -- desired size
+    (to_x, to_y) = (fromIntegral to_x', fromIntegral to_y') :: (Float, Float)
+    -- if < 0, then image is portrait
+    -- if > 0, then image is landscape
     to_ratio = to_x / to_y
     ratio = x / y
-    crop_width = to_ratio > ratio 
+    -- if the desired image is less landscape then
+    -- the actual image, we need to crop the
+    -- actual image in its width.
+    crop_width = to_ratio < ratio 
+    -- if we crop width, the scaling factor
+    -- is calculated based on the heights,
+    -- since we couldd take the complete 
+    -- height of the image
     scale = if crop_width
             then y / to_y
             else x / to_x
+    -- this is the size of the part we take
+    -- from the actual image.
+    size_x = scale * to_x;
+    size_y = scale * to_y;
+    size = (round size_x, round size_y) 
+    -- this is the upper left corner of
+    -- the part we take from the image
     up_left = ( if crop_width
                 then round $ (x - size_x) / 2  
                 else 0
@@ -137,12 +157,9 @@ resizeImageFixed img to_size@(to_x', to_y') = res
                 then 0
                 else round $ (y - size_y) / 2 
               ) 
-    size_x = scale * to_x;
-    size_y = scale * to_y;
-    size = (round size_x, round size_y) 
     res = unsafeTry ResizeError$ do
         new <- transparentImage to_size
-        GD.copyRegionScaled up_left size img (0,0) to_size new
+        GD.copyRegionScaled (trace (show up_left) up_left) (trace (show size) size) img (0,0) (trace (show to_size) size) new
         return new 
 
 resizeImageToX :: ProcImage -> Int -> Either ImageError ProcImage
