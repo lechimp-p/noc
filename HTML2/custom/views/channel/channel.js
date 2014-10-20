@@ -1,6 +1,6 @@
 angular.module("NoC.channel", []).
-controller("channel-controller", [ "$rootScope", "$scope", "$interval", "$routeParams", "API"
-         , function($rootScope, $scope, $interval, $routeParams, API) {
+controller("channel-controller", [ "$rootScope", "$scope", "$interval", "$routeParams", "API", "user"
+         , function($rootScope, $scope, $interval, $routeParams, API, user) {
     "use strict";
 
     var lastTS = {};
@@ -30,7 +30,7 @@ controller("channel-controller", [ "$rootScope", "$scope", "$interval", "$routeP
     };
 
     $scope.subscribe = function() {
-        API.subscribe($rootScope.user.id, $scope.channel.id)
+        API.subscribe(user.getId(), $scope.channel.id)
                 .success(function(response) { 
                     $scope.channel.subscribed = true;
                     $scope.updateChannelInfo();
@@ -39,7 +39,7 @@ controller("channel-controller", [ "$rootScope", "$scope", "$interval", "$routeP
     };
 
     $scope.unsubscribe = function() {
-        API.unsubscribe($rootScope.user.id, $scope.channel.id)
+        API.unsubscribe(user.getId(), $scope.channel.id)
                 .success(function(response) { 
                     $scope.channel.subscribed = false;
                     $scope.updateChannelInfo();
