@@ -22,6 +22,7 @@ To be done:
 * add more tests on models functionality
 * implement statistics functions for admins
 * adjust size of http input to fit images (better: make it depend on usecase)
+* user notifications need some enhancement
 
 To be thought about:
 
