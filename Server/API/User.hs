@@ -145,7 +145,7 @@ getContactsHandler uid = withJSONOut $ do
 
 setContactsHandler uid = withJSONIn $ do
     trySessionLogin
-    "add"       ?> sequence . fmap (setUserContact uid)
+    "set"       ?> sequence . fmap (setUserContact uid)
     "remove"    ?> sequence . fmap (rmUserContactTo uid)
     return Nothing
 
