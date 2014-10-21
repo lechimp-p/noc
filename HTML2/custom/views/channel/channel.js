@@ -1,6 +1,6 @@
 angular.module("NoC.channel", []).
-controller("channel-controller", [ "$rootScope", "$scope", "$interval", "$routeParams", "API", "user"
-         , function($rootScope, $scope, $interval, $routeParams, API, user) {
+controller("channel-controller", [ "$rootScope", "$scope", "$interval", "$routeParams", "model", "user"
+         , function($rootScope, $scope, $interval, $routeParams, model, user) {
     "use strict";
 
     var lastTS = {};
@@ -24,41 +24,43 @@ controller("channel-controller", [ "$rootScope", "$scope", "$interval", "$routeP
             return;
         }    
 
-        API.post($scope.channel.id, $scope.message)
+        model.channel($scope.channel.id)
+            .post($scope.message)
             .success($scope.updateMessages); 
+
         $scope.message = "";
     };
 
     $scope.subscribe = function() {
-        API.subscribe(user.getId(), $scope.channel.id)
+        user.subscribe($scope.channel.id)
                 .success(function(response) { 
                     $scope.channel.subscribed = true;
                     $scope.updateChannelInfo();
-                })
-                ;
+                });
     };
 
     $scope.unsubscribe = function() {
-        API.unsubscribe(user.getId(), $scope.channel.id)
+        user.unsubscribe($scope.channel.id)
                 .success(function(response) { 
                     $scope.channel.subscribed = false;
                     $scope.updateChannelInfo();
-                })
-                ;
+                });
     };
 
     $scope.updateMessages = function() {
         if (typeof lastTS.value === "undefined") {
-            return API.messages($scope.channel.id, 0, 10).success(toScope);
+            return model.channel($scope.channel.id)
+                .messages(0, 10).success(toScope);
         }
         else {
-            return API.messagesTill($scope.channel.id, lastTS.value).success(toScope);
+            return model.channel($scope.channel.id)
+                .messagesTill(lastTS.value).success(toScope);
         }
     };
 
     $scope.updateChannelInfo = function() {
-        return API.getChannelInfo($routeParams.chanId)
-                    .success(function(response) {
+        return model.channel($routeParams.chanId)
+            .get().success(function(response) {
                         $scope.channel = response; 
                     });
     };

@@ -1,5 +1,5 @@
 angular.module("NoC.profile", []).
-controller("profile-controller", [ "$scope", "API"
-         , function($scope, API) {
+controller("profile-controller", [ "$scope", "model"
+         , function($scope, model) {
     "use strict";
 }]);

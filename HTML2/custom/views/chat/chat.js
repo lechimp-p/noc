@@ -1,6 +1,6 @@
 angular.module("NoC.chat", []).
-controller("chat-controller", [ "$rootScope", "$scope", "$interval", "$routeParams", "API"
-         , function($rootScope, $scope, $interval, $routeParams, API) {
+controller("chat-controller", [ "$rootScope", "$scope", "$interval", "$routeParams", "model"
+         , function($rootScope, $scope, $interval, $routeParams, model) {
     "use strict";
 
     var lastTS = {};

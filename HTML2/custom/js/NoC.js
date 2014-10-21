@@ -7,8 +7,10 @@ angular.module("NoC",
     , "NoC.profile"
     , "NoC.my-profile"
     , "NoC.login"
-    , "NoC.services"
     , "NoC.filters"
+    , "NoC.model"
+    , "NoC.user" 
+    , "API.utilities"
     , "sticky"
     , "autoresize"
     ])

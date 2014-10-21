@@ -1,0 +1,9 @@
+<div class="list-group" ng-show="contacts" ng-repeat="contact in contacts"> 
+    <a href="#/profile/{{contact.user.id}}">
+        <img src="{{channel.image | icon}}" class="pull-left marginright img-circle" alt="Image of channel {{channel.name}}">
+    </a>
+    <a href="#/chat/{{contact.chat.id}}">
+        <h4 class="list-group-item-text">{{contact.name}}</h4>
+        <p class="list-group-item-text greytext" ng-show="contact.chat.lastMsg">{{contact.chat.lastMsg.timestamp | rel_timestamp}} - {{contact.chat.lastMsg.text</p>
+    </a>
+</div>
