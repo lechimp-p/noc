@@ -24,22 +24,27 @@ controller("chat-controller", [ "$rootScope", "$scope", "$interval", "$routePara
             return;
         }    
 
-        API.post($scope.channel.id, $scope.message)
-            .success($scope.updateMessages); 
+        model.channel($scope.channel.id)
+            .post($scope.message)
+                .success($scope.updateMessages); 
         $scope.message = "";
     };
 
     $scope.updateMessages = function() {
         if (typeof lastTS.value === "undefined") {
-            return API.messages($scope.channel.id, 0, 10).success(toScope);
+            return model.channel($scope.channel.id)
+                    .messages(0, 10)
+                        .success(toScope);
         }
         else {
-            return API.messagesTill($scope.channel.id, lastTS.value).success(toScope);
+            return model.channel($scope.channel.id)
+                    .messagesTill(lastTS.value)
+                        .success(toScope);
         }
     };
 
     $scope.updateChannelInfo = function() {
-        return API.getChannelInfo($routeParams.chanId)
+        return model.channel($routeParams.chanId).get()
                     .success(function(response) {
                         $scope.channel = response; 
                     });
