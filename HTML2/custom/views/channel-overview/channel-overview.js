@@ -8,6 +8,6 @@ controller("channel-overview-controller", [ "$scope", "model", "user"
             $scope.channels = data.subscriptions;
         });
 
-        model.user(user.getId()).subscriptions.update();
+        model.user(id).subscriptions.update();
     });
 }]);
