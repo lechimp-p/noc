@@ -34,19 +34,11 @@ controller("channel-controller", [ "$rootScope", "$scope", "$interval", "$routeP
     };
 
     $scope.subscribe = function() {
-        user.subscribe($scope.channel.id)
-                .success(function(response) { 
-                    $scope.channel.subscribed = true;
-                    $scope.updateChannelInfo();
-                });
+        user.subscribe($scope.channel.id);
     };
 
     $scope.unsubscribe = function() {
-        user.unsubscribe($scope.channel.id)
-                .success(function(response) { 
-                    $scope.channel.subscribed = false;
-                    $scope.updateChannelInfo();
-                });
+        user.unsubscribe($scope.channel.id);
     };
 
     $scope.updateMessages = function() {
@@ -61,12 +53,14 @@ controller("channel-controller", [ "$rootScope", "$scope", "$interval", "$routeP
     };
 
     $scope.startUpdateTask = function() {
-        if (updateTask.value !== null) {
+        return;
+        /*if (updateTask.value !== null) {
             return;
         }
 
         $scope.updateMessages();
         updateTask.value = $interval($scope.updateMessages, updateIntervalMS);
+        */
     };
 
     $scope.stopUpdateTask = function() {
@@ -81,7 +75,6 @@ controller("channel-controller", [ "$rootScope", "$scope", "$interval", "$routeP
         return model.channel($scope.channel.id)
                 .get()
                 .success(function(response) {
-                    console.log(response);
                     $scope.channel = response; 
                     return response;
                 });
@@ -89,6 +82,8 @@ controller("channel-controller", [ "$rootScope", "$scope", "$interval", "$routeP
     
     $scope.updateChannelInfo()
           .success( $scope.startUpdateTask );
+
+    model.channel($scope.channel.id).onChange($scope.updateChannelInfo);
 
     $rootScope.$on("$routeChangeStart", function(event, next, current) {
         if (next.pathParams.chanId == $scope.channel.id) {

@@ -70,9 +70,9 @@ angular.module("NoC.model", [])
     };
 
     // Helper to emit events.
-    var emitIt = function(ev, id, data) {
-        return function(_) {
-            $rootScope.$emit(ev, id, data);
+    var emitIt = function(ev, id) {
+        return function(response) {
+            $rootScope.$emit(ev, id, response);
         };
     };
 
@@ -124,7 +124,7 @@ angular.module("NoC.model", [])
         user.update = function() {
             return makeCachedAPICall(pr+".update", "GET", pa
                                     , {}, _.cache, "get")
-                    .success(emitIt(userChangedEvent, user.id, _.cache.get));
+                    .success(emitIt(userChangedEvent, user.id));
         };
 
         // Be informed when user information changes.
@@ -172,14 +172,23 @@ angular.module("NoC.model", [])
                                         , pa+"/subscriptions"
                                         , { subscribe : subscribe, unsubscribe : unsubscribe }
                                         , _.cache, "subscriptions")
-                    .success(user.subscriptions.update);
+                    .success(function(_) {
+                        // We need to flush the cache of the targeted
+                        // channels as well, since their information
+                        // changed.
+                        angular.forEach(subscribe.concat(unsubscribe), function(val) {
+                            root.channel(val).update();
+                        });
+
+                        user.subscriptions.update();
+                    });
         };
 
         user.subscriptions.update = function() {
             return makeCachedAPICall( pr+".subscriptions.update", "GET"
                                     , pa+"/subscriptions"
                                     , {}, _.cache, "subscriptions")
-                    .success(emitIt(subscriptionsChangedEvent, user.id, _.cache.subscriptions));
+                    .success(emitIt(subscriptionsChangedEvent, user.id));
         };
 
         user.subscriptions.onChange = function(fun) {
@@ -237,12 +246,15 @@ angular.module("NoC.model", [])
 
         channel.set = function(data) {
             return makeAPICallClearCache( pr+".set", "POST", pa
-                                        , data, _.cache, "get");
+                                        , data, _.cache, "get")
+                    .success(channel.update);
+
         };
 
         channel.update = function() {
             return makeCachedAPICall( pr+".set", "GET", pa
-                                    , {}, _.cache, "get");
+                                    , {}, _.cache, "get")
+                    .success(emitIt(channelChangedEvent, channel.id));
         };
 
         channel.onChange = function(fun) {
