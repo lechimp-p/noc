@@ -80,6 +80,8 @@ controller("chat-controller", [ "$rootScope", "$scope", "$interval", "$routePara
     $scope.updateChannelInfo()
         .success( function (_) { $scope.startUpdateTask(); });
 
+    model.channel($scope.channel.id).onChange($scope.updateChannelInfo);
+
     //$interval($scope.updateMessages, updateIntervalMS);
 
 /*    $scope.msgs =

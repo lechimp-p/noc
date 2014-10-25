@@ -53,14 +53,12 @@ controller("channel-controller", [ "$rootScope", "$scope", "$interval", "$routeP
     };
 
     $scope.startUpdateTask = function() {
-        return;
-        /*if (updateTask.value !== null) {
+        if (updateTask.value !== null) {
             return;
         }
 
         $scope.updateMessages();
         updateTask.value = $interval($scope.updateMessages, updateIntervalMS);
-        */
     };
 
     $scope.stopUpdateTask = function() {
@@ -71,19 +69,20 @@ controller("channel-controller", [ "$rootScope", "$scope", "$interval", "$routeP
         $interval.cancel(updateTask.value);
     };
 
+    $scope.setChannelInfo = function(data) {
+        $scope.channel = data;
+    };
+
     $scope.updateChannelInfo = function() {
         return model.channel($scope.channel.id)
                 .get()
-                .success(function(response) {
-                    $scope.channel = response; 
-                    return response;
-                });
+                .success($scope.setChannelInfo);
     };
     
     $scope.updateChannelInfo()
           .success( $scope.startUpdateTask );
 
-    model.channel($scope.channel.id).onChange($scope.updateChannelInfo);
+    model.channel($scope.channel.id).onChange($scope.setChannelInfo);
 
     $rootScope.$on("$routeChangeStart", function(event, next, current) {
         if (next.pathParams.chanId == $scope.channel.id) {

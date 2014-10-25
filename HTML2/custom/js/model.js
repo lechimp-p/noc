@@ -64,7 +64,7 @@ angular.module("NoC.model", [])
     var callOnMatchingId = function(ev, id, fun) {
         $rootScope.$on(ev, function(event, _id, data) {
             if (id === _id) {
-                fun(event, data);
+                fun(data);
             }
         });
     };
