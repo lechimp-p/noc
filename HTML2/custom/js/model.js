@@ -72,6 +72,8 @@ angular.module("NoC.model", [])
     // Helper to emit events.
     var emitIt = function(ev, id) {
         return function(response) {
+            console.log(ev+" "+id);
+            console.log(response);
             $rootScope.$emit(ev, id, response);
         };
     };
