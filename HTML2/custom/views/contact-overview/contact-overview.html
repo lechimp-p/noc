@@ -2,8 +2,10 @@
     <a href="#/profile/{{contact.user.id}}">
         <img src="{{contact.icon | icon}}" class="pull-left marginright img-circle" alt="Icon of user {{contact.name}}">
     </a>
-    <a href="#/chat/{{contact.chat.id}}">
+    <a href="#/chat/{{contact.channel.id}}">
         <h4 class="list-group-item-text">{{contact.name}}</h4>
-        <!--<p class="list-group-item-text greytext" ng-show="contact.chat.lastMsg">{{contact.chat.lastMsg.timestamp | rel_timestamp}} - {{contact.chat.lastMsg.text</p>-->
+        <p class="list-group-item-text greytext" ng-show="contact.channel.lastMsg">
+            {{contact.channel.lastMsg.timestamp | rel_timestamp}} - {{contact.channel.lastMsg.text
+        </p>
     </a>
 </div>
