@@ -74,19 +74,19 @@ angular.module("NoC",
     $httpProvider.interceptors.push( 'unauthInterceptor');
 }])
 
-.run(['$rootScope', '$http', '$location', "user-events", 
-       function($rootScope, $http, $location, userEvents) {
+.run(['$rootScope', '$http', '$location', "user", 
+       function($rootScope, $http, $location, user) {
     //$rootScope.deferred401 = [];
     $rootScope.deferredRoute = "";
 
-    $rootScope.$on(userEvents.loginSuccessfull, function() {
+    user.onLoginSuccessfull(function() {
         $location.path($rootScope.deferredRoute);
         /*$http(req.config).then(function(response) {
             req.deferred.resolve(reponse);
         });*/ 
     });
 
-    $rootScope.$on(userEvents.loginRequired, function() {
+    user.onLoginRequired(function() {
         $rootScope.deferredRoute = $location.path();
         $location.path("/login");
     });

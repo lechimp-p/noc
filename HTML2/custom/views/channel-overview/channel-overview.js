@@ -1,11 +1,10 @@
 angular.module("NoC.channel-overview", []).
-controller("channel-overview-controller", [ "$rootScope", "$scope", "model", "user", "user-events"
-         , function($rootScope, $scope, model, user, userEvents) {
+controller("channel-overview-controller", [ "$scope", "model", "user"
+         , function($scope, model, user) {
     "use strict";
     
-    $rootScope.$on(userEvents.idAcquired, function() {
-        model.user(user.getId()).subscriptions.onChange(function(data) {
-            console.log(data);
+    user.onIdAcquired(function(id) {
+        model.user(id).subscriptions.onChange(function(data) {
             $scope.channels = data.subscriptions;
         });
 

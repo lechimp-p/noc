@@ -1,7 +1,12 @@
 angular.module("NoC.user", [])
-.factory("user", ["$rootScope", "model", "makeAPICall", "user-events", 
-                  function($rootScope, model, makeAPICall, userEvents) {
+.factory("user", ["$rootScope", "model", "makeAPICall",
+                  function($rootScope, model, makeAPICall) {
     "use strict";
+
+    var loginRequired = "user-login-required";
+    var loginSuccessfull = "user-login-successfull";
+    var logoutSuccessfull = "user-logout";
+    var idAcquired = "user-id-acquired";
 
     var user_data = { id : null
                     , UTC_offset : 2
@@ -9,10 +14,34 @@ angular.module("NoC.user", [])
 
     var user = {};
 
+    user.onLoginRequired = function(fun) {
+        $rootScope.$on(loginRequired, function(event, id) {
+            fun(id);
+        });
+    };
+
+    user.onLoginSuccessfull = function(fun) {
+        $rootScope.$on(loginSuccessfull, function(event, id) {
+            fun(id);
+        });
+    };
+
+    user.onLogout = function() {
+        $rootScope.$on(logoutSuccessfull, function() {
+            fun();
+        });
+    };
+
+    user.onIdAcquired = function(fun) {
+        $rootScope.$on(idAcquired, function(event, id) {
+            fun(id);
+        });
+    };
+
     makeAPICall("logininfo", "GET", "logininfo", {})
         .success(function(response) {
             user_data.id = response.id;
-            $rootScope.$broadcast(userEvents.idAcquired);
+            $rootScope.$emit(idAcquired, response.id);
         });
     
     user.login = function(login, password) {
@@ -20,8 +49,8 @@ angular.module("NoC.user", [])
                           , { login : login, password : password })
             .success(function(response) {
                 user_data.id = response.id;
-                $rootScope.$broadcast(userEvents.idAcquired);
-                $rootScope.$broadcast(userEvents.loginSuccessfull);
+                $rootScope.$emit(idAcquired, reponse.id);
+                $rootScope.$emit(loginSuccessfull, response.id);
             });    
     };
 
@@ -53,10 +82,4 @@ angular.module("NoC.user", [])
 
     return user;
 }])
-.factory("user-events", function() {
-    return { loginRequired : "user:login-required"
-           , loginSuccessfull : "user:login-successfull"
-           , idAcquired : "user:id-acquired"
-           };
-})
 ;
