@@ -27,7 +27,7 @@ angular.module("NoC",
                 })
             .when("/chat/:chanId", 
                 { templateUrl: "partials/chat.html"
-                , controller : "chat-controller"
+                , controller : "channel-controller"
                 })
             .when("/user/:userId",
                 { templateUrl : "partials/profile.html"

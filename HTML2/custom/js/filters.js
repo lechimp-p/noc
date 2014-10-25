@@ -79,4 +79,10 @@ angular.module("NoC.filters", [])
         return chan.type == "stream";
     });
 };}])
+.filter("reversed", [function() { return function(input) {
+    if (typeof input == "undefined") {
+        return input;
+    }
+    return input.slice().reverse();
+};}])
 ;
