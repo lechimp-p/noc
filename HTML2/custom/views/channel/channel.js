@@ -6,16 +6,18 @@ controller("channel-controller", [ "$rootScope", "$scope", "$interval", "$routeP
     var lastTS = {};
     var updateIntervalMS = 5000;
     var updateTask = { value : null };
+
+    $scope.channel = { id : $routeParams.chanId };
  
     var toScope = function(response) {
-        if (response.messages.length > 0) {
-            lastTS.value = response.messages[0].timestamp;
+        if (response.data.messages.length > 0) {
+            lastTS.value = response.data.messages[0].timestamp;
         }
         if ($scope.msgs) {
-            $scope.msgs = response.messages.concat($scope.msgs);
+            $scope.msgs = response.data.messages.concat($scope.msgs);
         }
         else {
-            $scope.msgs = response.messages;
+            $scope.msgs = response.data.messages;
         }
     };
 
@@ -26,14 +28,14 @@ controller("channel-controller", [ "$rootScope", "$scope", "$interval", "$routeP
 
         model.channel($scope.channel.id)
             .post($scope.message)
-            .success($scope.updateMessages); 
+            .then($scope.updateMessages); 
 
         $scope.message = "";
     };
 
     $scope.subscribe = function() {
         user.subscribe($scope.channel.id)
-                .success(function(response) { 
+                .then(function(response) { 
                     $scope.channel.subscribed = true;
                     $scope.updateChannelInfo();
                 });
@@ -41,7 +43,7 @@ controller("channel-controller", [ "$rootScope", "$scope", "$interval", "$routeP
 
     $scope.unsubscribe = function() {
         user.unsubscribe($scope.channel.id)
-                .success(function(response) { 
+                .then(function(response) { 
                     $scope.channel.subscribed = false;
                     $scope.updateChannelInfo();
                 });
@@ -50,19 +52,12 @@ controller("channel-controller", [ "$rootScope", "$scope", "$interval", "$routeP
     $scope.updateMessages = function() {
         if (typeof lastTS.value === "undefined") {
             return model.channel($scope.channel.id)
-                .messages(0, 10).success(toScope);
+                .messages(0, 10).then(toScope);
         }
         else {
             return model.channel($scope.channel.id)
-                .messagesTill(lastTS.value).success(toScope);
+                .messagesTill(lastTS.value).then(toScope);
         }
-    };
-
-    $scope.updateChannelInfo = function() {
-        return model.channel($routeParams.chanId)
-            .get().success(function(response) {
-                        $scope.channel = response; 
-                    });
     };
 
     $scope.startUpdateTask = function() {
@@ -82,6 +77,18 @@ controller("channel-controller", [ "$rootScope", "$scope", "$interval", "$routeP
         $interval.cancel(updateTask.value);
     };
 
+    $scope.updateChannelInfo = function() {
+        return model.channel($scope.channel.id)
+                .get()
+                .then(function(response) {
+                    console.log(response);
+                    $scope.channel = response.data; 
+                });
+    };
+    
+    $scope.updateChannelInfo()
+          .then( $scope.startUpdateTask );
+
     $rootScope.$on("$routeChangeStart", function(event, next, current) {
         if (next.pathParams.chanId == $scope.channel.id) {
             $scope.updateChannelInfo();
@@ -91,9 +98,6 @@ controller("channel-controller", [ "$rootScope", "$scope", "$interval", "$routeP
             $scope.stopUpdateTask();
         }
     });
-
-    $scope.updateChannelInfo()
-        .success( function (_) { $scope.startUpdateTask(); });
 
     //$interval($scope.updateMessages, updateIntervalMS);
 

@@ -34,12 +34,12 @@ angular.module("NoC.user", [])
 
     user.subscribe = function(cid) {
         return model.user(user_data.id)
-                .setSubscriptions([cid], []);
+                .subscriptions.set([cid], []);
     };
 
-    user.subscribe = function(cid) {
+    user.unsubscribe = function(cid) {
         return model.user(user_data.id)
-                .setSubscriptions([], [cid]);
+                .subscriptions.set([], [cid]);
     };
 
 

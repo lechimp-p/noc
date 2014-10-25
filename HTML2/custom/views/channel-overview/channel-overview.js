@@ -3,15 +3,12 @@ controller("channel-overview-controller", [ "$rootScope", "$scope", "model", "us
          , function($rootScope, $scope, model, user, userEvents) {
     "use strict";
 
-    $scope.update = function() {
-        model.user(user.getId())
-            .subscriptions.get()
-                .success(function(response) {
-                    $scope.channels = response.subscriptions;
-                }); 
-    };
+    model.user(user.getId()).onChange(function(data) {
+        console.log(data);
+        $scope.channels = data;
+    });
     
     $rootScope.$on(userEvents.idAcquired, function() {
-        $scope.update();
+        model.user(user.getId()).update();
     });
 }]);

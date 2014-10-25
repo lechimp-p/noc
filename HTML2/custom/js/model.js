@@ -1,5 +1,6 @@
 angular.module("NoC.model", [])
-.factory("model", ["$q", "$timeout", "makeAPICall", function($q, $timeout, makeAPICall) {
+.factory("model", ["$rootScope", "$q", "$timeout", "makeAPICall", 
+                    function($rootScope, $q, $timeout, makeAPICall) {
     "use strict";
 
     ////////////
@@ -10,7 +11,7 @@ angular.module("NoC.model", [])
         var deferred = $q.defer();
 
         $timeout(function() {
-            deferred.resolve(content);
+            deferred.resolve({ data : content });
         });
         
         return deferred.promise;
@@ -32,10 +33,38 @@ angular.module("NoC.model", [])
     };
 
     var makeAPICallClearCache = function(name, method, path, params, cache, prop) {
-        return makeAPICall(pr+".set", "POST", pa, data)
+        return makeAPICall(name, method, path, params)
                 .success(function(_) {
                     delete cache[prop];
                 });
+    };
+
+
+    /////////
+    // Events
+    /////////
+
+    var channelChangedEvent = "channel-changed";
+    var contactsChangedEvent = "contacts-changed";
+    var subscriptionsChangedEvent = "subscriptions-changed";
+    var notificationsChangedEvent = "notifications-changed";
+    var userChangedEvent = "user-changed";
+
+    // Helper function for channel and user to create
+    // functions that register eventlisteners. 
+    var callOnMatchingId = function(ev, id, fun) {
+        $rootScope.$on(ev, function(event, _id, data) {
+            if (id === _id) {
+                fun(event, data);
+            }
+        });
+    };
+
+    // Helper to emit events.
+    var emitIt = function(ev, id, data) {
+        return function(_) {
+            $rootScope.$emit(ev, id, data);
+        };
     };
 
     ////////    
@@ -67,19 +96,31 @@ angular.module("NoC.model", [])
             _.cache = {};
         };        
 
+        // Get promise to user information, from cache or server.
         user.get = function() {
             return makeCachePromiseOrAPICall( pr+".get", "GET", pa
                                             , {}, _.cache, "get");
         };
 
+        // Get promise to set user information and clear cache.
+        // Afterwards update.
         user.set = function(data) {
             return makeAPICallClearCache(pr+".set", "POST", pa
-                                        , data, _.cache, "get");
+                                        , data, _.cache, "get")
+                    .success(user.update);
         };
 
+        // Get promise to user information from server and update cache.
+        // Afterwards emit user.onChange.
         user.update = function() {
             return makeCachedAPICall(pr+".update", "GET", pa
-                                    , {}, _.cache, "get");
+                                    , {}, _.cache, "get")
+                    .success(emitIt(userChangedEvent, user.id, _.cache.get));
+        };
+
+        // Be informed when user information changes.
+        user.onChange = function(fun) {
+            return callOnMatchingId(userChangedEvent, user.id, fun);
         };
 
         user.contacts = {};
@@ -94,13 +135,19 @@ angular.module("NoC.model", [])
             return makeAPICallClearCache( pr+".contacts.set", "POST"
                                         , pa+"/contacts"
                                         , { set : set, remove : remove}
-                                        , _.cache, "contacts");
+                                        , _.cache, "contacts")
+                    .success(user.contacts.update);
         };
 
         user.contacts.update = function() {
             return makeCachedAPICall( pr+".contacts.update", "GET"
                                     , pa+"/contacts"
-                                    , {}, _.cache, "contacts");
+                                    , {}, _.cache, "contacts")
+                    .success(emitIt(contactsChangedEvent, user.id));
+        };
+
+        user.contacts.onChange = function(fun) {
+            return callOnMatchingId(contactsChangedEvent, user.id, fun);
         };
 
         user.subscriptions = {};
@@ -115,13 +162,19 @@ angular.module("NoC.model", [])
             return makeAPICallClearCache( pr+".subscriptions.set", "POST"
                                         , pa+"/subscriptions"
                                         , { subscribe : subscribe, unsubscribe : unsubscribe }
-                                        , _.cache, "subscriptions");
+                                        , _.cache, "subscriptions")
+                    .success(user.subscriptions.update);
         };
 
         user.subscriptions.update = function() {
             return makeCachedAPICall( pr+".subscriptions.update", "GET"
                                     , pa+"/subscriptions"
-                                    , {}, _.cache, "subscriptions"); 
+                                    , {}, _.cache, "subscriptions")
+                    .success(emitIt(subscriptionsChangedEvent, user.id, _.cache.subscriptions));
+        };
+
+        user.subscriptions.onChange = function(fun) {
+            return callOnMatchingId(subscriptionsChangedEvent, user.id, fun);
         };
 
         user.notifications = {};
@@ -135,7 +188,12 @@ angular.module("NoC.model", [])
         user.notifications.update = function() {
             return makeCachedAPICall( pr+".notifications.get", "GET"
                                     , pa+"/notifications"
-                                    , {}, _.cache, "notifications"); 
+                                    , {}, _.cache, "notifications")
+                    .success(emitIt(notificationsChangedEvent, user.id));
+        };
+
+        user.notifications.onChange = function(fun) {
+            return callOnMatchingId(notificationsChangedEvent, user.id, fun);
         };
 
         __.users[uid] = user;
@@ -178,6 +236,10 @@ angular.module("NoC.model", [])
                                     , {}, _.cache, "get");
         };
 
+        channel.onChange = function(fun) {
+            return callOnMatchingId(channelChangedEvent, channel.id, fun);
+        };
+
         channel.messages = function(offset, amount) {
             return makeAPICall( pr+".messages", "GET", pa+"/messages"
                               , { offset : offset, amount : amount });
@@ -205,6 +267,8 @@ angular.module("NoC.model", [])
         return makeAPICall("channel.create", "POST", "channel"
                           , { name : name });
     };
+
+    
 
     return root;
 }])
