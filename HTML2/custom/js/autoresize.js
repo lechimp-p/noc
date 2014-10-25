@@ -25,7 +25,7 @@ angular.module("autoresize", [])
             if (content.length === 0) {
                 content = "p";
             }
-            hidden.html(content + " ");
+            hidden.html(content + "&nbsp;");
             hidden.width(elem.width());
             elem.height(hidden.height());
         });
