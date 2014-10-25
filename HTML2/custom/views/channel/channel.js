@@ -10,14 +10,14 @@ controller("channel-controller", [ "$rootScope", "$scope", "$interval", "$routeP
     $scope.channel = { id : $routeParams.chanId };
  
     var toScope = function(response) {
-        if (response.data.messages.length > 0) {
-            lastTS.value = response.data.messages[0].timestamp;
+        if (response.messages.length > 0) {
+            lastTS.value = response.messages[0].timestamp;
         }
         if ($scope.msgs) {
-            $scope.msgs = response.data.messages.concat($scope.msgs);
+            $scope.msgs = response.messages.concat($scope.msgs);
         }
         else {
-            $scope.msgs = response.data.messages;
+            $scope.msgs = response.messages;
         }
     };
 
@@ -82,7 +82,8 @@ controller("channel-controller", [ "$rootScope", "$scope", "$interval", "$routeP
                 .get()
                 .then(function(response) {
                     console.log(response);
-                    $scope.channel = response.data; 
+                    $scope.channel = response; 
+                    return response;
                 });
     };
     

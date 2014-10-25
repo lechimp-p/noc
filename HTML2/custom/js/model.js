@@ -1,26 +1,38 @@
 angular.module("NoC.model", [])
-.factory("model", ["$rootScope", "$q", "$timeout", "makeAPICall", 
-                    function($rootScope, $q, $timeout, makeAPICall) {
+.factory("model", ["$rootScope", "$q", "$timeout", "makeUnwrappedAPICall", 
+                    function($rootScope, $q, $timeout, makeUnwrappedAPICall) {
     "use strict";
 
     ////////////
     // Utilities
     ////////////
-    
+
+    var addHttpInterface = function(promise) {
+        promise.success = function(fun) {
+        
+        return promise;
+    }
+   
     var makeCachePromise = function(content) {
         var deferred = $q.defer();
 
         $timeout(function() {
-            deferred.resolve({ data : content });
+            deferred.resolve(content);
         });
+
+        var promise = deferred.promise;
+        promise.success = function(fun) {
+            var pr = promise.then(fun);
+        };
         
         return deferred.promise;
     };
 
     var makeCachedAPICall = function(name, method, path, params, cache, prop) {
-        return makeAPICall(name, method, path, params) 
-                    .success(function(response) {
+        return makeUnwrappedAPICall(name, method, path, params) 
+                    .then(function(response) {
                         cache[prop] = response;
+                        return response;
                     });
     };
 
@@ -32,10 +44,11 @@ angular.module("NoC.model", [])
         return makeCachedAPICall(name, method, path, params, cache, prop);
     };
 
-    var makeAPICallClearCache = function(name, method, path, params, cache, prop) {
-        return makeAPICall(name, method, path, params)
-                .success(function(_) {
+    var makeUnwrappedAPICallClearCache = function(name, method, path, params, cache, prop) {
+        return makeUnwrappedAPICall(name, method, path, params)
+                .then(function(response) {
                     delete cache[prop];
+                    return response; 
                 });
     };
 
@@ -105,9 +118,12 @@ angular.module("NoC.model", [])
         // Get promise to set user information and clear cache.
         // Afterwards update.
         user.set = function(data) {
-            return makeAPICallClearCache(pr+".set", "POST", pa
+            return makeUnwrappedAPICallClearCache(pr+".set", "POST", pa
                                         , data, _.cache, "get")
-                    .success(user.update);
+                    .then(function(response) {
+                        user.update()
+                        return response;
+                    });
         };
 
         // Get promise to user information from server and update cache.
@@ -115,7 +131,7 @@ angular.module("NoC.model", [])
         user.update = function() {
             return makeCachedAPICall(pr+".update", "GET", pa
                                     , {}, _.cache, "get")
-                    .success(emitIt(userChangedEvent, user.id, _.cache.get));
+                    .then(emitIt(userChangedEvent, user.id, _.cache.get));
         };
 
         // Be informed when user information changes.
@@ -132,18 +148,18 @@ angular.module("NoC.model", [])
         };
 
         user.contacts.set = function(set, remove) {
-            return makeAPICallClearCache( pr+".contacts.set", "POST"
+            return makeUnwrappedAPICallClearCache( pr+".contacts.set", "POST"
                                         , pa+"/contacts"
                                         , { set : set, remove : remove}
                                         , _.cache, "contacts")
-                    .success(user.contacts.update);
+                    .then(user.contacts.update);
         };
 
         user.contacts.update = function() {
             return makeCachedAPICall( pr+".contacts.update", "GET"
                                     , pa+"/contacts"
                                     , {}, _.cache, "contacts")
-                    .success(emitIt(contactsChangedEvent, user.id));
+                    .then(emitIt(contactsChangedEvent, user.id));
         };
 
         user.contacts.onChange = function(fun) {
@@ -159,18 +175,18 @@ angular.module("NoC.model", [])
         };
 
         user.subscriptions.set = function(subscribe, unsubscribe) {
-            return makeAPICallClearCache( pr+".subscriptions.set", "POST"
+            return makeUnwrappedAPICallClearCache( pr+".subscriptions.set", "POST"
                                         , pa+"/subscriptions"
                                         , { subscribe : subscribe, unsubscribe : unsubscribe }
                                         , _.cache, "subscriptions")
-                    .success(user.subscriptions.update);
+                    .then(user.subscriptions.update);
         };
 
         user.subscriptions.update = function() {
             return makeCachedAPICall( pr+".subscriptions.update", "GET"
                                     , pa+"/subscriptions"
                                     , {}, _.cache, "subscriptions")
-                    .success(emitIt(subscriptionsChangedEvent, user.id, _.cache.subscriptions));
+                    .then(emitIt(subscriptionsChangedEvent, user.id, _.cache.subscriptions));
         };
 
         user.subscriptions.onChange = function(fun) {
@@ -189,7 +205,7 @@ angular.module("NoC.model", [])
             return makeCachedAPICall( pr+".notifications.get", "GET"
                                     , pa+"/notifications"
                                     , {}, _.cache, "notifications")
-                    .success(emitIt(notificationsChangedEvent, user.id));
+                    .then(emitIt(notificationsChangedEvent, user.id));
         };
 
         user.notifications.onChange = function(fun) {
@@ -201,7 +217,7 @@ angular.module("NoC.model", [])
     };
 
     root.user.search = function(login) {
-        return makeAPICall("user.search", "GET", "user", { login : login });
+        return makeUnwrappedAPICall("user.search", "GET", "user", { login : login });
     };
 
 
@@ -227,7 +243,7 @@ angular.module("NoC.model", [])
         }; 
 
         channel.set = function(data) {
-            return makeAPICallClearCache( pr+".set", "POST", pa
+            return makeUnwrappedAPICallClearCache( pr+".set", "POST", pa
                                         , data, _.cache, "get");
         };
 
@@ -241,17 +257,17 @@ angular.module("NoC.model", [])
         };
 
         channel.messages = function(offset, amount) {
-            return makeAPICall( pr+".messages", "GET", pa+"/messages"
+            return makeUnwrappedAPICall( pr+".messages", "GET", pa+"/messages"
                               , { offset : offset, amount : amount });
         };
 
         channel.messagesTill = function(timestamp) {
-            return makeAPICall( pr+".messagesTill", "GET", pa+"/messages"
+            return makeUnwrappedAPICall( pr+".messagesTill", "GET", pa+"/messages"
                               , { timestamp : timestamp });
         };
 
         channel.post = function(text) {
-            return makeAPICall( pr+".post", "POST", pa+"/messages"
+            return makeUnwrappedAPICall( pr+".post", "POST", pa+"/messages"
                               , { text : text });
         };
 
@@ -260,11 +276,11 @@ angular.module("NoC.model", [])
     };
 
     root.channel.search = function() {
-        return makeAPICall("channel.search", "GET", "channel", {});
+        return makeUnwrappedAPICall("channel.search", "GET", "channel", {});
     };
 
     root.channel.create = function(name) {
-        return makeAPICall("channel.create", "POST", "channel"
+        return makeUnwrappedAPICall("channel.create", "POST", "channel"
                           , { name : name });
     };
 
