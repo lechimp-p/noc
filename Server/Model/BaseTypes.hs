@@ -56,7 +56,7 @@ data Contact = Contact
     { _userId :: UserId
     , _channelId :: Maybe ChanId
     }
-    deriving ( Data, Typeable)
+    deriving (Show, Data, Typeable)
 
 instance Eq Contact where
     a == b = _userId a == _userId b

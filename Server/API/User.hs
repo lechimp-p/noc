@@ -8,6 +8,8 @@
 module API.User 
 where
 
+import Debug.Trace
+
 import Model
 import Model.Permissions (hasAccess, forUserSelfOrAdmins)
 import API.Effects
@@ -145,7 +147,7 @@ getContactsHandler uid = withJSONOut $ do
 
 setContactsHandler uid = withJSONIn $ do
     trySessionLogin
-    "set"       ?> sequence . fmap (setUserContact uid)
+    "set"       ?> sequence . fmap (setUserContact uid) . (\ v -> trace (show v) v)
     "remove"    ?> sequence . fmap (rmUserContactTo uid)
     return Nothing
 
