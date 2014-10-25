@@ -84,16 +84,16 @@ class user(object):
     def getContacts(self, op):
         return op.getR(self.contacts_path % self.id)
 
-    def modifyContacts(self, op, add = [], remove = []):
+    def setContacts(self, op, set = [], remove = []):
         def toContact(a):
-            return { "userId" : a[0], "contactId" : a[1]}
-        add = map(toContact, add)
-        return op.postR(self.contacts_path % self.id, {"add" : add, "remove" : remove})
+            return { "userId" : a[0], "channelId" : a[1]}
+        _set = map(toContact, set)
+        return op.postR(self.contacts_path % self.id, {"set" : _set, "remove" : remove})
 
     def getSubscriptions(self, op):
         return op.getR(self.subscriptions_path % self.id)
 
-    def modifySubscriptions(self, op, subscribe = [], unsubscribe = []):
+    def setSubscriptions(self, op, subscribe = [], unsubscribe = []):
         return op.postR(self.subscriptions_path % self.id, {"subscribe" : subscribe, "unsubscribe" : unsubscribe})
 
     def getChannels(self, op):
