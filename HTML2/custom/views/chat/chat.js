@@ -26,7 +26,7 @@ controller("chat-controller", [ "$rootScope", "$scope", "$interval", "$routePara
 
         model.channel($scope.channel.id)
             .post($scope.message)
-                .then($scope.updateMessages); 
+                .success($scope.updateMessages); 
         $scope.message = "";
     };
 
@@ -34,18 +34,18 @@ controller("chat-controller", [ "$rootScope", "$scope", "$interval", "$routePara
         if (typeof lastTS.value === "undefined") {
             return model.channel($scope.channel.id)
                     .messages(0, 10)
-                        .then(toScope);
+                        .success(toScope);
         }
         else {
             return model.channel($scope.channel.id)
                     .messagesTill(lastTS.value)
-                        .then(toScope);
+                        .success(toScope);
         }
     };
 
     $scope.updateChannelInfo = function() {
         return model.channel($routeParams.chanId).get()
-                    .then(function(response) {
+                    .success(function(response) {
                         $scope.channel = response; 
                     });
     };
@@ -78,7 +78,7 @@ controller("chat-controller", [ "$rootScope", "$scope", "$interval", "$routePara
     });
 
     $scope.updateChannelInfo()
-        .then( function (_) { $scope.startUpdateTask(); });
+        .success( function (_) { $scope.startUpdateTask(); });
 
     //$interval($scope.updateMessages, updateIntervalMS);
 
