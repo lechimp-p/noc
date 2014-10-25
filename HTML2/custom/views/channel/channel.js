@@ -28,14 +28,14 @@ controller("channel-controller", [ "$rootScope", "$scope", "$interval", "$routeP
 
         model.channel($scope.channel.id)
             .post($scope.message)
-            .then($scope.updateMessages); 
+            .success($scope.updateMessages); 
 
         $scope.message = "";
     };
 
     $scope.subscribe = function() {
         user.subscribe($scope.channel.id)
-                .then(function(response) { 
+                .success(function(response) { 
                     $scope.channel.subscribed = true;
                     $scope.updateChannelInfo();
                 });
@@ -43,7 +43,7 @@ controller("channel-controller", [ "$rootScope", "$scope", "$interval", "$routeP
 
     $scope.unsubscribe = function() {
         user.unsubscribe($scope.channel.id)
-                .then(function(response) { 
+                .success(function(response) { 
                     $scope.channel.subscribed = false;
                     $scope.updateChannelInfo();
                 });
@@ -52,11 +52,11 @@ controller("channel-controller", [ "$rootScope", "$scope", "$interval", "$routeP
     $scope.updateMessages = function() {
         if (typeof lastTS.value === "undefined") {
             return model.channel($scope.channel.id)
-                .messages(0, 10).then(toScope);
+                .messages(0, 10).success(toScope);
         }
         else {
             return model.channel($scope.channel.id)
-                .messagesTill(lastTS.value).then(toScope);
+                .messagesTill(lastTS.value).success(toScope);
         }
     };
 
@@ -80,7 +80,7 @@ controller("channel-controller", [ "$rootScope", "$scope", "$interval", "$routeP
     $scope.updateChannelInfo = function() {
         return model.channel($scope.channel.id)
                 .get()
-                .then(function(response) {
+                .success(function(response) {
                     console.log(response);
                     $scope.channel = response; 
                     return response;
@@ -88,7 +88,7 @@ controller("channel-controller", [ "$rootScope", "$scope", "$interval", "$routeP
     };
     
     $scope.updateChannelInfo()
-          .then( $scope.startUpdateTask );
+          .success( $scope.startUpdateTask );
 
     $rootScope.$on("$routeChangeStart", function(event, next, current) {
         if (next.pathParams.chanId == $scope.channel.id) {
