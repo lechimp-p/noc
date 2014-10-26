@@ -9,11 +9,11 @@ module Model
     , ChanId
     , MsgId
     , Icon (Icon, icnPath)
-    , Message
     , Image (Image, imgPath)
     , Notification (..)
     , ChanType (..)
     , Contact (..)
+    , Message (..)
     )
 where
 

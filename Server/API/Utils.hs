@@ -72,6 +72,14 @@ channelInfo cid = do
     "lastPost"      <$ lastPostTimestamp cid
     "subscribed"    <$ fmap (S.member cid) .$ getUserSubscriptions uid 
 
+messageJSON msg = do
+    "image"     <: _image msg
+    "text"      <: _text msg
+    "timestamp" <: show .$ _timestamp msg
+    let uid = _author msg  
+    "author"    <$. userInfo uid
+
+
 -----------------
 -- Error handling
 -----------------

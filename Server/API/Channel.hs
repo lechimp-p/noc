@@ -121,13 +121,7 @@ getMessagesHandler cid = withJSONOut $ do
     msgs <- case ts of
         Nothing -> messages cid o a
         Just ts -> messagesTill cid ts
-    "messages" <$: flip fmap msgs .$ \ msg -> do
-        "image"     <: _image msg
-        "text"      <: _text msg
-        "timestamp" <: show .$ _timestamp msg
-        let uid = _author msg  
-        "author"    <$. userInfo uid
-
+    "messages" <$: fmap messageJSON msgs
 postHandler cid = withJSONIn $ do 
     trySessionLogin
     ts <- timestamp 
