@@ -8,8 +8,6 @@
 module API.User 
 where
 
-import Debug.Trace
-
 import Model
 import Model.Permissions (hasAccess, forUserSelfOrAdmins)
 import API.Effects

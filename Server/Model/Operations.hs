@@ -12,6 +12,8 @@ module Model.Operations
     )
 where
 
+import Debug.Trace
+
 import Model.BaseTypes
 import Model.Errors
 import Model.Permissions

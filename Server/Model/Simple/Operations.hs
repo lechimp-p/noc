@@ -2,8 +2,6 @@
 
 module Model.Simple.Operations where
 
-import Debug.Trace
-
 import Model.Errors
 import Model.BaseTypes
 

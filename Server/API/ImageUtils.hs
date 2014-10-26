@@ -4,8 +4,6 @@
 
 module API.ImageUtils where
 
-import Debug.Trace
-
 import Model
 import Model.BaseTypes
 import API.ImageConfig
