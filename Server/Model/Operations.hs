@@ -12,8 +12,6 @@ module Model.Operations
     )
 where
 
-import Debug.Trace
-
 import Model.BaseTypes
 import Model.Errors
 import Model.Permissions
@@ -356,7 +354,7 @@ createUserContact uid oid = do
                     setChanType cid Conversation
                     forceOperatorId >>= rmChanOwner cid
                     return cid
-            subscribeToChan (trace (show uid) uid) (trace (show cid) cid) 
+            subscribeToChan uid cid
             U.setUserContact uid (Contact oid cid) 
         
 
