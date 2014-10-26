@@ -34,7 +34,8 @@ $(deriveSafeCopy 0 'base ''Image)
 $(deriveSafeCopy 0 'base ''Icon)
 $(deriveSafeCopy 0 'base ''ChanType)
 $(deriveSafeCopy 0 'base ''Notification)
-$(deriveSafeCopy 0 'base ''Contact)
+$(deriveSafeCopy 1 'extension ''Contact)
+$(deriveSafeCopy 0 'base ''Contact0)
 $(deriveSafeCopy 0 'base ''Channel)
 $(deriveSafeCopy 1 'extension ''User)
 $(deriveSafeCopy 0 'base ''User0)
@@ -52,5 +53,10 @@ instance Migrate User where
                          (_email0 user0)
                          (_ownedChannels0 user0)
                          (_subscriptions0 user0)
-                         (S.map (flip Contact Nothing) (_contacts0 user0))
+                         (S.map (migrate . flip Contact0 Nothing) (_contacts0 user0))
                          (_notifications0 user0)
+
+instance Migrate Contact where
+    type MigrateFrom Contact = Contact0
+    migrate (Contact0 uid (Just cid)) = Contact uid cid
+    migrate (Contact0 uid Nothing) = Contact uid . error $ "Contact to " ++ show uid ++ " needs to be recreated due to migration." 

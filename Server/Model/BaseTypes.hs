@@ -17,6 +17,7 @@ module Model.BaseTypes
     , ChanType (..)
     , Notification (..)
     , Contact (..)
+    , Contact0 (..)
     )
 where
 
@@ -54,7 +55,7 @@ data Notification
 
 data Contact = Contact
     { _userId :: UserId
-    , _channelId :: Maybe ChanId
+    , _channelId :: ChanId
     }
     deriving (Show, Data, Typeable)
 
@@ -63,3 +64,21 @@ instance Eq Contact where
 
 instance Ord Contact where
     compare a = compare (_userId a) . _userId
+
+
+-- Old datatypes for migrations
+
+data Contact0 = Contact0
+    { _userId0 :: UserId
+    , _channelId0 :: Maybe ChanId
+    }
+    deriving (Show, Data, Typeable)
+
+instance Eq Contact0 where
+    a == b = _userId0 a == _userId0 b
+
+instance Ord Contact0 where
+    compare a = compare (_userId0 a) . _userId0
+
+
+

@@ -89,8 +89,10 @@ getUserContactByContactIdR n uid cid = queryUser findContact n uid
     findContact user = fmap fst 
                      . S.maxView 
                      . snd 
-                     . S.split (Contact uid Nothing)
+                     . S.split (Contact uid err)
                      $ U._contacts user
+    err = error $ "Model.Simple.Operations.getUserContactByContactIdR: This value "
+               ++ "should just be used for comparison by uid."
 getUserSubscriptionsR = queryUser U._subscriptions
 
 
@@ -158,7 +160,10 @@ setUserIconR n u i = updateUser (set icon i) () n u
 setUserEmailR n u e = updateUser (set email e) () n u
 addUserNotificationR n u n' = updateUser (over notifications ((:) n')) () n u
 setUserContactR n u c = updateUser (over contacts (S.insert c)) () n u
-rmUserContactToR n u uid = updateUser (over contacts (S.delete (Contact uid Nothing))) () n u
+rmUserContactToR n u uid = updateUser (over contacts (S.delete (Contact uid err))) () n u
+    where
+    err = error $ "Model.Simple.Operations.rmUserContactToR: This value "
+               ++ "should just be used for comparison by uid."
 addUserSubscriptionR n u cid = do
     s <- getChanSubscribersR n cid  
     (n', _) <- updateChan (over subscribers (S.insert u)) () n cid

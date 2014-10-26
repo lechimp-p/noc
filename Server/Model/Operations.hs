@@ -15,6 +15,7 @@ where
 import Model.BaseTypes
 import Model.Errors
 import Model.Permissions
+import Model.Constraints
 import Model.Exec (Exec)
 import Model.Query (Query)
 import Model.Update (Update)
@@ -25,6 +26,7 @@ import Model.Message
 
 import qualified Data.Set as S
 import Data.Text (Text) 
+import qualified Data.Text as T
 import Data.Time.Clock (UTCTime)
 import Data.Maybe (isJust)
 import Control.Eff
@@ -330,6 +332,25 @@ setUserContact :: (Member Update r, Member Query r, Member Exec r)
 setUserContact uid other = do
     checkAccess uid forUserSelfOrAdmins
     U.setUserContact uid other
+
+createUserContact :: (Member Update r, Member Query r, Member Exec r)
+                  => UserId -> UserId -> Eff r ()
+createUserContact uid oid = do
+    checkAccess uid forUserSelfOrAdmins
+    c <- Q.getUserContactByContactId oid uid
+    cid <- case c of
+        Just (Contact _ cid) -> return cid
+        Nothing -> do
+            name <- makeName . T.pack $ ("Private channel of " ++ (show . uiToInt $ uid) ++ " and " ++ (show . uiToInt $ oid))
+            cid <- createChannel name
+            addChanConsumer cid uid
+            addChanProducer cid uid
+            addChanConsumer cid oid 
+            addChanProducer cid oid
+            forceOperatorId >>= rmChanOwner cid
+            return cid
+    U.setUserContact uid (Contact oid cid) 
+    
 
 rmUserContactTo :: (Member Update r, Member Query r, Member Exec r)
               => UserId -> UserId -> Eff r ()
