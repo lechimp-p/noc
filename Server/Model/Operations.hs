@@ -351,8 +351,10 @@ createUserContact uid oid = do
                     addChanProducer cid uid
                     addChanConsumer cid oid 
                     addChanProducer cid oid
+                    setChanType cid Conversation
                     forceOperatorId >>= rmChanOwner cid
                     return cid
+            subscribeToChan uid cid 
             U.setUserContact uid (Contact oid cid) 
         
 

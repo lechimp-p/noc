@@ -84,3 +84,10 @@ Scenario: Channels for contacts
     When user_1 has contact one to user_2
     And user_2 has contact two to user_1
     Then channel.id of one equals channel.id of two 
+
+Scenario: Creation of channels is idempotent
+    Given User user_3 exists
+    And User user_4 exists
+    When user_3 has contact one to user_4
+    And user_3 has contact two to user_4
+    Then channel of one equals channel of two
