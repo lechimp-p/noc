@@ -354,7 +354,7 @@ createUserContact uid oid = do
                     setChanType cid Conversation
                     forceOperatorId >>= rmChanOwner cid
                     return cid
-            subscribeToChan uid cid 
+            subscribeToChan (trace (show uid) uid) (trace (show cid) cid) 
             U.setUserContact uid (Contact oid cid) 
         
 
