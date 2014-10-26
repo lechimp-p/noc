@@ -337,20 +337,24 @@ createUserContact :: (Member Update r, Member Query r, Member Exec r)
                   => UserId -> UserId -> Eff r ()
 createUserContact uid oid = do
     checkAccess uid forUserSelfOrAdmins
-    c <- Q.getUserContactByContactId oid uid
-    cid <- case c of
-        Just (Contact _ cid) -> return cid
-        Nothing -> do
-            name <- makeName . T.pack $ ("Private channel of " ++ (show . uiToInt $ uid) ++ " and " ++ (show . uiToInt $ oid))
-            cid <- createChannel name
-            addChanConsumer cid uid
-            addChanProducer cid uid
-            addChanConsumer cid oid 
-            addChanProducer cid oid
-            forceOperatorId >>= rmChanOwner cid
-            return cid
-    U.setUserContact uid (Contact oid cid) 
-    
+    c' <- Q.getUserContactByContactId uid oid
+    case c' of
+        Just _ -> return ()
+        Nothing -> do  
+            c <- Q.getUserContactByContactId oid uid
+            cid <- case c of
+                Just (Contact _ cid) -> return cid
+                Nothing -> do
+                    name <- makeName . T.pack $ ("Private channel of " ++ (show . uiToInt $ uid) ++ " and " ++ (show . uiToInt $ oid))
+                    cid <- createChannel name
+                    addChanConsumer cid uid
+                    addChanProducer cid uid
+                    addChanConsumer cid oid 
+                    addChanProducer cid oid
+                    forceOperatorId >>= rmChanOwner cid
+                    return cid
+            U.setUserContact uid (Contact oid cid) 
+        
 
 rmUserContactTo :: (Member Update r, Member Query r, Member Exec r)
               => UserId -> UserId -> Eff r ()
