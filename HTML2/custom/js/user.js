@@ -9,7 +9,7 @@ angular.module("NoC.user", [])
     var idAcquired = "user-id-acquired";
 
     var user_data = { id : null
-                    , UTC_offset : 2
+                    , UTC_offset : 1 
                     };
 
     var user = {};
