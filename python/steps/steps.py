@@ -128,3 +128,30 @@ def step_impl(context, contain, name):
     check_verb("contain", contain)
     mod = to_modifier(contain)
     assert mod(name in context.search_result)
+
+@when("{user_1} has contact {name} to {user_2}")
+def step_impl(context, user_1, name, user_2):
+    user_1 = context.users[user_1]
+    user_2 = context.users[user_2]
+    admin = context.users["admin"]
+    user_1.setContacts(admin, [user_2.id], [])
+    contacts = user_1.getContacts(admin)
+    for contact in contacts:
+        if contact["user"]["id"] == user_2.id:
+            context.namedData[name] = contact 
+
+@then("{what_1} of {name_1} equals {what_2} of {name_2}")
+def step_imp(context, what_1, name_1, what_2, name_2):
+    data_1 = context.namedData[name_1]
+    data_2 = context.namedData[name_2]
+    what_1 = what_1.split(".")
+    what_2 = what_2.split(".")
+    
+    def get(what, data):
+        if len(what) == 0:
+            return data
+        else:
+            return get(what[1:], data[what[0]])
+
+    return get(what_1, data_1) == get(what_2, data_2)
+    

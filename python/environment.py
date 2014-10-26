@@ -19,5 +19,6 @@ def after_all(context):
 def before_scenario(context, feature):
     context.users = {}
     context.channels = {}
+    context.namedData = {}
     context.NoC = NoC.noc("http://localhost:8000")
     context.users["admin"] = context.NoC.user("admin", "admin")

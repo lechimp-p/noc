@@ -77,3 +77,10 @@ Scenario: Searching of channels by name
     And the result will not contain "camel"
     And the result will not contain "cow"
     And the result will not contain "channel 3"
+
+Scenario: Channels for contacts
+    Given User user_1 exists
+    And User user_2 exists
+    When user_1 has contact one to user_2
+    And user_2 has contact two to user_1
+    Then channel.id of one equals channel.id of two 
