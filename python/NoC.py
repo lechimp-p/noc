@@ -82,25 +82,19 @@ class user(object):
         return op.getR(self.user_path % self.id)
 
     def getContacts(self, op):
-        return op.getR(self.contacts_path % self.id)
+        return op.getR(self.contacts_path % self.id)["contacts"]
 
-    def setContacts(self, op, set = [], remove = []):
-        def toContact(a):
-            return { "userId" : a[0], "channelId" : a[1]}
-        _set = map(toContact, set)
-        return op.postR(self.contacts_path % self.id, {"set" : _set, "remove" : remove})
+    def setContacts(self, op, create = [], remove = []):
+        return op.postR(self.contacts_path % self.id, {"create" : create, "remove" : remove})
 
     def getSubscriptions(self, op):
-        return op.getR(self.subscriptions_path % self.id)
+        return op.getR(self.subscriptions_path % self.id)["subscriptions"]
 
     def setSubscriptions(self, op, subscribe = [], unsubscribe = []):
         return op.postR(self.subscriptions_path % self.id, {"subscribe" : subscribe, "unsubscribe" : unsubscribe})
 
-    def getChannels(self, op):
-        return op.getR(self.contacts_path % self.id)
-
     def getNotifications(self, op):
-        return op.getR(self.notifications_path % self.id)
+        return op.getR(self.notifications_path % self.id)["notifications"]
 
     def getLoginInfo(self):
         return self.getR(self.login_info_path)
