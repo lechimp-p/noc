@@ -2,6 +2,8 @@
 
 module Model.Simple.Operations where
 
+import Debug.Trace
+
 import Model.Errors
 import Model.BaseTypes
 
@@ -165,7 +167,6 @@ rmUserContactToR n u uid = updateUser (over contacts (S.delete (Contact uid err)
     err = error $ "Model.Simple.Operations.rmUserContactToR: This value "
                ++ "should just be used for comparison by uid."
 addUserSubscriptionR n u cid = do
-    s <- getChanSubscribersR n cid  
     (n', _) <- updateChan (over subscribers (S.insert u)) () n cid
     updateUser (over subscriptions (S.insert cid)) () n' u
 rmUserSubscriptionR n u cid = do
