@@ -1,3 +1,13 @@
+[2014-10-26]
+
+Vor grunt watch einmal folgendes ausführen:
+
+grunt setup
+grunt dist
+grunt upload-dist
+
+Bitte außerdem das Backend updaten.
+
 [2014-10-19]
 
 Bitte nochmal das Backend nach den unten beschriebenen

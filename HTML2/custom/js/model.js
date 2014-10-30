@@ -9,7 +9,14 @@ angular.module("NoC.model", [])
 
     var addHttpInterface = function(promise) {
         promise.success = function(fun) {
-            var pr = promise.then(fun);
+            // we need to pass on the data by
+            // ourselves to not destroy the
+            // success interface.
+            var pr = promise.then( function (val) {
+                fun(val);
+                return val;
+            });
+
             return addHttpInterface(pr);
         };
         
@@ -54,6 +61,7 @@ angular.module("NoC.model", [])
     /////////
 
     var channelChangedEvent = "channel-changed";
+    var messagesChangedEvent = "channel-messages-changed";
     var contactsChangedEvent = "contacts-changed";
     var subscriptionsChangedEvent = "subscriptions-changed";
     var notificationsChangedEvent = "notifications-changed";
@@ -62,7 +70,7 @@ angular.module("NoC.model", [])
     // Helper function for channel and user to create
     // functions that register eventlisteners. 
     var callOnMatchingId = function(ev, id, fun) {
-        $rootScope.$on(ev, function(event, _id, data) {
+        return $rootScope.$on(ev, function(event, _id, data) {
             if (id === _id) {
                 fun(data);
             }
@@ -81,41 +89,41 @@ angular.module("NoC.model", [])
     ////////
 
     var root = {};
-    var __ = { users : {}
+    var __c = { users : {}
             , channels : {}
             };
     root.flushCache = function() {
-        __.users = {};
-        __.channels = {};
+        __c.users = {};
+        __c.channels = {};
     };
 
 
     // User
 
     root.user = function(uid) {
-        if (__.users.hasOwnProperty(uid)) {
-            return __.users[uid];
+        if (__c.users.hasOwnProperty(uid)) {
+            return __c.users[uid];
         }
         var user = { id : uid };
-        var _ = { cache : {} };        
+        var _c = { cache : {} };        
         var pr = "user["+uid+"]";
         var pa = "user/"+uid;
 
         user.flushCache = function() {
-            _.cache = {};
+            _c.cache = {};
         };        
 
         // Get promise to user information, from cache or server.
         user.get = function() {
             return makeCachePromiseOrAPICall( pr+".get", "GET", pa
-                                            , {}, _.cache, "get");
+                                            , {}, _c.cache, "get");
         };
 
         // Get promise to set user information and clear cache.
         // Afterwards update.
         user.set = function(data) {
             return makeAPICallClearCache(pr+".set", "POST", pa
-                                        , data, _.cache, "get")
+                                        , data, _c.cache, "get")
                     .success(user.update);
         };
 
@@ -123,7 +131,7 @@ angular.module("NoC.model", [])
         // Afterwards emit user.onChange.
         user.update = function() {
             return makeCachedAPICall(pr+".update", "GET", pa
-                                    , {}, _.cache, "get")
+                                    , {}, _c.cache, "get")
                     .success(emitIt(userChangedEvent, user.id));
         };
 
@@ -137,21 +145,21 @@ angular.module("NoC.model", [])
         user.contacts.get = function() {
             return makeCachePromiseOrAPICall( pr+".contacts.get", "GET"
                                             , pa+"/contacts"
-                                            , {}, _.cache, "contacts");
+                                            , {}, _c.cache, "contacts");
         };
 
         user.contacts.set = function(set, remove) {
             return makeAPICallClearCache( pr+".contacts.set", "POST"
                                         , pa+"/contacts"
                                         , { set : set, remove : remove}
-                                        , _.cache, "contacts")
+                                        , _c.cache, "contacts")
                     .success(user.contacts.update);
         };
 
         user.contacts.update = function() {
             return makeCachedAPICall( pr+".contacts.update", "GET"
                                     , pa+"/contacts"
-                                    , {}, _.cache, "contacts")
+                                    , {}, _c.cache, "contacts")
                     .success(emitIt(contactsChangedEvent, user.id));
         };
 
@@ -164,19 +172,19 @@ angular.module("NoC.model", [])
         user.subscriptions.get = function() {
             return makeCachePromiseOrAPICall( pr+".subscriptions.get", "GET"
                                             , pa+"/subscriptions"
-                                            , {}, _.cache, "subscriptions"); 
+                                            , {}, _c.cache, "subscriptions"); 
         };
 
         user.subscriptions.set = function(subscribe, unsubscribe) {
             return makeAPICallClearCache( pr+".subscriptions.set", "POST"
                                         , pa+"/subscriptions"
                                         , { subscribe : subscribe, unsubscribe : unsubscribe }
-                                        , _.cache, "subscriptions")
+                                        , _c.cache, "subscriptions")
                     .success(function(_) {
                         // We need to flush the cache of the targeted
                         // channels as well, since their information
                         // changed.
-                        angular.forEach(subscribe.concat(unsubscribe), function(val) {
+                        _c.map(subscribe.concat(unsubscribe), function(val) {
                             root.channel(val).update();
                         });
 
@@ -187,7 +195,7 @@ angular.module("NoC.model", [])
         user.subscriptions.update = function() {
             return makeCachedAPICall( pr+".subscriptions.update", "GET"
                                     , pa+"/subscriptions"
-                                    , {}, _.cache, "subscriptions")
+                                    , {}, _c.cache, "subscriptions")
                     .success(emitIt(subscriptionsChangedEvent, user.id));
         };
 
@@ -200,13 +208,13 @@ angular.module("NoC.model", [])
         user.notifications.get = function() {
             return makeCachePromiseOrAPICall( pr+".notifications.get", "GET"
                                             , pa+"/notifications"
-                                            , {}, _.cache, "notifications"); 
+                                            , {}, _c.cache, "notifications"); 
         };
 
         user.notifications.update = function() {
             return makeCachedAPICall( pr+".notifications.get", "GET"
                                     , pa+"/notifications"
-                                    , {}, _.cache, "notifications")
+                                    , {}, _c.cache, "notifications")
                     .success(emitIt(notificationsChangedEvent, user.id));
         };
 
@@ -214,7 +222,7 @@ angular.module("NoC.model", [])
             return callOnMatchingId(notificationsChangedEvent, user.id, fun);
         };
 
-        __.users[uid] = user;
+        __c.users[uid] = user;
         return user;
     };
 
@@ -226,34 +234,34 @@ angular.module("NoC.model", [])
     // Channel
 
     root.channel = function(cid) {
-        if (__.channels.hasOwnProperty(cid)) {
-            return __.channels[cid];
+        if (__c.channels.hasOwnProperty(cid)) {
+            return __c.channels[cid];
         }
 
         var channel = { id : cid };
-        var _ = { cache : {} };
+        var _c = { cache : { msgs : { messages : [] } } };
         var pr = "channel["+cid+"]";
         var pa = "channel/"+cid; 
 
         channel.flushCache = function() {
-            _.cache = {};
+            _c.cache = { msgs : { messages : [] } };
         };
 
         channel.get = function() {
             return makeCachePromiseOrAPICall( pr+".get", "GET", pa
-                                            , {}, _.cache, "get");
+                                            , {}, _c.cache, "get");
         }; 
 
         channel.set = function(data) {
             return makeAPICallClearCache( pr+".set", "POST", pa
-                                        , data, _.cache, "get")
+                                        , data, _c.cache, "get")
                     .success(channel.update);
 
         };
 
         channel.update = function() {
-            return makeCachedAPICall( pr+".set", "GET", pa
-                                    , {}, _.cache, "get")
+            return makeCachedAPICall( pr+".update", "GET", pa
+                                    , {}, _c.cache, "get")
                     .success(emitIt(channelChangedEvent, channel.id));
         };
 
@@ -261,22 +269,97 @@ angular.module("NoC.model", [])
             return callOnMatchingId(channelChangedEvent, channel.id, fun);
         };
 
-        channel.messages = function(offset, amount) {
-            return makeAPICall( pr+".messages", "GET", pa+"/messages"
-                              , { offset : offset, amount : amount });
+        channel.messages = {};
+
+        channel.messages.get = function(offset, amount) {
+            if (_c.cache.msgs.messages.length > offset + amount) {
+                // seems there are enough messages in
+                // the stack to satisfy the request.
+                return makeCachePromise( 
+                        { messages : _c.cache.msgs.messages.slice(offset, offset + amount) }
+                    );
+            }
+
+            // semms as we need new messages...
+            // But instead of just querying the requested
+            // slice we query all messages from start for
+            // chaching purpose.
+            return  addHttpInterface(
+                        makeCachedAPICall( 
+                                  pr+".messages", "GET", pa+"/messages"
+                                , { offset : offset, amount : amount }
+                                , _c.cache, "msgs")
+                            // We use then to reduce the passed messages
+                            // to the desired slice after caching.
+                            .then( function(val) {
+                                return { messages : val.data.slice(offset, amount) };
+                            })
+                    );
         };
 
-        channel.messagesTill = function(timestamp) {
-            return makeAPICall( pr+".messagesTill", "GET", pa+"/messages"
-                              , { timestamp : timestamp });
+        channel.messages.getTill = function(timestamp) {
+            // that's the easiest case. we just have no
+            // messages atm.
+            if (_c.cache.msgs.messages.length === 0) {
+                return makeCachedAPICall( 
+                              pr+".messagesTill", "GET", pa+"/messages"
+                            , { timestamp : timestamp }
+                            , _c.cache, "msgs");
+            }
+            
+            // TODO: is it really ok to compare the timestamps like this? 
+            // I guess not...
+            if ( _c.cache.msgs.messages[0].timestamp > timestamp) {
+                // seems we already have newer messages. so we assume
+                // the cache is fresh enough...
+                return makeCachePromise(
+                            { messages : _.takeWhile(_c.cache.msgs.messages, function(msg) {
+                                return msg.timestamp > timestamp;
+                            }) }
+                        );
+            }
+
+            // so we need to get more messages. instead of
+            // querying for the timestamp we ask for all 
+            // messages that are newer then our newest message in the cache.
+            return  addHttpInterface(
+                        makeAPICall( 
+                                  pr+".messagesTill", "GET", pa+"/messages"
+                                , { timestamp : _c.cache.msgs.messages[0].timestamp }
+                                )
+                            .success( function(response) {
+                                _c.cache.msgs.messages = response.messages.concat(_c.cache.msgs.messages); 
+                            })
+                            .success(emitIt(messagesChangedEvent, channel.id))
+                            // We use then to reduce the passed messages
+                            // to the desired slice after caching.
+                            .then( function(val) {
+                                return { messages : _.takeWhile(val.data, function (msg) {
+                                                            return msg.timestamp > timestamp;
+                                                        })
+                                       };
+                            })
+                    );
+
         };
 
-        channel.post = function(text) {
+        channel.messages.update = function() {
+            if (_c.cache.msgs.messages.length > 0) {
+                return channel.messages.getTill(_c.cache.msgs.messages[0].timestamp);
+            }
+            return channel.messages.getTill(undefined);
+        };
+
+        channel.messages.onChange = function(fun) {
+            return callOnMatchingId(messagesChangedEvent, channel.id, fun);
+        };
+
+        channel.messages.post = function(text) {
             return makeAPICall( pr+".post", "POST", pa+"/messages"
                               , { text : text });
         };
 
-        __.channels[cid] = channel;
+        __c.channels[cid] = channel;
         return channel;
     };
 

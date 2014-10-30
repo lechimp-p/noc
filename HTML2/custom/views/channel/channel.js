@@ -3,23 +3,10 @@ controller("channel-controller", [ "$rootScope", "$scope", "$interval", "$routeP
          , function($rootScope, $scope, $interval, $routeParams, model, user) {
     "use strict";
 
-    var lastTS = {};
     var updateIntervalMS = 5000;
     var updateTask = { value : null };
 
     $scope.channel = { id : $routeParams.chanId };
- 
-    var toScope = function(response) {
-        if (response.messages.length > 0) {
-            lastTS.value = response.messages[0].timestamp;
-        }
-        if ($scope.msgs) {
-            $scope.msgs = response.messages.concat($scope.msgs);
-        }
-        else {
-            $scope.msgs = response.messages;
-        }
-    };
 
     $scope.post = function() {
         if ($scope.message.length === 0) {
@@ -27,6 +14,7 @@ controller("channel-controller", [ "$rootScope", "$scope", "$interval", "$routeP
         }    
 
         model.channel($scope.channel.id)
+            .messages
             .post($scope.message)
             .success($scope.updateMessages); 
 
@@ -42,14 +30,7 @@ controller("channel-controller", [ "$rootScope", "$scope", "$interval", "$routeP
     };
 
     $scope.updateMessages = function() {
-        if (typeof lastTS.value === "undefined") {
-            return model.channel($scope.channel.id)
-                .messages(0, 10).success(toScope);
-        }
-        else {
-            return model.channel($scope.channel.id)
-                .messagesTill(lastTS.value).success(toScope);
-        }
+        model.channel($scope.channel.id).messages.update();
     };
 
     $scope.startUpdateTask = function() {
@@ -78,11 +59,14 @@ controller("channel-controller", [ "$rootScope", "$scope", "$interval", "$routeP
                 .get()
                 .success($scope.setChannelInfo);
     };
-    
-    $scope.updateChannelInfo()
-          .success( $scope.startUpdateTask );
 
+    $scope.updateChannelInfo().success( $scope.startUpdateTask );
+ 
     model.channel($scope.channel.id).onChange($scope.setChannelInfo);
+
+    model.channel($scope.channel.id).messages.onChange(function(msgs) {
+        $scope.msgs = msgs.messages.concat($scope.msgs); 
+    });
 
     $rootScope.$on("$routeChangeStart", function(event, next, current) {
         if (next.pathParams.chanId == $scope.channel.id) {
