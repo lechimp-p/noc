@@ -8,12 +8,12 @@ controller("contact-overview-controller", [ "$scope", "model", "user",
     $scope.contacts = {}; 
 
     var setLastMsg = function(msgs) {
-        $scope.contacts.lastMsg = msgs[0];
+        $scope.contacts.lastMsg = msgs.messages[0];
     };
 
     var registerChanHandler = function(chanId) {
         var chan = model.channel(chanId);
-        unregister[chanId] = chan.messages.onChange(setLastMsg);
+        unregister[chanId] = chan.messages.onUpdate(setLastMsg);
     };
 
     var unregisterChanHandler = function(chanId) {

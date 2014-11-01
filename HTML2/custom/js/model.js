@@ -1,7 +1,14 @@
 angular.module("NoC.model", [])
-.factory("model", ["$rootScope", "$q", "$timeout", "makeAPICall", 
-                    function($rootScope, $q, $timeout, makeAPICall) {
+.factory("model", ["$rootScope", "$q", "$timeout", "$interval", "makeAPICall", 
+                    function($rootScope, $q, $timeout, $interval, makeAPICall) {
     "use strict";
+
+    /////////
+    // Config
+    /////////
+
+    var msgsUpdateIntervalMS = 30000;
+    var initMsgsAmount = 10;
 
     ////////////
     // Utilities
@@ -61,7 +68,7 @@ angular.module("NoC.model", [])
     /////////
 
     var channelChangedEvent = "channel-changed";
-    var messagesChangedEvent = "channel-messages-changed";
+    var messagesUpdatedEvent = "channel-messages-changed";
     var contactsChangedEvent = "contacts-changed";
     var subscriptionsChangedEvent = "subscriptions-changed";
     var notificationsChangedEvent = "notifications-changed";
@@ -239,12 +246,13 @@ angular.module("NoC.model", [])
         }
 
         var channel = { id : cid };
-        var _c = { cache : { msgs : { messages : [] } } };
+        var _c = { cache : { messages : [] } };
+        var updateTask = { value : null, counter : 0 };
         var pr = "channel["+cid+"]";
         var pa = "channel/"+cid; 
 
         channel.flushCache = function() {
-            _c.cache = { msgs : { messages : [] } };
+            _c.cache = { messages : [] };
         };
 
         channel.get = function() {
@@ -272,91 +280,67 @@ angular.module("NoC.model", [])
         channel.messages = {};
 
         channel.messages.get = function(offset, amount) {
-            if (_c.cache.msgs.messages.length > offset + amount) {
-                // seems there are enough messages in
-                // the stack to satisfy the request.
-                return makeCachePromise( 
-                        { messages : _c.cache.msgs.messages.slice(offset, offset + amount) }
-                    );
-            }
-
-            // semms as we need new messages...
-            // But instead of just querying the requested
-            // slice we query all messages from start for
-            // chaching purpose.
-            return  addHttpInterface(
-                        makeCachedAPICall( 
-                                  pr+".messages", "GET", pa+"/messages"
+            return makeAPICall( pr+".messages", "GET", pa+"/messages"
                                 , { offset : offset, amount : amount }
-                                , _c.cache, "msgs")
-                            // We use then to reduce the passed messages
-                            // to the desired slice after caching.
-                            .then( function(val) {
-                                return { messages : val.data.slice(offset, amount) };
-                            })
-                    );
+                              );
         };
 
         channel.messages.getTill = function(timestamp) {
-            // that's the easiest case. we just have no
-            // messages atm.
-            if (_c.cache.msgs.messages.length === 0) {
-                return makeCachedAPICall( 
-                              pr+".messagesTill", "GET", pa+"/messages"
-                            , { timestamp : timestamp }
-                            , _c.cache, "msgs");
-            }
-            
-            // TODO: is it really ok to compare the timestamps like this? 
-            // I guess not...
-            if ( _c.cache.msgs.messages[0].timestamp > timestamp) {
-                // seems we already have newer messages. so we assume
-                // the cache is fresh enough...
-                return makeCachePromise(
-                            { messages : _.takeWhile(_c.cache.msgs.messages, function(msg) {
-                                return msg.timestamp > timestamp;
-                            }) }
-                        );
+            return makeAPICall( pr+".messagesTill", "GET", pa+"/messages"
+                                , { timestamp : timestamp }
+                              );
+        };
+
+        channel.messages.onUpdate = function(fun) {
+            if (_c.cache.messages.length > 0) {
+                fun({ messages : _c.cache.messages });
             }
 
-            // so we need to get more messages. instead of
-            // querying for the timestamp we ask for all 
-            // messages that are newer then our newest message in the cache.
-            return  addHttpInterface(
-                        makeAPICall( 
-                                  pr+".messagesTill", "GET", pa+"/messages"
-                                , { timestamp : _c.cache.msgs.messages[0].timestamp }
-                                )
-                            .success( function(response) {
-                                _c.cache.msgs.messages = response.messages.concat(_c.cache.msgs.messages); 
-                            })
-                            .success(emitIt(messagesChangedEvent, channel.id))
-                            // We use then to reduce the passed messages
-                            // to the desired slice after caching.
-                            .then( function(val) {
-                                return { messages : _.takeWhile(val.data, function (msg) {
-                                                            return msg.timestamp > timestamp;
-                                                        })
-                                       };
-                            })
-                    );
-
+            return callOnMatchingId(messagesUpdatedEvent, channel.id, fun);
         };
 
         channel.messages.update = function() {
-            if (_c.cache.msgs.messages.length > 0) {
-                return channel.messages.getTill(_c.cache.msgs.messages[0].timestamp);
+            if (_c.cache.messages.length === 0) {
+                return channel.messages.get(0, initMsgsAmount)
+                    .success(function(response) {
+                        _c.cache.messages = response.messages;
+                    })
+                    .success(emitIt(messagesUpdatedEvent, channel.id));
             }
-            return channel.messages.getTill(undefined);
+            
+            return channel.messages.getTill(_c.cache.messages[0].timestamp)
+                .success(function(response) {
+                    _c.cache.messages = response.messages.concat(_c.cache.messages);
+                })
+                .success(emitIt(messagesUpdatedEvent, channel.id));
+        };
+    
+        channel.messages.startUpdateTask = function() {
+            updateTask.counter += 1;
+
+            if (updateTask.value !== null) {
+                return;
+            }
+            
+            updateTask.value = $interval(channel.messages.update, msgsUpdateIntervalMS);
         };
 
-        channel.messages.onChange = function(fun) {
-            return callOnMatchingId(messagesChangedEvent, channel.id, fun);
+        channel.messages.stopUpdateTask = function() {
+            if (updateTask.value === null) {
+                return;
+            }
+
+            updateTask.counter -= 1;
+
+            if (updateTask.counter === 0) {
+                $interval.cancel(updateTask.value);
+            }
         };
 
         channel.messages.post = function(text) {
             return makeAPICall( pr+".post", "POST", pa+"/messages"
-                              , { text : text });
+                              , { text : text })
+                    .success( channel.messages.update );
         };
 
         __c.channels[cid] = channel;

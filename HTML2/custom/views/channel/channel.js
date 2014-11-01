@@ -1,12 +1,10 @@
 angular.module("NoC.channel", []).
-controller("channel-controller", [ "$rootScope", "$scope", "$interval", "$routeParams", "model", "user"
-         , function($rootScope, $scope, $interval, $routeParams, model, user) {
+controller("channel-controller", [ "$rootScope", "$scope", "$routeParams", "model", "user"
+         , function($rootScope, $scope, $routeParams, model, user) {
     "use strict";
 
-    var updateIntervalMS = 5000;
-    var updateTask = { value : null };
-
     $scope.channel = { id : $routeParams.chanId };
+    $scope.msgs = [];
 
     $scope.post = function() {
         if ($scope.message.length === 0) {
@@ -15,8 +13,7 @@ controller("channel-controller", [ "$rootScope", "$scope", "$interval", "$routeP
 
         model.channel($scope.channel.id)
             .messages
-            .post($scope.message)
-            .success($scope.updateMessages); 
+            .post($scope.message);
 
         $scope.message = "";
     };
@@ -29,54 +26,37 @@ controller("channel-controller", [ "$rootScope", "$scope", "$interval", "$routeP
         user.unsubscribe($scope.channel.id);
     };
 
-    $scope.updateMessages = function() {
-        model.channel($scope.channel.id).messages.update();
-    };
-
-    $scope.startUpdateTask = function() {
-        if (updateTask.value !== null) {
-            return;
-        }
-
-        $scope.updateMessages();
-        updateTask.value = $interval($scope.updateMessages, updateIntervalMS);
-    };
-
-    $scope.stopUpdateTask = function() {
-        if (updateTask.value === null) {
-            return;
-        }
-
-        $interval.cancel(updateTask.value);
-    };
-
-    $scope.setChannelInfo = function(data) {
+    var setChannelInfo = function(data) {
         $scope.channel = data;
     };
 
-    $scope.updateChannelInfo = function() {
-        return model.channel($scope.channel.id)
-                .get()
-                .success($scope.setChannelInfo);
+    var setMessages = function(msgs) {
+        $scope.msgs = msgs.messages;
     };
 
-    $scope.updateChannelInfo().success( $scope.startUpdateTask );
- 
-    model.channel($scope.channel.id).onChange($scope.setChannelInfo);
+    var prependMessages = function(msgs) {
+        $scope.msgs = msgs.messages.concat($scope.msgs);
+    };
 
-    model.channel($scope.channel.id).messages.onChange(function(msgs) {
-        $scope.msgs = msgs.messages.concat($scope.msgs); 
-    });
+    model.channel($scope.channel.id).onChange(setChannelInfo);
 
     $rootScope.$on("$routeChangeStart", function(event, next, current) {
         if (next.pathParams.chanId == $scope.channel.id) {
-            $scope.updateChannelInfo();
-            $scope.startUpdateTask(); 
+            model.channel($scope.channel.id).update();
+            model.channel($scope.channel.id).startUpdateTask(); 
         }
         else {
-            $scope.stopUpdateTask();
+            model.channel($scope.channel.id).stopUpdateTask();
         }
     });
+
+    model.channel($scope.channel.id).update();
+    model.channel($scope.channel.id)
+        .messages.startUpdateTask();
+    model.channel( $scope.channel.id )
+        .messages.onUpdate( prependMessages );
+    model.channel( $scope.channel.id )
+        .messages.update();
 
     //$interval($scope.updateMessages, updateIntervalMS);
 

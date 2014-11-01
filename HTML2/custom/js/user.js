@@ -49,7 +49,7 @@ angular.module("NoC.user", [])
                           , { login : login, password : password })
             .success(function(response) {
                 user_data.id = response.id;
-                $rootScope.$emit(idAcquired, reponse.id);
+                $rootScope.$emit(idAcquired, response.id);
                 $rootScope.$emit(loginSuccessfull, response.id);
             });    
     };
