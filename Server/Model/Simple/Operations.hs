@@ -84,12 +84,17 @@ getUserIconR = queryUser U._icon
 getUserEmailR = queryUser U._email
 getUserNotificationsR = queryUser U._notifications
 getUserContactsR = queryUser U._contacts
-getUserContactByContactIdR n uid cid = queryUser findContact n uid
+getUserContactByContactIdR n uid cid = do
+    hc <- queryUser hasContact n uid
+    if hc
+        then queryUser findContact n uid 
+        else return Nothing
     where
+    hasContact user = S.member (Contact cid err) (U._contacts user)
     findContact user = fmap fst 
                      . S.maxView 
                      . snd 
-                     . S.split (Contact uid err)
+                     . S.split (Contact cid err)
                      $ U._contacts user
     err = error $ "Model.Simple.Operations.getUserContactByContactIdR: This value "
                ++ "should just be used for comparison by uid."
