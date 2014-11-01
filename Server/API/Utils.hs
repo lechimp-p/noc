@@ -52,6 +52,10 @@ userInfo uid = do
     "name"          <$ getUserName uid
     "description"   <$ getUserDesc uid
     "icon"          <$ getUserIcon uid
+    sp <- hasAccess uid forUserSelfOrAdmins
+    if sp
+        then "email" <$ getUserEmail uid >> return ()
+        else return ()
 
 channelInfo cid = do
     uid <- forceOperatorId

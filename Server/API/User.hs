@@ -100,10 +100,6 @@ createHandler = withJSONIO $ do
 getHandler uid = withJSONOut $ do
     trySessionLogin
     userInfo uid
-    sp <- hasAccess uid forUserSelfOrAdmins
-    if sp
-        then "email" <$ getUserEmail uid >> return ()
-        else return ()
 
 setHandler uid = withJSONIn $ do
     trySessionLogin 
