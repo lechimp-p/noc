@@ -300,19 +300,30 @@ angular.module("NoC.model", [])
         };
 
         channel.messages.update = function() {
+            var addHandler = function(promise) {
+                return promise
+                    .success( function(response) {
+                        if (response.messages.length > 0) {
+                            emitIt(messagesUpdatedEvent, channel.id)(response);
+                        }
+                    });
+            };
+
             if (_c.cache.messages.length === 0) {
-                return channel.messages.get(0, initMsgsAmount)
-                    .success(function(response) {
-                        _c.cache.messages = response.messages;
-                    })
-                    .success(emitIt(messagesUpdatedEvent, channel.id));
+                return addHandler(
+                    channel.messages.get(0, initMsgsAmount)
+                        .success(function(response) {
+                            _c.cache.messages = response.messages;
+                        })
+                    );
             }
             
-            return channel.messages.getTill(_c.cache.messages[0].timestamp)
-                .success(function(response) {
-                    _c.cache.messages = response.messages.concat(_c.cache.messages);
-                })
-                .success(emitIt(messagesUpdatedEvent, channel.id));
+            return addHandler(
+                channel.messages.getTill(_c.cache.messages[0].timestamp)
+                    .success(function(response) {
+                        _c.cache.messages = response.messages.concat(_c.cache.messages);
+                    })
+                );
         };
     
         channel.messages.startUpdateTask = function() {

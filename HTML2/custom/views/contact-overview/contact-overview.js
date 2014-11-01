@@ -7,18 +7,22 @@ controller("contact-overview-controller", [ "$scope", "model", "user",
 
     $scope.contacts = {}; 
 
-    var setLastMsg = function(msgs) {
-        $scope.contacts.lastMsg = msgs.messages[0];
+    var setLastMsg = function(userId) {
+        return function(msgs) {
+            $scope.contacts[userId].channel.lastMsg = msgs.messages[0];
+        };
     };
 
-    var registerChanHandler = function(chanId) {
+    var registerChanHandler = function(userId, chanId) {
         var chan = model.channel(chanId);
-        unregister[chanId] = chan.messages.onUpdate(setLastMsg);
+        unregister[chanId] = chan.messages.onUpdate(setLastMsg(userId));
+        chan.messages.startUpdateTask();
     };
 
     var unregisterChanHandler = function(chanId) {
         unregister[chanId]();
         delete unregister[chanId];
+        model.channel(chanId).messages.startUpdateTask();
     };
     
     user.onIdAcquired(function(id) {
@@ -28,15 +32,15 @@ controller("contact-overview-controller", [ "$scope", "model", "user",
             var curIds = _.keys($scope.contacts);
 
             _.map(response.contacts, function(contact) {
-                next[contact.id] = contact;
-                nextIds.push(contact.id);
+                next[contact.user.id] = contact;
+                nextIds.push(contact.user.id);
             });
 
             var In = _.difference(nextIds, curIds);
             var Out = _.difference(curIds, nextIds);
 
             _.map(In, function(id) {
-                registerChanHandler(next[id].channel.id);
+                registerChanHandler(id, next[id].channel.id);
             });
 
             _.map(Out, function(id) {
