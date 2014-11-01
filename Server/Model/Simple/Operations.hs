@@ -85,12 +85,14 @@ getUserEmailR = queryUser U._email
 getUserNotificationsR = queryUser U._notifications
 getUserContactsR = queryUser U._contacts
 getUserContactByContactIdR n uid cid = do
-    hc <- queryUser hasContact n uid
-    if hc
-        then queryUser findContact n uid 
-        else return Nothing
+    c <- queryUser findContact n uid
+    case c of
+        Nothing -> return Nothing
+        Just c' ->
+            if _userId c' == cid
+            then return c
+            else return Nothing
     where
-    hasContact user = S.member (Contact cid err) (U._contacts user)
     findContact user = fmap fst 
                      . S.maxView 
                      . snd 

@@ -155,10 +155,10 @@ angular.module("NoC.model", [])
                                             , {}, _c.cache, "contacts");
         };
 
-        user.contacts.set = function(set, remove) {
+        user.contacts.set = function(create, remove) {
             return makeAPICallClearCache( pr+".contacts.set", "POST"
                                         , pa+"/contacts"
-                                        , { set : set, remove : remove}
+                                        , { create : create , remove : remove}
                                         , _c.cache, "contacts")
                     .success(user.contacts.update);
         };

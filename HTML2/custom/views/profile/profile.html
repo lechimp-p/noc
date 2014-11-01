@@ -1,4 +1,6 @@
 <h1>{{user.login}}<span ng-show="user.name"> - {{user.name}}</span><h1>
 <img src="{{user.icon}}" alt="icon of {{user.login}}">
 <p>{{user.description}}</p>
+<button ng-hide="user.contact" class="btn roundcorners whiteborder medopacity link" ng-click="addToContacts()">Zu Kontakten hinzufügen</button>
+<button ng-show="user.contact" class="btn roundcorners whiteborder medopacity link" ng-click="removeFromContacts()">Aus den Kontakten entfernen</button>
 
