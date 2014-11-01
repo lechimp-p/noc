@@ -27,7 +27,9 @@
     <div class="card bgcolor roundcorners" ng-repeat="msg in msgs">
         <div class="cardcontent">{{msg.text}}</div>
         <div class="cardfooter">
-            <img src="{{msg.author.icon | icon}}" alt="icon of {{msg.author.login}}" class="circular floatleft">
+            <a href="#/user/{{msg.author.id}}">
+                <img src="{{msg.author.icon | icon}}" alt="icon of {{msg.author.login}}" class="circular floatleft">
+            </a>
             <p>
                 <strong>{{msg.author | username}}</strong><br />
                 <span class="greyed small">{{msg.timestamp | rel_timestamp}}</span>
