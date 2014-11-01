@@ -1,6 +1,6 @@
 <div class="list-group" ng-show="contacts" ng-repeat="contact in contacts"> 
     <a href="#/profile/{{contact.user.id}}">
-        <img src="{{contact.user.icon | icon}}" class="pull-left marginright img-circle" alt="Icon of user {{contact.user.name}}">
+        <img src="{{contact.user.icon | icon}}" class="pull-left marginright img-circle" alt="Icon of user {{contact.user.login}}">
     </a>
     <a href="#/chat/{{contact.channel.id}}" style="color:white">
         <h4 class="list-group-item-text" style="color:white">{{contact.user.name}}</h4>
