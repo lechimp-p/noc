@@ -67,12 +67,12 @@ angular.module("NoC.model", [])
     // Events
     /////////
 
-    var channelChangedEvent = "channel-changed";
+    var channelUpdatedEvent = "channel-changed";
     var messagesUpdatedEvent = "channel-messages-changed";
-    var contactsChangedEvent = "contacts-changed";
-    var subscriptionsChangedEvent = "subscriptions-changed";
-    var notificationsChangedEvent = "notifications-changed";
-    var userChangedEvent = "user-changed";
+    var contactsUpdatedEvent = "contacts-changed";
+    var subscriptionsUpdatedEvent = "subscriptions-changed";
+    var notificationsUpdatedEvent = "notifications-changed";
+    var userUpdatedEvent = "user-changed";
 
     // Helper function for channel and user to create
     // functions that register eventlisteners. 
@@ -135,16 +135,16 @@ angular.module("NoC.model", [])
         };
 
         // Get promise to user information from server and update cache.
-        // Afterwards emit user.onChange.
+        // Afterwards emit user.onUpdate.
         user.update = function() {
             return makeCachedAPICall(pr+".update", "GET", pa
                                     , {}, _c.cache, "get")
-                    .success(emitIt(userChangedEvent, user.id));
+                    .success(emitIt(userUpdatedEvent, user.id));
         };
 
         // Be informed when user information changes.
-        user.onChange = function(fun) {
-            return callOnMatchingId(userChangedEvent, user.id, fun);
+        user.onUpdate = function(fun) {
+            return callOnMatchingId(userUpdatedEvent, user.id, fun);
         };
 
         user.contacts = {};
@@ -167,11 +167,11 @@ angular.module("NoC.model", [])
             return makeCachedAPICall( pr+".contacts.update", "GET"
                                     , pa+"/contacts"
                                     , {}, _c.cache, "contacts")
-                    .success(emitIt(contactsChangedEvent, user.id));
+                    .success(emitIt(contactsUpdatedEvent, user.id));
         };
 
-        user.contacts.onChange = function(fun) {
-            return callOnMatchingId(contactsChangedEvent, user.id, fun);
+        user.contacts.onUpdate = function(fun) {
+            return callOnMatchingId(contactsUpdatedEvent, user.id, fun);
         };
 
         user.subscriptions = {};
@@ -203,11 +203,11 @@ angular.module("NoC.model", [])
             return makeCachedAPICall( pr+".subscriptions.update", "GET"
                                     , pa+"/subscriptions"
                                     , {}, _c.cache, "subscriptions")
-                    .success(emitIt(subscriptionsChangedEvent, user.id));
+                    .success(emitIt(subscriptionsUpdatedEvent, user.id));
         };
 
-        user.subscriptions.onChange = function(fun) {
-            return callOnMatchingId(subscriptionsChangedEvent, user.id, fun);
+        user.subscriptions.onUpdate = function(fun) {
+            return callOnMatchingId(subscriptionsUpdatedEvent, user.id, fun);
         };
 
         user.notifications = {};
@@ -222,11 +222,11 @@ angular.module("NoC.model", [])
             return makeCachedAPICall( pr+".notifications.get", "GET"
                                     , pa+"/notifications"
                                     , {}, _c.cache, "notifications")
-                    .success(emitIt(notificationsChangedEvent, user.id));
+                    .success(emitIt(notificationsUpdatedEvent, user.id));
         };
 
-        user.notifications.onChange = function(fun) {
-            return callOnMatchingId(notificationsChangedEvent, user.id, fun);
+        user.notifications.onUpdate = function(fun) {
+            return callOnMatchingId(notificationsUpdatedEvent, user.id, fun);
         };
 
         __c.users[uid] = user;
@@ -270,11 +270,11 @@ angular.module("NoC.model", [])
         channel.update = function() {
             return makeCachedAPICall( pr+".update", "GET", pa
                                     , {}, _c.cache, "get")
-                    .success(emitIt(channelChangedEvent, channel.id));
+                    .success(emitIt(channelUpdatedEvent, channel.id));
         };
 
-        channel.onChange = function(fun) {
-            return callOnMatchingId(channelChangedEvent, channel.id, fun);
+        channel.onUpdate = function(fun) {
+            return callOnMatchingId(channelUpdatedEvent, channel.id, fun);
         };
 
         channel.messages = {};

@@ -38,7 +38,7 @@ controller("channel-controller", [ "$rootScope", "$scope", "$routeParams", "mode
         $scope.msgs = msgs.messages.concat($scope.msgs);
     };
 
-    model.channel($scope.channel.id).onChange(setChannelInfo);
+    model.channel($scope.channel.id).onUpdate(setChannelInfo);
 
     $rootScope.$on("$routeChangeStart", function(event, next, current) {
         if (next.pathParams.chanId == $scope.channel.id) {

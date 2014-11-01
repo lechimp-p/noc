@@ -26,7 +26,7 @@ controller("contact-overview-controller", [ "$scope", "model", "user",
     };
     
     user.onIdAcquired(function(id) {
-        model.user(id).contacts.onChange(function(response) {
+        model.user(id).contacts.onUpdate(function(response) {
             var next = {};
             var nextIds = [];
             var curIds = _.keys($scope.contacts);
