@@ -43,10 +43,10 @@ controller("channel-controller", [ "$rootScope", "$scope", "$routeParams", "mode
     $rootScope.$on("$routeChangeStart", function(event, next, current) {
         if (next.pathParams.chanId == $scope.channel.id) {
             model.channel($scope.channel.id).update();
-            model.channel($scope.channel.id).startUpdateTask(); 
+            model.channel($scope.channel.id).messages.startUpdateTask(); 
         }
         else {
-            model.channel($scope.channel.id).stopUpdateTask();
+            model.channel($scope.channel.id).messages.stopUpdateTask();
         }
     });
 
