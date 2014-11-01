@@ -94,7 +94,7 @@ getUserContactByContactIdR n uid cid = do
             else return Nothing
     where
     findContact user = fmap fst 
-                     . S.maxView 
+                     . S.minView 
                      . snd 
                      . S.split (Contact cid err)
                      $ U._contacts user
