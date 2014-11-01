@@ -10,6 +10,7 @@ module API.Utils
 where
 
 import Model
+import Model.Permissions (hasAccess, forUserSelfOrAdmins)
 import qualified Model.Query as QueryUnsecure
 import qualified Model.Errors as ME
 import Model.BaseTypes
@@ -56,6 +57,8 @@ userInfo uid = do
     if sp
         then "email" <$ getUserEmail uid >> return ()
         else return ()
+    oid <- forceOperatorId
+    "contact"       <$ fmap (fmap _channelId) .$ getUserContactByContactId oid uid
 
 channelInfo cid = do
     uid <- forceOperatorId

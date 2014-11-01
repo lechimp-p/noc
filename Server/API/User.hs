@@ -9,7 +9,6 @@ module API.User
 where
 
 import Model
-import Model.Permissions (hasAccess, forUserSelfOrAdmins)
 import API.Effects
 import API.Config
 import API.Utils
