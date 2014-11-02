@@ -76,6 +76,8 @@ angular.module("NoC",
 
 .run(['$rootScope', '$http', '$location', "user", 
        function($rootScope, $http, $location, user) {
+    "use strict";
+
     //$rootScope.deferred401 = [];
     $rootScope.deferredRoute = "";
 
@@ -89,6 +91,24 @@ angular.module("NoC",
     user.onLoginRequired(function() {
         $rootScope.deferredRoute = $location.path();
         $location.path("/login");
+    });
+}])
+
+.run(["$rootScope", "$location", "user",
+        function($rootScope, $location, user) {
+    "use strict";
+
+    $rootScope.$on("$routeChangeStart", function(event, _, __) {
+        if($location.path() == "/user/"+user.getId()) {
+            event.preventDefault();
+            $location.path("/profile");
+        }
+    });
+
+    user.onIdAcquired(function(id) {
+        if($location.path() == "/user/"+id) {
+            $location.path("/profile");
+        }
     });
 }])
 
