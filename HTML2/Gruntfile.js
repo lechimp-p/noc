@@ -189,6 +189,12 @@ module.exports = function (grunt) {
             , filter : 'isFile'
             },
             { expand : true
+            , cwd : 'custom/views/error'
+            , src : '*.js'
+            , dest : 'dist/js'
+            , filter : 'isFile'
+            },
+            { expand : true
             , cwd : 'custom/views/login'
             , src : '*.js'
             , dest : 'dist/js'
@@ -233,6 +239,12 @@ module.exports = function (grunt) {
             },
             { expand : true
             , cwd : 'custom/views/my-profile'
+            , src : '*.html'
+            , dest : 'dist/partials'
+            , filter : 'isFile'
+            },
+            { expand : true
+            , cwd : 'custom/views/error'
             , src : '*.html'
             , dest : 'dist/partials'
             , filter : 'isFile'

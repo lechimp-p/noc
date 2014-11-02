@@ -6,6 +6,7 @@ angular.module("NoC",
     , "NoC.contact-overview"
     , "NoC.profile"
     , "NoC.my-profile"
+    , "NoC.error"
     , "NoC.login"
     , "NoC.filters"
     , "NoC.model"
@@ -37,6 +38,10 @@ angular.module("NoC",
                 { templateUrl : "partials/my-profile.html"
                 , controller : "my-profile-controller"
                 })
+            .when("/error",
+                { templateUrl : "partials/error.html"
+                , controller : "error-controller"
+                })
             .otherwise(
                 { redirectTo : "/login"
                 })
@@ -47,7 +52,7 @@ angular.module("NoC",
 // Intercept 401 (unauthorized) responses from server, send a
 // login required event and resend the requests after successfull
 // login.
-.factory('unauthInterceptor', ['$q', '$rootScope', function($q, $rootScope) {
+.factory('unauthInterceptor', ['$q', '$rootScope', '$location', function($q, $rootScope, $location) {
     var STATUS_UNAUTHORIZED = 401;
     var unauthInterceptor =
         { 'responseError' : function(rejection) {

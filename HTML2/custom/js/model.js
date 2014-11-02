@@ -192,7 +192,6 @@ angular.module("NoC.model", [])
                         // channels as well, since their information
                         // changed.
                         _.map(subscribe.concat(unsubscribe), function(val) {
-                            console.log(val);
                             root.channel(val).update();
                         });
 

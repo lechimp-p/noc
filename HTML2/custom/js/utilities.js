@@ -1,5 +1,5 @@
 angular.module("API.utilities", [])
-.factory("makeAPICall", ["$http", function($http) {
+.factory("makeAPICall", ["$http", "$location", function($http, $location) {
     "use strict";
 
     return function(name, method, endpoint, data) {
@@ -17,6 +17,7 @@ angular.module("API.utilities", [])
         return $http( config )
                 .error( function(data, status, headers, config) {
                     console.log("Error in APICall " + name + ": " + data);
+                    $location.path("error"); 
                 });
     };
 }])
