@@ -62,7 +62,8 @@ logUserIn = withJSONIO $ do
 logUserOut :: (Member API r, Member Exec r)
            => Eff r (Either Error (Maybe Value)) 
 logUserOut = do
-    refreshCookie Nothing Nothing
+    authSet (set login Nothing)
+    authSet (set password Nothing)
     return $ Right Nothing
 
 refreshCookie :: (Member API r, Member Exec r)
