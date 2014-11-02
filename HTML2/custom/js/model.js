@@ -187,11 +187,12 @@ angular.module("NoC.model", [])
                                         , pa+"/subscriptions"
                                         , { subscribe : subscribe, unsubscribe : unsubscribe }
                                         , _c.cache, "subscriptions")
-                    .success(function(_) {
+                    .success(function(__) {
                         // We need to flush the cache of the targeted
                         // channels as well, since their information
                         // changed.
-                        _c.map(subscribe.concat(unsubscribe), function(val) {
+                        _.map(subscribe.concat(unsubscribe), function(val) {
+                            console.log(val);
                             root.channel(val).update();
                         });
 
