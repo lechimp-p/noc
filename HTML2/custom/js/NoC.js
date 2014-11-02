@@ -7,6 +7,7 @@ angular.module("NoC",
     , "NoC.profile"
     , "NoC.my-profile"
     , "NoC.error"
+    , "NoC.topbar"
     , "NoC.login"
     , "NoC.filters"
     , "NoC.model"
@@ -131,6 +132,20 @@ angular.module("NoC",
             $rootScope.deferredRoute = "/profile";
             event.preventDefault();
             $location.path("/login");
+        }
+    });
+}])
+
+// redirect to personal profile if user is logged in and wants
+// to go to login
+.run(["$rootScope", "$location", "user",
+        function($rootScope, $location, user) {
+    "use strict";
+
+    $rootScope.$on("$routeChangeStart", function(event, _, __) {
+        if($location.path() == "/login" && user.getId() !== null) {
+            event.preventDefault();
+            $location.path("/profile");
         }
     });
 }])
