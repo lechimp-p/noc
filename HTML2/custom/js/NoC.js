@@ -156,9 +156,9 @@ angular.module("NoC",
     });
 }])
 
-.run(["$location", "user", function($location, user) {
+.run(["$window", "user", function($window, user) {
     user.onLogout(function() {
-        $location.path("/login");
+        $window.location.reload();
     });
 }])
 
