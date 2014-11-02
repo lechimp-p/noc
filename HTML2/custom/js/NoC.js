@@ -94,6 +94,8 @@ angular.module("NoC",
     });
 }])
 
+// redirect to personal profile if path goes to current
+// users profile.
 .run(["$rootScope", "$location", "user",
         function($rootScope, $location, user) {
     "use strict";
