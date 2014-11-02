@@ -15,25 +15,33 @@ angular.module("NoC.user", [])
     var user = {};
 
     user.onLoginRequired = function(fun) {
-        $rootScope.$on(loginRequired, function(event, id) {
+        return $rootScope.$on(loginRequired, function(event, id) {
             fun(id);
         });
     };
 
+    user.loginRequired = function(fun) {
+        $rootScope.$broadcast(loginRequired);
+    };
+
     user.onLoginSuccessfull = function(fun) {
-        $rootScope.$on(loginSuccessfull, function(event, id) {
+        return $rootScope.$on(loginSuccessfull, function(event, id) {
             fun(id);
         });
     };
 
     user.onLogout = function() {
-        $rootScope.$on(logoutSuccessfull, function() {
+        return $rootScope.$on(logoutSuccessfull, function() {
             fun();
         });
     };
 
     user.onIdAcquired = function(fun) {
-        $rootScope.$on(idAcquired, function(event, id) {
+        if (user_data.id !== null) {
+            fun(user_data.id);
+        }
+
+        return $rootScope.$on(idAcquired, function(event, id) {
             fun(id);
         });
     };
@@ -41,7 +49,9 @@ angular.module("NoC.user", [])
     makeAPICall("logininfo", "GET", "logininfo", {})
         .success(function(response) {
             user_data.id = response.id;
-            $rootScope.$emit(idAcquired, response.id);
+            if (response.id !== null) {
+                $rootScope.$emit(idAcquired, response.id);
+            }
         });
     
     user.login = function(login, password) {

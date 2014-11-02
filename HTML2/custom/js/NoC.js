@@ -51,20 +51,19 @@ angular.module("NoC",
     var STATUS_UNAUTHORIZED = 401;
     var unauthInterceptor =
         { 'responseError' : function(rejection) {
-                console.log(rejection);
                 if (rejection.status === STATUS_UNAUTHORIZED) {
-//                    var deferred = $q.defer();
-//                    var request = { config : rejection.config
-//                                  , deferred : deferred
-//                                  };
+                    var deferred = $q.defer();
+                    var request = { config : rejection.config
+                                  , deferred : deferred
+                                  };
 
-//                    $rootScope.deferred401.push(request);
-                    $rootScope.$broadcast("user:login-required");
-//                    return deferred.promise;
+                    $rootScope.deferred401.push(request);
+                    $rootScope.$broadcast("user-login-required");
+                    return deferred.promise;
                 }
-//                else {
+                else {
                     return $q.reject(rejection);
-//                }
+                }
             }
         };
     return unauthInterceptor;
@@ -78,14 +77,16 @@ angular.module("NoC",
        function($rootScope, $http, $location, user) {
     "use strict";
 
-    //$rootScope.deferred401 = [];
+    $rootScope.deferred401 = [];
     $rootScope.deferredRoute = "";
 
     user.onLoginSuccessfull(function() {
         $location.path($rootScope.deferredRoute);
-        /*$http(req.config).then(function(response) {
-            req.deferred.resolve(reponse);
-        });*/ 
+        _.map($rootScope.deferred401, function(req) {
+            $http(req.config).then(function(response) {
+                req.deferred.resolve(response);
+            });
+        }); 
     });
 
     user.onLoginRequired(function() {
@@ -110,6 +111,21 @@ angular.module("NoC",
     user.onIdAcquired(function(id) {
         if($location.path() == "/user/"+id) {
             $location.path("/profile");
+        }
+    });
+}])
+
+// redirect to login, if page is personal profile and
+// user is not logged in.
+.run(["$rootScope", "$location", "user",
+        function($rootScope, $location, user) {
+    "use strict";
+
+    $rootScope.$on("$routeChangeStart", function(event, _, __) {
+        if($location.path() == "/profile" && user.getId() === null) {
+            $rootScope.deferredRoute = "/profile";
+            event.preventDefault();
+            $location.path("/login");
         }
     });
 }])
