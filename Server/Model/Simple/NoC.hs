@@ -10,6 +10,7 @@ where
 import Prelude hiding (words)
 import Data.Data (Data, Typeable) 
 import qualified Data.Set as S
+import qualified Data.Map.Strict as M
 import Data.Text 
 import Data.Time.Clock (UTCTime)
 import Data.IxSet (Indexable, empty, IxSet, ixSet, ixFun) 
@@ -41,4 +42,4 @@ mkNoC l pw = NoC IX.empty (ChanId 0)
                  ((UserId 0) `S.insert` S.empty) 
     where
     users = admin `IX.insert` IX.empty 
-    admin = User (UserId 0) l pw (Name "admin") (Desc "The Administrator.") Nothing Nothing S.empty S.empty S.empty []
+    admin = User (UserId 0) l pw (Name "admin") (Desc "The Administrator.") Nothing Nothing S.empty S.empty M.empty []

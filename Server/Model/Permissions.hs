@@ -3,14 +3,15 @@
 module Model.Permissions
 where
 
-import Data.Monoid
-import qualified Data.Set as S
-import Control.Eff
-
 import Model.BaseTypes
 import Model.Exec
 import Model.Query
 import Model.Errors
+
+import Data.Maybe (isJust)
+import Data.Monoid
+import qualified Data.Set as S
+import Control.Eff
 
 -- permissions abstract
 
@@ -106,7 +107,7 @@ forUserSelf = Permission (\ o -> return . (==) o) (ret NoUserSelf)
 
 forUsersOnContactList :: Member Query m => Permission UserId m
 forUsersOnContactList = Permission
-    (\ oid uid -> (getUserContacts uid >>= \ u -> return (oid `S.member` (S.map _userId u))))
+    (\ oid uid -> fmap (isJust) $ getUserContactByContactId uid oid)
     (ret NotOnContactList)
 
 forUserSelfOrAdmins :: Member Query m => Permission UserId m

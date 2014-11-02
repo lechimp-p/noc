@@ -16,6 +16,7 @@ import Model.Simple.Message
 
 import Control.Lens 
 import qualified Data.Set as S 
+import qualified Data.Map.Strict as M 
 import qualified Data.IxSet as IX
 import Data.Time.Clock (UTCTime)
 
@@ -83,23 +84,9 @@ getUserDescR = queryUser U._desc
 getUserIconR = queryUser U._icon
 getUserEmailR = queryUser U._email
 getUserNotificationsR = queryUser U._notifications
-getUserContactsR = queryUser U._contacts
-getUserContactByContactIdR n uid cid = do
-    c <- queryUser findContact n uid
-    case c of
-        Nothing -> return Nothing
-        Just c' ->
-            if _userId c' == cid
-            then return c
-            else return Nothing
-    where
-    findContact user = fmap fst 
-                     . S.minView 
-                     . snd 
-                     . S.split (Contact cid err)
-                     $ U._contacts user
-    err = error $ "Model.Simple.Operations.getUserContactByContactIdR: This value "
-               ++ "should just be used for comparison by uid."
+getUserContactsR = queryUser (M.elems . U._contacts)
+getUserContactByContactIdR n uid cid = 
+    queryUser (M.lookup cid . U._contacts) n uid
 getUserSubscriptionsR = queryUser U._subscriptions
 
 
@@ -112,7 +99,7 @@ createChanR noc uid name = (noc', cid)
 createUserR noc l pw = (noc', uid)
     where
     noc' = over users (IX.insert user) (set nextUserId nuid noc)
-    user = User uid l pw (Name "") (Desc "") Nothing Nothing S.empty S.empty S.empty []
+    user = User uid l pw (Name "") (Desc "") Nothing Nothing S.empty S.empty M.empty []
     uid  = _nextUserId noc
     nuid = UserId (uiToInt uid + 1)
 addAdminR noc uid = (over admins (S.insert uid) noc, ()) 
@@ -166,11 +153,8 @@ setUserDescR n u d = updateUser (set U.desc d) () n u
 setUserIconR n u i = updateUser (set icon i) () n u
 setUserEmailR n u e = updateUser (set email e) () n u
 addUserNotificationR n u n' = updateUser (over notifications ((:) n')) () n u
-setUserContactR n u c = updateUser (over contacts (S.insert c)) () n u
-rmUserContactToR n u uid = updateUser (over contacts (S.delete (Contact uid err))) () n u
-    where
-    err = error $ "Model.Simple.Operations.rmUserContactToR: This value "
-               ++ "should just be used for comparison by uid."
+setUserContactR n u c = updateUser (over contacts (M.insert (_userId c) c)) () n u
+rmUserContactToR n u uid = updateUser (over contacts (M.delete uid )) () n u
 addUserSubscriptionR n u cid = do
     (n', _) <- updateChan (over subscribers (S.insert u)) () n cid
     updateUser (over subscriptions (S.insert cid)) () n' u

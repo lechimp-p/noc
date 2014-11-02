@@ -132,7 +132,7 @@ setHandler uid = withJSONIn $ do
 getContactsHandler uid = withJSONOut $ do
     trySessionLogin
     cts <- getUserContacts uid
-    "contacts" <$: flip fmap (S.toList cts) .$ \ (Contact uid cid) -> do
+    "contacts" <$: flip fmap cts .$ \ (Contact uid cid) -> do
         "user" <$. userInfo uid
         "channel" <$. do
             channelInfo cid

@@ -274,7 +274,7 @@ getUserSubscriptions uid = do
     Q.getUserSubscriptions uid
 
 getUserContacts :: (Member Query r, Member Exec r)
-                => UserId -> Eff r (S.Set Contact)
+                => UserId -> Eff r [Contact]
 getUserContacts uid = do
     checkAccess uid forUserSelfOrAdmins
     Q.getUserContacts uid

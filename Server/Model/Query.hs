@@ -105,7 +105,7 @@ data UserQueryType n
     | GetUserIcon                       (Maybe Icon -> n)
     | GetUserEmail                      (Maybe EmailAddress -> n)
     | GetUserNotifications              ([Notification] -> n)
-    | GetUserContacts                   (S.Set Contact -> n)
+    | GetUserContacts                   ([Contact] -> n)
     | GetUserContactByContactId UserId  (Maybe Contact -> n)
     | GetUserSubscriptions              (S.Set ChanId -> n)
     deriving (Typeable, Functor)
@@ -135,7 +135,7 @@ getUserEmail uid = userQuery uid GetUserEmail
 getUserNotifications :: Member Query r => UserId -> Eff r [Notification] 
 getUserNotifications uid = userQuery uid GetUserNotifications
 
-getUserContacts :: Member Query r => UserId -> Eff r (S.Set Contact)
+getUserContacts :: Member Query r => UserId -> Eff r [Contact]
 getUserContacts uid = userQuery uid GetUserContacts
 
 getUserContactByContactId :: Member Query r => UserId -> UserId -> Eff r (Maybe Contact)
