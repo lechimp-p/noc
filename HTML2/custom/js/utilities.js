@@ -17,7 +17,7 @@ angular.module("API.utilities", [])
         return $http( config )
                 .error( function(data, status, headers, config) {
                     console.log("Error in APICall " + name + ": " + data);
-                    $location.path("error"); 
+                    $location.path("/error"); 
                 });
     };
 }])
