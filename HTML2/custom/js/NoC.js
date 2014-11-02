@@ -148,6 +148,18 @@ angular.module("NoC",
             $location.path("/profile");
         }
     });
+
+    user.onIdAcquired(function(id) {
+        if($location.path() == "/login") {
+            $location.path("/profile");
+        }
+    });
+}])
+
+.run(["$location", "user", function($location, user) {
+    user.onLogout(function() {
+        $location.path("/login");
+    });
 }])
 
 ;

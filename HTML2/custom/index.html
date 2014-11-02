@@ -32,7 +32,9 @@
     <script src="js/chat.js"></script>
     <script src="js/contact-overview.js"></script>
     <script src="js/profile.js"></script>
+    <script src="js/error.js"></script>
     <script src="js/my-profile.js"></script>
+    <script src="js/topbar.js"></script>
     <script src="js/login.js"></script>
     <script src="js/filters.js"></script>
     <script src="js/sticky.js"></script>
@@ -52,7 +54,7 @@
 
 	<div class="wrapper all" id="contentwrapper">
 
-        <div class="wrapper topbar bgcolor flexcontainer" ng-include src="'partials/topbar.html'"></div>
+        <div class="wrapper topbar bgcolor flexcontainer" ng-controller="topbar-controller" ng-include src="'partials/topbar.html'"></div>
 
         <!-- ALLES-WRAPPER -->
         <div class="wrapper content" id="mainview" ng-view></div>

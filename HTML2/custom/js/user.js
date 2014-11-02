@@ -20,7 +20,7 @@ angular.module("NoC.user", [])
         });
     };
 
-    user.loginRequired = function(fun) {
+    user.loginRequired = function() {
         $rootScope.$broadcast(loginRequired);
     };
 
@@ -30,10 +30,8 @@ angular.module("NoC.user", [])
         });
     };
 
-    user.onLogout = function() {
-        return $rootScope.$on(logoutSuccessfull, function() {
-            fun();
-        });
+    user.onLogout = function(fun) {
+        return $rootScope.$on(logoutSuccessfull, fun);
     };
 
     user.onIdAcquired = function(fun) {
@@ -65,10 +63,13 @@ angular.module("NoC.user", [])
     };
 
     user.logout = function() {
-        model.flushCache();
-        user_data.id = null;
-        user_data.UTC_offset = 2;
-        return makeAPICall("logout", "POST", "logout", {});
+        return makeAPICall("logout", "POST", "logout", {})
+                .success(function() {
+                    model.flushCache();
+                    user_data.id = null;
+                    user_data.UTC_offset = 2;
+                    $rootScope.$emit(logoutSuccessfull);
+                });
     }; 
 
     user.subscribe = function(cid) {
