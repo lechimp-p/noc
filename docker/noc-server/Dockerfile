@@ -6,7 +6,9 @@ RUN apt-get update && apt-get install -y \
     git \
     libgd-dev
 RUN cabal update && \
-    cabal install transformers
+    cabal install cabal-install && \
+    rm /usr/bin/cabal && \
+    cp /.cabal/bin/cabal /usr/bin/cabal
 RUN cd /opt/ && \
     cabal unpack extensible-effects && \
     cd extensible-effects-1.7.1 && \
