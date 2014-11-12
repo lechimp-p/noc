@@ -1,0 +1,3 @@
+#/bin/bash
+
+docker inspect noc-ssh | grep IPA 
