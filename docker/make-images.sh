@@ -16,7 +16,7 @@ echo ""
 
 rm noc-ssh/authorized_keys
 rm ~/.ssh/noc_dev_rsa
-ssh-keygen -f ~/.ssh/known_hosts -R [localhost]:50022
+ssh-keygen -f ~/.ssh/known_hosts -R $(./docker_ip):50022
 ssh-keygen -t rsa -f ~/.ssh/noc_dev_rsa -N ""
 cat ~/.ssh/noc_dev_rsa.pub >> noc-ssh/authorized_keys
 ssh-add ~/.ssh/noc_dev_rsa
@@ -57,8 +57,8 @@ sleep 5s
 echo ""
 echo " Type 'yes' and press Enter!"
 echo ""
-ssh root@$(boot2docker_ip) -p 50022 echo ssh connection to noc works
-ssh root@$(boot2docker_ip) -p 50022 /usr/bin/git init --bare /opt/NoC-Server-git
+ssh root@$(./docker_ip) -p 50022 echo ssh connection to noc works
+ssh root@$(./docker_ip) -p 50022 /usr/bin/git init --bare /opt/NoC-Server-git
 
 echo ""
 echo ""
@@ -72,9 +72,9 @@ echo ""
 
 
 git remote remove devsrv
-git remote add devsrv ssh://root@$(boot2docker_ip):50022/opt/NoC-Server-git
+git remote add devsrv ssh://root@$(./docker_ip):50022/opt/NoC-Server-git
 git push -f devsrv master
-ssh -p 50022 root@$(boot2docker_ip) git clone /opt/NoC-Server-git /opt/NoC-Server-src/
+ssh -p 50022 root@$(./docker_ip) git clone /opt/NoC-Server-git /opt/NoC-Server-src/
 
 echo ""
 echo ""
