@@ -16,11 +16,11 @@ echo ""
 
 rm noc-ssh/authorized_keys
 rm ~/.ssh/noc_dev_rsa
-ssh-keygen -f ~/.ssh/known_hosts -R $(./docker_ip):50022
 ssh-keygen -t rsa -f ~/.ssh/noc_dev_rsa -N ""
 cat ~/.ssh/noc_dev_rsa.pub >> noc-ssh/authorized_keys
 ssh-add ~/.ssh/noc_dev_rsa
 docker build -t noc-ssh noc-ssh
+ssh-keygen -f ~/.ssh/known_hosts -R $(./docker_ip):50022
 rm noc-ssh/authorized_keys
 
 echo ""

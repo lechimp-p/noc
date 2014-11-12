@@ -8,7 +8,8 @@ RUN apt-get update && apt-get install -y \
 RUN cabal update && \
     cabal install cabal-install && \
     rm /usr/bin/cabal && \
-    cp /.cabal/bin/cabal /usr/bin/cabal
+    cp /.cabal/bin/cabal /usr/bin/cabal \
+    cabal install --constraint "transformers ==0.4.2.*" transformers
 RUN cd /opt/ && \
     cabal unpack extensible-effects && \
     cd extensible-effects-1.7.1 && \
