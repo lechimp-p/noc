@@ -18,6 +18,7 @@ To try it:
 * run ./run-dev-server.sh
 * visit http://$DOCKER_HOST and login as admin/admin.
 * use the python interface to add users and do modifications
+* maybe you wanna have a look at ./python/mock-data.py
 * yes, there will be a gui for that later
 * have fun and give me feedback
 
