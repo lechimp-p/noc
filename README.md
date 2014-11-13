@@ -7,6 +7,7 @@ backend.
 To try it:
 
 * install docker.io, grunt-cli and bower
+* make sure you can use ssh-add
 * go to ./HTML
 * run npm install
 * run grunt setup 
