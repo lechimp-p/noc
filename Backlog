@@ -1,21 +1,3 @@
-* Think about weather a show instance is a good
-  idea for the Password type.
-* UI: Channel owners need a way to edit channel
-  name and description.
-* UI: edit own profile
-* UI: view others profiles 
-* UI: global channel search
-* UI: global user search
-* UI: How are channels separated where i'm only consumer and where i'm producer as well. 
-
-* make permission handling more flexible
-
-* delete users and channels
-
-* The session handling needs some kind of review:
-    - login and password should not be stored in session
-    - make session an effect?
-
 To be done:
 
 * more tests on api
@@ -23,12 +5,17 @@ To be done:
 * implement statistics functions for admins
 * adjust size of http input to fit images (better: make it depend on usecase)
 * user notifications need some enhancement
+* make permission handling more flexible
+* delete users and channels
 
 To be thought about:
 
 * How to deal with images of different size when resizing? (scale up, down, crop...?)
 * how the model is represented
 * body policy and get body for images and other requests
+* The session handling needs some kind of review:
+    - login and password should not be stored in session
+    - make session an effect?
 
 Refactoring:
 
