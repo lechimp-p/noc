@@ -322,7 +322,7 @@ module.exports = function (grunt) {
     })
 
     // install bootstrap
-    grunt.registerTask('setup-bootstrap', function() {
+    /*grunt.registerTask('setup-bootstrap', function() {
         var cb = this.async();
         exec('cd bower_components/bootstrap; npm install; bower install;',
         function(error, result, stderr) {
@@ -330,7 +330,7 @@ module.exports = function (grunt) {
             console.log(stderr);
             cb();
         });
-    });
+    });*/
 
     grunt.registerTask('setup-self', function() {
         var cb = this.async();
@@ -352,10 +352,10 @@ module.exports = function (grunt) {
         });
     });
 
-    grunt.registerTask('setup', ['setup-self', 'setup-bootstrap']);
+    grunt.registerTask('setup', ['setup-self']);
 
     // run gruntfile from bootstrap
-    grunt.registerTask('run-bootstrap-grunt', function() {
+    /*grunt.registerTask('run-bootstrap-grunt', function() {
         var cb = this.async();
         grunt.util.spawn({
             grunt : true,
@@ -367,7 +367,7 @@ module.exports = function (grunt) {
             console.log(result.stdout);
             cb();
         });
-    });
+    });*/
 
     // collect all js files from bootstrap 
     //grunt.registerTask('bs-js-copy', function () {

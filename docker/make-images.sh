@@ -2,7 +2,6 @@
 
 docker build -t noc-data noc-data
 docker run -d --name noc-data noc-data
-docker stop noc-data
 
 echo ""
 echo ""
@@ -20,14 +19,39 @@ ssh-keygen -t rsa -f ~/.ssh/noc_dev_rsa -N ""
 cat ~/.ssh/noc_dev_rsa.pub >> noc-ssh/authorized_keys
 ssh-add ~/.ssh/noc_dev_rsa
 docker build -t noc-ssh noc-ssh
-ssh-keygen -f ~/.ssh/known_hosts -R $(./docker_ip):50022
+
+docker run -d -p 50022:22  \
+           --volumes-from noc-data \
+           --name noc-ssh \
+           noc-ssh 
+
+ssh-keygen -f ~/.ssh/known_hosts -R [$(./docker_ip)]:50022
 rm noc-ssh/authorized_keys
 
 echo ""
 echo ""
 echo "********************************************************"
 echo ""
-echo " Build image for ssh server and initialized keys"
+echo " Build image and container for ssh server"
+echo " and initialized keys"
+echo ""
+echo "********************************************************"
+echo ""
+echo ""
+
+
+echo ""
+echo " ATTENTION Press Enter, then type 'yes' and press Enter again!"
+echo ""
+read
+ssh root@$(./docker_ip) -p 50022 echo ssh connection to noc works
+ssh root@$(./docker_ip) -p 50022 /usr/bin/git init --bare /opt/NoC-Server-git
+
+echo ""
+echo ""
+echo "********************************************************"
+echo ""
+echo " Checked ssh and initialized git repo on data container"
 echo ""
 echo "********************************************************"
 echo ""
@@ -47,30 +71,6 @@ echo "********************************************************"
 echo ""
 echo ""
 
-docker start noc-data
-docker run -d -p 50022:22  \
-           --volumes-from noc-data \
-           --name noc-ssh \
-           noc-ssh 
-
-sleep 5s
-echo ""
-echo " Type 'yes' and press Enter!"
-echo ""
-ssh root@$(./docker_ip) -p 50022 echo ssh connection to noc works
-ssh root@$(./docker_ip) -p 50022 /usr/bin/git init --bare /opt/NoC-Server-git
-
-echo ""
-echo ""
-echo "********************************************************"
-echo ""
-echo " Checked ssh and initialized git repo on data container"
-echo ""
-echo "********************************************************"
-echo ""
-echo ""
-
-
 git remote remove devsrv
 git remote add devsrv ssh://root@$(./docker_ip):50022/opt/NoC-Server-git
 git push -f devsrv master
@@ -86,7 +86,7 @@ echo "********************************************************"
 echo ""
 echo ""
 
-cd ../HTML2
+cd ../HTML
 grunt dist
 grunt upload-dist
 cd ../docker
@@ -102,12 +102,12 @@ echo ""
 echo ""
 
 docker stop noc-ssh
-docker rm noc-ssh
 
 docker run -t -i --name noc-build \
            --volumes-from noc-data \
            noc-server \
            /bin/sh /opt/update-noc-server.sh 
+docker wait noc-build
 docker rm noc-build
 docker stop noc-data
 
@@ -127,7 +127,9 @@ echo ""
 echo ""
 echo "********************************************************"
 echo ""
-echo " Build nginx-Server.       FINISHED" 
+echo " Build nginx-Server."
+echo ""
+echo " FINISHED" 
 echo ""
 echo "********************************************************"
 echo ""

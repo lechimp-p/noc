@@ -5,11 +5,14 @@ RUN apt-get update && apt-get install -y \
     haskell-platform \
     git \
     libgd-dev
+# for base-unicode-symbols
+ENV LANG C.UTF-8 
 RUN cabal update && \
     cabal install cabal-install && \
     rm /usr/bin/cabal && \
-    cp /.cabal/bin/cabal /usr/bin/cabal \
-    cabal install --constraint "transformers ==0.4.2.*" transformers
+    cp /.cabal/bin/cabal /usr/bin/cabal && \
+    cabal install --constraint "transformers ==0.4.2.*" transformers && \
+    cabal install --constraint "base-unicode-symbols==0.2.2.*" base-unicode-symbols 
 RUN cd /opt/ && \
     cabal unpack extensible-effects && \
     cd extensible-effects-1.7.1 && \
@@ -21,7 +24,6 @@ RUN cd /opt/ && \
     git clone https://github.com/lechimp-p/json-effects.git && \
     cd json-effects && \
     cabal install --only-dependencies && \
-    cabal configure && \
     cabal install
 RUN cd /opt/NoC-Server-git/Server && \
     cabal install --only-dependencies
