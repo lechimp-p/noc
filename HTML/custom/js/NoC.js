@@ -2,7 +2,6 @@ angular.module("NoC",
     [ "ngRoute"
     , "NoC.channel"
     , "NoC.channel-overview"
-    , "NoC.chat"
     , "NoC.contact-overview"
     , "NoC.profile"
     , "NoC.my-profile"

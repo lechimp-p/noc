@@ -10,9 +10,8 @@ docker run -d -p 80:80 --name nginx-server \
            --volumes-from noc-data \
            --link noc-server:noc-server \
            noc-nginx
-docker run -d -p 50022:22 --name noc-ssh \
-           --volumes-from noc-data \
-           noc-ssh
+docker start noc-ssh
+
 echo "  "
 echo "  "
 echo " You can view your page at:"
@@ -25,7 +24,6 @@ echo "If nothing happens here while you visit the page, something is wrong..."
 docker logs --follow=true --timestamps=true noc-server 
 echo "  Shutting down..."
 docker stop noc-ssh
-docker rm noc-ssh
 docker stop noc-server
 docker rm noc-server
 docker stop nginx-server
