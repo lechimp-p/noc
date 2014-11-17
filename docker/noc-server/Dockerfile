@@ -9,8 +9,8 @@ RUN apt-get update && apt-get install -y \
 ENV LANG C.UTF-8 
 RUN cabal update && \
     cabal install cabal-install && \
-    rm /usr/bin/cabal && \
-    cp /.cabal/bin/cabal /usr/bin/cabal && \
+    rm /usr/bin/cabal 
+RUN cp ~/.cabal/bin/cabal /usr/bin/cabal && \
     cabal install --constraint "transformers ==0.4.2.*" transformers && \
     cabal install --constraint "base-unicode-symbols==0.2.2.*" base-unicode-symbols 
 RUN cd /opt/ && \
