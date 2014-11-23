@@ -58,7 +58,12 @@ userInfo uid = do
         then "email" <$ getUserEmail uid >> return ()
         else return ()
     oid <- forceOperatorId
-    "contact"       <$ fmap (fmap _channelId) .$ getUserContactByContactId oid uid
+    if oid /= uid 
+        then do
+            "contact"       <$ fmap (fmap _channelId) .$ getUserContactByContactId oid uid
+            return ()
+        else 
+            return ()
 
 channelInfo cid = do
     uid <- forceOperatorId
