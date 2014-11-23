@@ -49,6 +49,7 @@ controller("my-profile-controller", [ "$scope", "$timeout", "model", "user"
         model.user($scope.user.id).get().success(function(response) {
             $scope.user = response;
 
+            throttledUpdate("login");
             throttledUpdate("name");
             throttledUpdate("description");
             throttledUpdate("email");

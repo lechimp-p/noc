@@ -1,4 +1,4 @@
-<input type="text" ng-model="user.login" /><br />
+<input type="text" ng-class="{updating : updating.login, faulty: error.login}" ng-model="user.login" /><br />
 <input type="text" ng-class="{updating : updating.name, faulty: error.name}" ng-model="user.name" /><br />
 <img src="{{user.icon}}" alt="icon of {{user.login}}"><br />
 <input type="text" ng-class="{updating : updating.description, faulty: error.description}" ng-model="user.description" /><br />
