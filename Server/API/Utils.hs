@@ -22,6 +22,7 @@ import Control.Eff
 import Control.Eff.JSON
 import Data.Text (Text)
 import qualified Data.Text as T
+import Data.Text.Encoding (decodeUtf8)
 import qualified Data.Set as S
 import qualified Data.List as L
 import Data.Aeson 
@@ -33,6 +34,7 @@ import Control.Lens hiding ((.=))
 import Data.Data (Typeable)
 import Data.Time.Clock (UTCTime)
 import Data.Monoid
+import qualified Text.Email.Validate as TE
 
 
 ifIsJust :: (Monad m) => Maybe a -> (a -> m ()) -> m ()
@@ -55,12 +57,14 @@ userInfo uid = do
     "icon"          <$ getUserIcon uid
     sp <- hasAccess uid forUserSelfOrAdmins
     if sp
-        then "email" <$ getUserEmail uid >> return ()
+        then do
+            "email" <$ fmap (fmap (decodeUtf8 . TE.toByteString)) .$ getUserEmail uid
+            return ()
         else return ()
     oid <- forceOperatorId
     if oid /= uid 
         then do
-            "contact"       <$ fmap (fmap _channelId) .$ getUserContactByContactId oid uid
+            "contact" <$ fmap (fmap _channelId) .$ getUserContactByContactId oid uid
             return ()
         else 
             return ()
