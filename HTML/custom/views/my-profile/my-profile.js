@@ -3,15 +3,21 @@ controller("my-profile-controller", [ "$scope", "$timeout", "model", "user"
          , function($scope, $timeout, model, user) {
     "use strict";
 
-    var throttleDelay = 800; // ms
+    var throttleDelay = 1000; // ms
+
+    $scope.updating = {};
 
     var throttledUpdate = function(key) {
         var updateState = { timeout : null };       
+
+        $scope.updating[key] = false;
         
         $scope.$watch("user."+key, function(nval, oval) {
             if (_.isEqual(nval, oval)) {
                 return;
             }
+
+            $scope.updating[key] = true;
 
             if (updateState.timeout !== null) {
                 $timeout.cancel(updateState.timeout);
@@ -21,7 +27,10 @@ controller("my-profile-controller", [ "$scope", "$timeout", "model", "user"
             updateState.timeout = $timeout(function() {
                 var upd = {};
                 upd[key] = nval;
-                model.user($scope.user.id).set(upd);         
+                model.user($scope.user.id).set(upd)
+                    .success(function(_) {
+                        $scope.updating[key] = false;
+                    });         
                 updateState.timeout = null;
             }, throttleDelay);
         });
@@ -32,15 +41,6 @@ controller("my-profile-controller", [ "$scope", "$timeout", "model", "user"
 
         model.user($scope.user.id).get().success(function(response) {
             $scope.user = response;
-            //$scope.user.password = "xxxxxxxx";
-            // TODO: This works around bad formed output of server.
-            //       Should be fixed there...
-            if ($scope.user.email.length === 0) {
-                $scope.user.email = "";
-            }
-            else {
-                $scope.user.email = $scope.user.email[0];
-            }
 
             throttledUpdate("name");
             throttledUpdate("description");

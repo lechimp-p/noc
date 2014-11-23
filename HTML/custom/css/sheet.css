@@ -506,3 +506,6 @@ li {border-bottom:1px solid #eee;}
 	opacity:1;
 }
 
+.updating {
+    background-color : orange;
+}
