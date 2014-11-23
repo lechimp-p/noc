@@ -140,10 +140,6 @@ getContactsHandler uid = withJSONOut $ do
             case msg' of
                 [] -> return ()
                 x:[] -> "lastMsg" <$. (messageJSON x >> return ())
-    --"contacts" <$: flip fmap (S.toList uids) .$ \ uid -> do
-    --    "login"         <$ getUserLogin uid
-    --    "description"   <$ getUserDesc uid
-    --    "icon"          <$ getUserIcon uid
 
 setContactsHandler uid = withJSONIn $ do
     trySessionLogin
