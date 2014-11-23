@@ -509,3 +509,7 @@ li {border-bottom:1px solid #eee;}
 .updating {
     background-color : orange;
 }
+
+.faulty {
+    background-color : red;
+}

@@ -6,6 +6,7 @@ controller("my-profile-controller", [ "$scope", "$timeout", "model", "user"
     var throttleDelay = 1000; // ms
 
     $scope.updating = {};
+    $scope.error = {};
 
     var throttledUpdate = function(key) {
         var updateState = { timeout : null };       
@@ -18,6 +19,7 @@ controller("my-profile-controller", [ "$scope", "$timeout", "model", "user"
             }
 
             $scope.updating[key] = true;
+            $scope.error[key] = false;
 
             if (updateState.timeout !== null) {
                 $timeout.cancel(updateState.timeout);
@@ -30,7 +32,12 @@ controller("my-profile-controller", [ "$scope", "$timeout", "model", "user"
                 model.user($scope.user.id).set(upd)
                     .success(function(_) {
                         $scope.updating[key] = false;
-                    });         
+                    })         
+                    .errorHandler(function(data, status, headers, config) {
+                        $scope.error[key] = true;
+                        $scope.updating[key] = false;
+                        return true;
+                    });
                 updateState.timeout = null;
             }, throttleDelay);
         });

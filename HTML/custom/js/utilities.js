@@ -2,6 +2,25 @@ angular.module("API.utilities", [])
 .factory("makeAPICall", ["$http", "$location", function($http, $location) {
     "use strict";
 
+    var addErrorInterface = function(promise) {
+        promise._errorHandlers = [];
+        promise.errorHandler = function(handler) {
+            promise._errorHandlers.push(handler);
+            return promise;
+        };
+
+        promise.error(function(data, status, header, config) {
+            while(promise._errorHandlers.length > 0) {
+                var handler = promise._errorHandlers.pop();
+                if ( handler(data, status, header, config) ) {
+                    return;
+                }
+            }
+        });
+
+        return promise;
+    };
+
     return function(name, method, endpoint, data) {
         var config = 
             { method : method
@@ -14,8 +33,8 @@ angular.module("API.utilities", [])
         else if (method == "GET") {
             config.params = data;
         }
-        return $http( config )
-                .error( function(data, status, headers, config) {
+        return addErrorInterface($http( config ))
+                .errorHandler( function(data, status, headers, config) {
                     console.log("Error in APICall " + name + ": " + data);
                     $location.path("/error"); 
                 });
