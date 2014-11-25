@@ -14,6 +14,7 @@ angular.module("NoC",
     , "API.utilities"
     , "sticky"
     , "autoresize"
+    , "throttled-update"
     ])
 
 .config([ '$routeProvider', function($routeProvider) {
