@@ -9,15 +9,19 @@ controller("my-profile-controller", [ "$scope", "$timeout", "model", "user"
     $scope.confirmation = {};
     $scope.beforeChange = {};
 
-    $scope.update = function(key, val) {
+    $scope.update = function(key) {
         var spl = key.split(".");
         if (spl[0] != "user") {
             console.log("my-profile-controller: can only update user.");
             return;
         }
 
+        if (spl.length > 2) {
+            console.log("my-profile-controller: only support one level nesting in user update.");
+        }
+
         var upd = {};
-        upd[spl.slice(1).join(".")] = val;
+        upd[spl[1]] = $scope.$eval(key);
         return model.user($scope.user.id).set(upd)
                 .errorHandler(function(data, status, headers, config) {
                     // Errors will be handled by the form.

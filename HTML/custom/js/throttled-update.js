@@ -1,3 +1,17 @@
+/* throttle-update - attribute direcitve
+
+This directive notices changes on a model property defined via ng-model
+attribute. It then sets the updating property in its scope and adds the
+update-class on the element. After a delay it call update(model, value)
+on the scope.
+
+Expects the scope to have a property update or named as defined in 
+attribute update-handler whicht takes the ng-model property and 
+performs a (server?) update on it. The update-handler must return a 
+promise.
+
+*/
+
 angular.module("throttled-update", [])
 .directive("throttledUpdate", [ "$timeout", function($timeout) {
     "use strict";
@@ -36,7 +50,7 @@ angular.module("throttled-update", [])
             }
 
             state.timeout = $timeout(function() {
-               scope.update(model, nval)
+               scope.$eval(updateHandler)(model, nval)
                     .success(function() {
                         scope.updating = false;
                         element.removeClass(updateClass);
