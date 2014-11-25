@@ -12,6 +12,9 @@ To try it:
 * run npm install
 * run grunt setup 
 * go to ./docker
+* create a script called docker_ip that echos the ip or host of
+  the system docker is running at. This might be boot2docker ip
+  on mac or echo localhost on linux.
 * run ./make-images.sh
 * Watch out, at some point you have to type "yes" to initialize
   the connection to the containers via ssh correctly. This setup

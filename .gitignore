@@ -1,6 +1,7 @@
-HTML2/bower_components
-HTML2/node_modules
-HTML2/dist
+HTML/bower_components
+HTML/node_modules
+HTML/dist
+docker/docker_ip
 Server/dist
 *.swp
 *.pyc

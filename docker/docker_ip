@@ -1,4 +1,0 @@
-#/bin/bash
-
-echo lechimp-desktop
-#docker inspect noc-ssh | grep -m 1 HostIp | grep -Po "[0-9.]+"
