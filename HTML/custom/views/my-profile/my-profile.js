@@ -5,48 +5,24 @@ controller("my-profile-controller", [ "$scope", "$timeout", "model", "user"
 
     var throttleDelay = 1000; // ms
 
-    $scope.updating = {};
     $scope.error = {};
     $scope.confirmation = {};
     $scope.beforeChange = {};
 
-    var update = function(key, val) {
+    $scope.update = function(key, val) {
+        var spl = key.split(".");
+        if (spl[0] != "user") {
+            console.log("my-profile-controller: can only update user.");
+            return;
+        }
+
         var upd = {};
-        upd[key] = val;
-        model.user($scope.user.id).set(upd)
-             .success(function(_) {
-                $scope.updating[key] = false;
-             })         
-             .errorHandler(function(data, status, headers, config) {
-                $scope.error[key] = true;
-                $scope.updating[key] = false;
-                return true;
-             });
-    };
-
-    var throttledUpdate = function(key) {
-        var updateState = { timeout : null };       
-
-        $scope.updating[key] = false;
-        
-        $scope.$watch("user."+key, function(nval, oval) {
-            if (_.isEqual(nval, oval)) {
-                return;
-            }
-
-            $scope.updating[key] = true;
-            $scope.error[key] = false;
-
-            if (updateState.timeout !== null) {
-                $timeout.cancel(updateState.timeout);
-                updateState.timeout = null;
-            }
-
-            updateState.timeout = $timeout(function() {
-               update(key, nval);
-               updateState.timeout = null;
-            }, throttleDelay);
-        });
+        upd[spl.slice(1).join(".")] = val;
+        return model.user($scope.user.id).set(upd)
+                .errorHandler(function(data, status, headers, config) {
+                    // Errors will be handled by the form.
+                    return true;
+                });
     };
 
     var confirmedUpdate = function(key) {
@@ -82,11 +58,6 @@ controller("my-profile-controller", [ "$scope", "$timeout", "model", "user"
             $scope.user = response;
             $scope.user.password = "xxxxxxxx";
 
-            throttledUpdate("login");
-            throttledUpdate("name");
-            throttledUpdate("description");
-            throttledUpdate("email");
-            throttledUpdate("email");
             confirmedUpdate("password"); 
             // Passwort will no be reset after update.
         });

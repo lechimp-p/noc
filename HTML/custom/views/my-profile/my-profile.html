@@ -1,9 +1,9 @@
-<input type="text" ng-class="{updating : updating.login, faulty: error.login}" ng-model="user.login" /><br />
-<input type="text" ng-class="{updating : updating.name, faulty: error.name}" ng-model="user.name" /><br />
+<input type="text" throttled-update ng-model="user.login" update-class="updating" error-class="faulty" update-handler="update"/><br />
+<input type="text" throttled-update ng-model="user.name" /><br />
 <img src="{{user.icon}}" alt="icon of {{user.login}}"><br />
-<input type="text" ng-class="{updating : updating.description, faulty: error.description}" ng-model="user.description" /><br />
-<input type="text" ng-class="{updating : updating.email, faulty: error.email}" ng-model="user.email" /><br />
-<input type="password" ng-class="{faulty: error.password}" ng-model="user.password" />
+<input type="text" throttled-update ng-model="user.description" /><br />
+<input type="text" throttled-update ng-model="user.email" /><br />
+<input type="password" throttled-update ng-model="user.password" />
 <span ng-show="confirmation.password"><button ng-click="confirm('password')">OK</button><button ng-click="abort('password')">CANCEL</button></span>
 <br />
 
