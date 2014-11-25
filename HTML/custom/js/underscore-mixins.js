@@ -8,5 +8,13 @@ _.mixin({
             ret.push(elem);
         }
         return ret;
+    },
+    
+    defaultUndef : function(item, def) {
+        if (typeof item == "undefined") {
+            return def;
+        }
+        return item;
     }
-});
+})
+;
