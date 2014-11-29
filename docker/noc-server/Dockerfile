@@ -14,7 +14,7 @@ RUN cp ~/.cabal/bin/cabal /usr/bin/cabal && \
     cabal install --constraint "text==1.1.*" text && \
     cabal install --constraint "transformers ==0.4.2.*" transformers && \
     cabal install --constraint "base-unicode-symbols==0.2.2.*" base-unicode-symbols && \
-    cabal install --constraint "extensible-effects==1.8.0.*" extensible-effects 
+    cabal install --constraint "extensible-effects==1.7.1.0" extensible-effects 
 RUN cd /opt/ && \
     git clone https://github.com/lechimp-p/json-effects.git && \
     cd json-effects && \
