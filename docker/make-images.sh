@@ -1,5 +1,28 @@
 #!/bin/bash
 
+if [ -f docker_ip ]
+then
+    echo "docker_ip exists. Great!"
+else
+    echo "You need to define a docker_ip script"\
+         "that returns the ip of your docker daemon."
+    exit
+fi
+
+docker stop noc-ssh noc-data noc-build noc-server noc-nginx
+docker rm noc-ssh noc-data noc-build noc-server noc-nginx
+docker rmi noc-ssh noc-data noc-build noc-server noc-nginx
+
+echo ""
+echo ""
+echo "***************************************************"
+echo ""
+echo " Cleaned up existing containers and images of noc."
+echo ""
+echo "***************************************************"
+echo ""
+echo ""
+
 docker build -t noc-data noc-data
 docker run -d --name noc-data noc-data
 
@@ -15,6 +38,7 @@ echo ""
 
 rm noc-ssh/authorized_keys
 rm ~/.ssh/noc_dev_rsa
+ssk-keygen -R $(./docker_ip):50022
 ssh-keygen -t rsa -f ~/.ssh/noc_dev_rsa -N ""
 cat ~/.ssh/noc_dev_rsa.pub >> noc-ssh/authorized_keys
 ssh-add ~/.ssh/noc_dev_rsa
