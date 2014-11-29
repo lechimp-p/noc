@@ -13,18 +13,14 @@ RUN cabal update && \
 RUN cp ~/.cabal/bin/cabal /usr/bin/cabal && \
     cabal install --constraint "transformers ==0.4.2.*" transformers && \
     cabal install --constraint "base-unicode-symbols==0.2.2.*" base-unicode-symbols 
-RUN cd /opt/ && \
-    cabal unpack extensible-effects && \
-    cd extensible-effects-1.7.1 && \
-    sed -i 's/0.4.1.*/0.4.2.*/' *.cabal && \
-    cabal install
-COPY src/ /opt/NoC-Server-git
-COPY update-noc-server.sh /opt/update-noc-server.sh
+    cabal install --constraint "extensible-effects==1.8.0.*" extensible-effects 
 RUN cd /opt/ && \
     git clone https://github.com/lechimp-p/json-effects.git && \
     cd json-effects && \
     cabal install --only-dependencies && \
     cabal install
+COPY src/ /opt/NoC-Server-git
+COPY update-noc-server.sh /opt/update-noc-server.sh
 RUN cd /opt/NoC-Server-git/Server && \
     cabal install --only-dependencies
 RUN rm -r /opt/NoC-Server-git
