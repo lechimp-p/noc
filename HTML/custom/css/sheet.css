@@ -293,7 +293,7 @@ and (max-width : 1400px) {
 
 /* --------------- MESSAGE-INPUT ------------------------------ */
 
-.placeholder {
+.unsticky {
 	width:100%;
 	z-index:10;
 	background:#ddd;
