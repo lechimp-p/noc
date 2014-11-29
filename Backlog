@@ -7,6 +7,8 @@ To be done:
 * user notifications need some enhancement
 * make permission handling more flexible
 * delete users and channels
+* add channel controller
+* change channel properties
 
 To be thought about:
 
@@ -22,3 +24,7 @@ Refactoring:
 * instead of the various get/set methods for channels and users, use one get/set
   plus a record for 'core'-data 
 * implement constraints in model
+* split topbar-controller in notifications and logout
+* parametrize channel-controller::post
+* create a current-user-controller which handles subscribe, unsubscribe, addToContacts
+  removeFromContacts, login and logout (maybe bind post to it too?)
