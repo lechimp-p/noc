@@ -158,7 +158,7 @@ executable NoC-Server-dev
                         , web-routes ==0.27.*
                         , web-routes-boomerang ==0.28.*
                         , web-routes-happstack ==0.23.*
-                        , yaml ==0.8.9.1
+                        , yaml ==0.8.9.10
 
 Test-Suite test-NoC-Server
     type:               detailed-0.9
