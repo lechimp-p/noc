@@ -12,7 +12,7 @@ promise.
 
 */
 
-angular.module("throttled-update", [])
+angular.module("update", [])
 .directive("throttledUpdate", [ "$timeout", function($timeout) {
     "use strict";
 
