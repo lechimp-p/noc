@@ -117,6 +117,9 @@ module.exports = function (grunt) {
             , dest : 'dist'
             , filter : 'isFile'
             }
+        },
+
+
         watch :
         { 'custom-html' :
             { files : ['custom/*.html']
@@ -158,7 +161,7 @@ module.exports = function (grunt) {
             }
         , custom : [ 'custom/js/*' ]
         , views : [ 'custom/views/*/*.js' ]
-        },
+        }
     });
 
     grunt.loadNpmTasks('grunt-contrib-clean');
