@@ -1,9 +1,27 @@
-/* throttle-update - attribute direcitve
+/* update - attribute direcitves
+
+throttled-update
 
 This directive notices changes on a model property defined via ng-model
 attribute. It then sets the updating property in its scope and adds the
-update-class on the element. After a delay it call update(model, value)
+update-class on the element. After a delay it call update(model)
 on the scope.
+
+Expects the scope to have a property update or named as defined in 
+attribute update-handler whicht takes the ng-model property and 
+performs a (server?) update on it. The update-handler must return a 
+promise.
+
+
+confirmed-update
+
+This directive also notices changes on a model propery defined via
+ng-model attribute. It then sets the confirmation property in its
+scope and add the confirmation-class on the element. After getting
+a confirmation, it calls update(model) on the scope. When
+getting abort, it resets the confirmation property and removes the
+class. It also sets the update class and propety like throttled-update 
+does.
 
 Expects the scope to have a property update or named as defined in 
 attribute update-handler whicht takes the ng-model property and 
@@ -16,6 +34,8 @@ angular.module("update", [])
 .directive("throttledUpdate", [ "$timeout", function($timeout) {
     "use strict";
 
+    // The time to wait between the last change on the model and 
+    // calling $scope.update.
     var throttleDelay = 1000; // ms
 
     var link = function(scope, element, attrs) {
@@ -27,6 +47,7 @@ angular.module("update", [])
         if (typeof model == "undefined") {
             return;
         }
+
 
         var state = { timeout : null
                     };
@@ -50,7 +71,7 @@ angular.module("update", [])
             }
 
             state.timeout = $timeout(function() {
-               scope.$eval(updateHandler)(model, nval)
+               scope.$eval(updateHandler)(model)
                     .success(function() {
                         scope.updating = false;
                         element.removeClass(updateClass);
@@ -67,6 +88,99 @@ angular.module("update", [])
             , throttleDelay);
  
         }); 
+    };
+
+    return  { restrict : "A"
+            , scope : true // create own scope inherited from parent
+            , link : link
+            };
+}])
+.directive("confirmedUpdate", [ "$parse", function($parse) {
+    "use strict";
+
+    var link = function(scope, element, attrs) {
+        var updateClass = _.defaultUndef(attrs.updateClass, "updating"); 
+        var confirmationClass = _.defaultUndef(attrs.confirmationClass, "confirmation"); 
+        var errorClass = _.defaultUndef(attrs.errorClass, "faulty"); 
+        var model = attrs.ngModel;
+        var updateHandler = _.defaultUndef(attrs.updateHandler, "update");
+
+        if (typeof model == "undefined") {
+            return;
+        }
+
+        scope.confirmation = false;
+        scope.error = false;
+
+        var state = { old_value : null 
+                    , abort : false
+                    };
+
+        scope.$watch(model, function(nval, oval) {
+            if ( _.isEqual(nval, oval) || typeof nval == "undefined" || typeof oval == "undefined") {
+                return;
+            }
+
+            // This is to not start confirmation mode again
+            // after calling abort.
+            if (state.abort) {
+                state.abort = false;
+                return;
+            }
+
+            scope.confirmation = true;
+            element.addClass(confirmationClass);
+            scope.updating = false;
+            element.removeClass(updateClass);
+            scope.error = false;
+            element.removeClass(errorClass);
+
+            // We maybe already captured the starting value.
+            if (state.old_value === null) {
+                state.old_value = oval;
+            }
+        }); 
+
+        scope.confirm = function() {
+            // Maybe we don't need a confirmation.
+            if (scope.confirmation === false) {
+                return;
+            }
+
+            scope.confirmation = false;
+            element.removeClass(confirmationClass);
+            scope.updating = true;
+            element.addClass(updateClass);
+
+            state.old_value = null;
+
+            scope.$eval(updateHandler)(model)
+                    .success(function() {
+                        scope.updating = false;
+                        element.removeClass(updateClass);
+                    })
+                    .error(function() {
+                        scope.updating = false;
+                        element.removeClass(updateClass);
+                        scope.error = true;
+                        element.addClass(errorClass);
+                    })
+                    ;
+        };
+
+        scope.abort = function() {
+            if (state.old_value === null) {
+                return;
+            }
+
+            state.abort = true;
+
+            var modelHandle = $parse(model);
+            modelHandle.assign(scope, state.old_value);
+
+            scope.confirmation = false;
+            element.removeClass(confirmationClass);
+        }
     };
 
     return  { restrict : "A"

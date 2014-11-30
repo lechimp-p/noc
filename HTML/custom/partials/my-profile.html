@@ -3,7 +3,12 @@
 <img src="{{user.icon}}" alt="icon of {{user.login}}"><br />
 <input type="text" throttled-update ng-model="user.description" /><br />
 <input type="text" throttled-update ng-model="user.email" /><br />
-<input type="password" throttled-update ng-model="user.password" />
-<span ng-show="confirmation.password"><button ng-click="confirm('password')">OK</button><button ng-click="abort('password')">CANCEL</button></span>
+<span confirmed-update ng-model="user.password">
+    <input type="password" ng-class="{ updating : updating, confirmation : confirmation, faulty : error }" ng-model="user.password" />
+    <span ng-show="confirmation">
+        <button ng-click="confirm()">OK</button>
+        <button ng-click="abort()">CANCEL</button>
+    </span>
+</span>
 <br />
 

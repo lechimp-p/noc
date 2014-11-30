@@ -5,9 +5,9 @@ controller("my-profile-controller", [ "$scope", "$timeout", "model", "user"
 
     var throttleDelay = 1000; // ms
 
-    $scope.error = {};
-    $scope.confirmation = {};
-    $scope.beforeChange = {};
+//    $scope.error = {};
+//    $scope.confirmation = {};
+//    $scope.beforeChange = {};
 
     $scope.update = function(key) {
         var spl = key.split(".");
@@ -29,7 +29,7 @@ controller("my-profile-controller", [ "$scope", "$timeout", "model", "user"
                 });
     };
 
-    var confirmedUpdate = function(key) {
+/*    var confirmedUpdate = function(key) {
         // No need for confirmation on startup.
         $scope.confirmation[key] = false;        
 
@@ -54,7 +54,7 @@ controller("my-profile-controller", [ "$scope", "$timeout", "model", "user"
         $scope.confirmation[key] = false;
         $scope.user[key] = $scope.beforeConfirmation;
     };
-
+*/
     user.onIdAcquired(function(id) {
         $scope.user = { id : id }; 
 
@@ -62,7 +62,7 @@ controller("my-profile-controller", [ "$scope", "$timeout", "model", "user"
             $scope.user = response;
             $scope.user.password = "xxxxxxxx";
 
-            confirmedUpdate("password"); 
+            //confirmedUpdate("password");
             // Passwort will no be reset after update.
         });
     });

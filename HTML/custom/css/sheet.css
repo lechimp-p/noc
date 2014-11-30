@@ -510,6 +510,10 @@ li {border-bottom:1px solid #eee;}
     background-color : orange;
 }
 
+.confirmation {
+    background-color : yellow;
+}
+
 .faulty {
     background-color : red;
 }
