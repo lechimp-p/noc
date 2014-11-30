@@ -1,35 +1,3 @@
-/* update - attribute direcitves
-
-throttled-update
-
-This directive notices changes on a model property defined via ng-model
-attribute. It then sets the updating property in its scope and adds the
-update-class on the element. After a delay it call update(model)
-on the scope.
-
-Expects the scope to have a property update or named as defined in 
-attribute update-handler whicht takes the ng-model property and 
-performs a (server?) update on it. The update-handler must return a 
-promise.
-
-
-confirmed-update
-
-This directive also notices changes on a model propery defined via
-ng-model attribute. It then sets the confirmation property in its
-scope and add the confirmation-class on the element. After getting
-a confirmation, it calls update(model) on the scope. When
-getting abort, it resets the confirmation property and removes the
-class. It also sets the update class and propety like throttled-update 
-does.
-
-Expects the scope to have a property update or named as defined in 
-attribute update-handler whicht takes the ng-model property and 
-performs a (server?) update on it. The update-handler must return a 
-promise.
-
-*/
-
 angular.module("update", [])
 .directive("throttledUpdate", [ "$timeout", function($timeout) {
     "use strict";
