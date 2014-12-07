@@ -16,8 +16,9 @@ RUN cp ~/.cabal/bin/cabal /usr/bin/cabal && \
     cabal install --constraint "base-unicode-symbols==0.2.2.*" base-unicode-symbols && \
     cabal install --constraint "extensible-effects==1.7.1.0" extensible-effects 
 RUN cd /opt/ && \
-    git clone https://github.com/lechimp-p/json-effects.git && \
-    cd json-effects && \
+    git clone https://github.com/lechimp-p/json-effects.git
+COPY cabal.config /opt/json-effects/cabal.config
+RUN cd /opt/json-effects && \
     cabal install --only-dependencies && \
     cabal install
 COPY src/ /opt/NoC-Server-git
