@@ -31,6 +31,9 @@ angular.module("autoresize", [])
         });
     };
 
-    return { link : link };
+    return { restrict : "A"
+           , link : link 
+           , scope : false
+           };
 }])
 ; 

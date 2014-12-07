@@ -31,21 +31,7 @@ module.exports = function (grunt) {
         },
 
         copy: 
-        { /*'bs-css' :
-            { expand : true
-            , cwd : 'bower_components/bootstrap/dist/css'
-            , src : '*.css'
-            , dest : 'dist/css'
-            , filter : 'isFile'
-            }                  
-        , 'bs-fonts' :
-            { expand : true
-            , cwd : 'bower_components/bootstrap/dist/fonts'
-            , src : '*'
-            , dest : 'dist/fonts'
-            , filter : 'isFile'
-            }*/
-          'ng-css' :
+        { 'ng-css' :
             { expand : true
             , cwd : 'bower_components/angular'
             , src : 'angular-csp.css'
@@ -56,24 +42,7 @@ module.exports = function (grunt) {
             , cwd : 'bower_components/angular'
             , src : 'angular.js'
             , dest : 'dist/js'
-            }]}/*,
-            { expand : true
-            , cwd : 'bower_components/angular'
-            , src : 'angular.min.js.map'
-            , dest : 'dist/js'
-            }]}*/
-        /*, 'ng-bs-js' : { files : [
-            { expand : true
-            , cwd : 'bower_components/angular-bootstrap'
-            , src : 'ui-bootstrap.js'
-            , dest : 'dist/js'
-
-            },
-            { expand : true
-            , cwd : 'bower_components/angular-bootstrap'
-            , src : 'ui-bootstrap-tpls.js'
-            , dest : 'dist/js'
-            }]}*/
+            }]}
         , 'ng-route-js' : { files : [
             { expand : true
             , cwd : 'bower_components/angular-route'
@@ -92,24 +61,6 @@ module.exports = function (grunt) {
             , src : 'underscore-min.js'
             , dest : 'dist/js'
             }
-        /*, 'ng-mobile-js' :
-            { expand : true
-            , cwd : 'bower_components/mobile-angular-ui/dist/js'
-            , src : '*.min.js'
-            , dest : 'dist/js'
-            }
-        , 'ng-mobile-css' :
-            { expand : true
-            , cwd : 'bower_components/mobile-angular-ui/dist/css'
-            , src : '*.min.css'
-            , dest : 'dist/css'
-            }
-        , 'ng-mobile-fonts':
-            { expand : true
-            , cwd : 'bower_components/mobile-angular-ui/dist/fonts'
-            , src : '*'
-            , dest : 'dist/fonts'
-            }*/
         , 'custom-css' :
             { expand : true
             , cwd : 'custom/css'
@@ -138,6 +89,27 @@ module.exports = function (grunt) {
             , dest : 'dist/js'
             , filter : 'isFile'
             }
+        , 'custom-controllers' :
+            { expand : true
+            , cwd : 'custom/controllers'
+            , src : '*.js'
+            , dest : 'dist/js'
+            , filter : 'isFile'
+            }
+        , 'custom-directives' :
+            { expand : true
+            , cwd : 'custom/directives'
+            , src : '*.js'
+            , dest : 'dist/js'
+            , filter : 'isFile'
+            }
+        , 'custom-partials' :
+            { expand : true
+            , cwd : 'custom/partials'
+            , src : '*.html'
+            , dest : 'dist/partials'
+            , filter : 'isFile'
+            }
         , 'custom-html' : 
             { expand : true
             , cwd : 'custom'
@@ -145,117 +117,8 @@ module.exports = function (grunt) {
             , dest : 'dist'
             , filter : 'isFile'
             }
-        , 'views-js' : { files : [
-            { expand : true
-            , cwd : 'custom/views/channel'
-            , src : '*.js'
-            , dest : 'dist/js'
-            , filter : 'isFile'
-            },
-            { expand : true
-            , cwd : 'custom/views/channel-overview'
-            , src : '*.js'
-            , dest : 'dist/js'
-            , filter : 'isFile'
-            },
-            { expand : true
-            , cwd : 'custom/views/chat'
-            , src : '*.js'
-            , dest : 'dist/js'
-            , filter : 'isFile'
-            },
-            { expand : true
-            , cwd : 'custom/views/contact-overview'
-            , src : '*.js'
-            , dest : 'dist/js'
-            , filter : 'isFile'
-            },
-            { expand : true
-            , cwd : 'custom/views/topbar'
-            , src : '*.js'
-            , dest : 'dist/js'
-            , filter : 'isFile'
-            },
-            { expand : true
-            , cwd : 'custom/views/profile'
-            , src : '*.js'
-            , dest : 'dist/js'
-            , filter : 'isFile'
-            },
-            { expand : true
-            , cwd : 'custom/views/my-profile'
-            , src : '*.js'
-            , dest : 'dist/js'
-            , filter : 'isFile'
-            },
-            { expand : true
-            , cwd : 'custom/views/error'
-            , src : '*.js'
-            , dest : 'dist/js'
-            , filter : 'isFile'
-            },
-            { expand : true
-            , cwd : 'custom/views/login'
-            , src : '*.js'
-            , dest : 'dist/js'
-            , filter : 'isFile'
-            }]}
-        , 'views-html' : { files : [
-            { expand : true
-            , cwd : 'custom/views/channel'
-            , src : '*.html'
-            , dest : 'dist/partials'
-            , filter : 'isFile'
-            },
-            { expand : true
-            , cwd : 'custom/views/channel-overview'
-            , src : '*.html'
-            , dest : 'dist/partials'
-            , filter : 'isFile'
-            },
-            { expand : true
-            , cwd : 'custom/views/chat'
-            , src : '*.html'
-            , dest : 'dist/partials'
-            , filter : 'isFile'
-            },
-            { expand : true
-            , cwd : 'custom/views/contact-overview'
-            , src : '*.html'
-            , dest : 'dist/partials'
-            , filter : 'isFile'
-            },
-            { expand : true
-            , cwd : 'custom/views/topbar'
-            , src : '*.html'
-            , dest : 'dist/partials'
-            , filter : 'isFile'
-            },
-            { expand : true
-            , cwd : 'custom/views/profile'
-            , src : '*.html'
-            , dest : 'dist/partials'
-            , filter : 'isFile'
-            },
-            { expand : true
-            , cwd : 'custom/views/my-profile'
-            , src : '*.html'
-            , dest : 'dist/partials'
-            , filter : 'isFile'
-            },
-            { expand : true
-            , cwd : 'custom/views/error'
-            , src : '*.html'
-            , dest : 'dist/partials'
-            , filter : 'isFile'
-            },
-            { expand : true
-            , cwd : 'custom/views/login'
-            , src : '*.html'
-            , dest : 'dist/partials'
-            , filter : 'isFile'
-            }]}
         },
+
 
         watch :
         { 'custom-html' :
@@ -278,13 +141,17 @@ module.exports = function (grunt) {
             { files : ['custom/img/*']
             , tasks : ['copy:custom-img', 'upload-dist']
             }
-        , 'views-js' :
-            { files : ['custom/views/*/*.js']
-            , tasks : ['jshint:views', 'copy:views-js', 'upload-dist']
+        , 'custom-controllers' :
+            { files : ['custom/controllers/*']
+            , tasks : ['copy:custom-controllers', 'upload-dist']
             }
-        , 'views-html' :
-            { files : ['custom/views/*/*.html']
-            , tasks : ['copy:views-html', 'upload-dist']
+        , 'custom-directives' :
+            { files : ['custom/directives/*']
+            , tasks : ['copy:custom-directives', 'upload-dist']
+            }
+        , 'custom-partials' :
+            { files : ['custom/partials/*']
+            , tasks : ['copy:custom-partials', 'upload-dist']
             }
         },
 
@@ -294,43 +161,18 @@ module.exports = function (grunt) {
             }
         , custom : [ 'custom/js/*' ]
         , views : [ 'custom/views/*/*.js' ]
-        },
-
-        /*'ftp-deploy' :
-        { urbanoid :
-            { auth : 
-                { host : 'server01.campusspeicher.de'
-                , port : 22
-                , authKey : 'nico'
-                }
-            , authPath : './.ftppass'
-            , src : '/Users/Nico/NoC-Server/HTML2/dist'
-            , dest : '/httpdocs/noc'
-            }
-        }*/
+        }
     });
 
     grunt.loadNpmTasks('grunt-contrib-clean');
     grunt.loadNpmTasks('grunt-contrib-copy');
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-contrib-jshint');
-    //grunt.loadNpmTasks('grunt-ftp-deploy');
 
     grunt.registerTask('ftp-deploy', function() {
         var res = this.async();
         res();
     })
-
-    // install bootstrap
-    /*grunt.registerTask('setup-bootstrap', function() {
-        var cb = this.async();
-        exec('cd bower_components/bootstrap; npm install; bower install;',
-        function(error, result, stderr) {
-            console.log(result.stdout);
-            console.log(stderr);
-            cb();
-        });
-    });*/
 
     grunt.registerTask('setup-self', function() {
         var cb = this.async();
@@ -354,35 +196,8 @@ module.exports = function (grunt) {
 
     grunt.registerTask('setup', ['setup-self']);
 
-    // run gruntfile from bootstrap
-    /*grunt.registerTask('run-bootstrap-grunt', function() {
-        var cb = this.async();
-        grunt.util.spawn({
-            grunt : true,
-            args : [],
-            opts : {
-                cwd: 'bower_components/bootstrap'
-            } 
-        }, function(error, result, code) {
-            console.log(result.stdout);
-            cb();
-        });
-    });*/
-
-    // collect all js files from bootstrap 
-    //grunt.registerTask('bs-js-copy', function () {
-    //});
-
-    // collect all css files from bootstrap 
-    //grunt.registerTask('bs-css-copy', function () {
-    //});
-
-    // collect all css files from bootstrap 
-    //grunt.registerTask('bs-img-copy', function () {
-    //});
-
     // JS distribution task.
-    grunt.registerTask('dist-js', ['copy:custom-js', 'copy:ng-js', 'copy:ng-route-js', 'copy:jquery', 'copy:underscore', 'copy:views-js']);
+    grunt.registerTask('dist-js', ['copy:custom-js', 'copy:ng-js', 'copy:ng-route-js', 'copy:jquery', 'copy:underscore', 'copy:custom-controllers', 'copy:custom-directives']);
 
     // CSS distribution task.
     grunt.registerTask('dist-css', ['copy:ng-css', 'copy:custom-css']);
@@ -394,12 +209,10 @@ module.exports = function (grunt) {
     grunt.registerTask('dist-fonts', ['copy:custom-fonts']);
 
     // HTML distribution task.
-    grunt.registerTask('dist-html', ['copy:custom-html', 'copy:views-html']);
+    grunt.registerTask('dist-html', ['copy:custom-html', 'copy:custom-partials']);
 
     // Full distribution task.
     grunt.registerTask('dist', ['clean', 'dist-css', 'dist-js', 'dist-img', 'dist-fonts', 'dist-html']);
-
-    grunt.registerTask('dist-custom', ['copy:custom-js', 'copy:custom-css', 'copy:custom-img', 'copy:custom-fonts', 'copy:custom-html']);
 
     grunt.registerTask('dist-full', ['run-bootstrap-grunt', 'dist']);
 
