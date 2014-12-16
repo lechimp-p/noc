@@ -87,6 +87,9 @@ channelInfo cid = do
     "amountOfUsers" <$ amountOfSubscribedUsers cid
     "lastPost"      <$ lastPostTimestamp cid
     "subscribed"    <$ fmap (S.member cid) .$ getUserSubscriptions uid 
+    "owner"         <$ isChanOwner cid uid
+    "producer"      <$ isChanProducer cid uid
+    "consumer"      <$ isChanConsumer cid uid
 
 messageJSON msg = do
     "image"     <: _image msg
