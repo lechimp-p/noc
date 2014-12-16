@@ -159,8 +159,7 @@ module.exports = function (grunt) {
         { options :
             { laxcomma : true
             }
-        , custom : [ 'custom/js/*' ]
-        , views : [ 'custom/views/*/*.js' ]
+        , custom : [ 'custom/*/*.js' ]
         }
     });
 
