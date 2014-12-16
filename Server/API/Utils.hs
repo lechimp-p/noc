@@ -20,6 +20,7 @@ import API.ImageUtils
 
 import Control.Eff
 import Control.Eff.JSON
+import Control.Monad
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Text.Encoding (decodeUtf8)
@@ -68,6 +69,7 @@ userInfo uid = do
             return ()
         else 
             return ()
+    "admin" <$ isAdmin uid
 
 channelInfo cid = do
     uid <- forceOperatorId
@@ -87,9 +89,9 @@ channelInfo cid = do
     "amountOfUsers" <$ amountOfSubscribedUsers cid
     "lastPost"      <$ lastPostTimestamp cid
     "subscribed"    <$ fmap (S.member cid) .$ getUserSubscriptions uid 
-    "owner"         <$ isChanOwner cid uid
-    "producer"      <$ isChanProducer cid uid
-    "consumer"      <$ isChanConsumer cid uid
+    "owner"         <$ liftM2 (&&) (isChanOwner cid uid) (isAdmin uid)
+    "producer"      <$ liftM2 (&&) (isChanProducer cid uid) (isAdmin uid)
+    "consumer"      <$ liftM2 (&&) (isChanConsumer cid uid) (isAdmin uid)
 
 messageJSON msg = do
     "image"     <: _image msg
