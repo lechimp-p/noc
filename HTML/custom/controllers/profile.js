@@ -4,14 +4,40 @@ controller("profile-controller", [ "$scope", "$routeParams", "user", "model"
     "use strict";
 
     $scope.user = { id : $routeParams.userId };
+    $scope.adding = false;
+    $scope.removing = false;
+    $scope.addRemoveError = false;
 
     $scope.addToContacts = function() {
-        model.user(user.getId()).contacts.set([$sope.user.id], []);
-        model.user($scope.user.id).update();
+        $scope.adding = true;
+        $scope.removing = false;
+        $scope.addRemoveError = false;
+        model.user(user.getId()).contacts.set([$scope.user.id], [])
+            .success(function() {
+                model.user($scope.user.id).update();
+                $scope.adding = false;
+            })
+            .error(function() {
+                $scope.adding = false;
+                $scope.addRemoveError = true;
+            })
+            ;
     };
 
     $scope.removeFromContacts = function() {
-        model.user(user.getId()).contacts.set([], [$sope.user.id]);
+        $scope.adding = false;
+        $scope.removing = true;
+        $scope.addRemoveError = false;
+        model.user(user.getId()).contacts.set([], [$scope.user.id])
+            .success(function() {
+                $scope.removing = false;
+                model.user($scope.user.id).update();
+            })
+            .error(function() {
+                $scope.removing = false;
+                $scope.addRemoveError = true;
+            })
+            ;
     };
 
     model.user($scope.user.id).onUpdate(function(response) {

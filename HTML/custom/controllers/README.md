@@ -63,6 +63,12 @@ user
     icon
     contact             -- Id des Channels zwischen dem aktuellen Benutzer und dem 
                            Kontakt, wenn Kontakt besteht.
+    adding              -- true, wenn Benutzer gerade zu Kontakten hinzugefügt wird
+                           sonst false.
+    removing            -- true, wenn Benutzer gerade aus Kontakten entfernt wird, 
+                           sonst false.
+    addRemoveError      -- true, wenn es einen Fehler beim Hinzufügen oder Entfernen
+                           gab.
 
 addToContacts           -- Fügt den Benutzer zu den Kontakten des aktuellen Benutzers
                            hinzu.    
