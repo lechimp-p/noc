@@ -142,11 +142,11 @@ module.exports = function (grunt) {
             , tasks : ['copy:custom-img', 'upload-dist']
             }
         , 'custom-controllers' :
-            { files : ['custom/controllers/*.jss']
+            { files : ['custom/controllers/*.js']
             , tasks : ['copy:custom-controllers', 'upload-dist']
             }
         , 'custom-directives' :
-            { files : ['custom/directives/*.jss']
+            { files : ['custom/directives/*.js']
             , tasks : ['copy:custom-directives', 'upload-dist']
             }
         , 'custom-partials' :
