@@ -9,6 +9,9 @@ channel
     amountOfUsers
     lastPost            -- Zeitpunkt des letzten Posts
     subscribed          -- Ist der aktuelle Benutzer subscribed?
+    owner               -- Ist der aktuelle Benutzer ein Owner des Kanals?
+    producer            -- Ist der aktuelle Benutzer ein Producer des Kanals?
+    consumer            -- Ist der aktuelle Benutzer ein Consumer des Kanals?
 
 msgs
     msg
