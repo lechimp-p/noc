@@ -16,6 +16,7 @@ angular.module("NoC",
     , "sticky"
     , "autoresize"
     , "update"
+    , "imgInput"
     ])
 
 .config([ '$routeProvider', function($routeProvider) {
