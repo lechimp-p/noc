@@ -5,29 +5,6 @@
 	<button ng-show="user" ng-click="logout()">RAUS!</button>
 	<div class="clear"></div>
 
-<!-- variablen im scope: 
-
-user
-user.id
-user.login
-user.name
-user.description
-user.icon 
-
-notifications
-notifications.length
-
-analog zu Nachrichten in channel.html mit ng-repeat="notification in notifications"
-gibt es dann pro notification diese variablen:
-
-notification.type (derzeit nur "added-to-channel")
-notification.timestamp
-
-für "added-to-channel"-notifications
-notification.channel (analog zu channel in channel.js)
-notification.user (analog zu user in contact-overview.js)
-
--->
 <script>
 	$(window).ready(function() {
 		$(".shownavbtn").on("click", function(ev) {

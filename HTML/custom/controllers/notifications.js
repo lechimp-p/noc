@@ -3,7 +3,6 @@ controller("notifications-controller", [ "$scope", "model", "user"
          , function($scope, model, user) {
     "use strict";
 
-    $scope.msgs = [];
     $scope.notifications = [];
 
     var updateHandler = { deregister : null };

@@ -50,7 +50,7 @@ login()                 -- Führt Login mit username und password aus.
 
 ### my-profile-controller
 
-user                    -- Analog zu user auf profile-controller
+user                    -- Analog zu user aus profile-controller
     email
 
 ### profile-controller
@@ -70,9 +70,24 @@ user
     addRemoveError      -- true, wenn es einen Fehler beim Hinzufügen oder Entfernen
                            gab.
 
-addToContacts           -- Fügt den Benutzer zu den Kontakten des aktuellen Benutzers
+addToContacts()         -- Fügt den Benutzer zu den Kontakten des aktuellen Benutzers
                            hinzu.    
-removeFromContacts      -- Entfernt den Benutzer aus den Kontakten des aktuellen
+removeFromContacts()    -- Entfernt den Benutzer aus den Kontakten des aktuellen
                            Benutzers.
 
+### notifications-controller
+
+notifications
+    notification
+        type            -- Im Moment nur 'added-to-channel'.
+        timestamp
+        user            -- Analog zu user aus profile-controller.
+        channel         -- Analog zu channel aus channel-controller.
+      
+
 ### topbar-controller
+
+user                    -- Analog zu user aus profile-controller für den eingeloggten
+                           Benutzer.
+
+logout()                -- Loggt den Benutzer aus.
