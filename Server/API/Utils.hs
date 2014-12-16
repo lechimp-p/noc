@@ -69,7 +69,13 @@ userInfo uid = do
             return ()
         else 
             return ()
-    "admin" <$ isAdmin uid
+    c <- isAdmin oid
+    if c
+        then do
+            "admin" <$ isAdmin uid
+            return ()
+        else
+            return ()
 
 channelInfo cid = do
     uid <- forceOperatorId
