@@ -148,7 +148,7 @@ angular.module("update", [])
 
             scope.confirmation = false;
             element.removeClass(confirmationClass);
-        }
+        };
     };
 
     return  { restrict : "A"

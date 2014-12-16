@@ -1,7 +1,7 @@
 	<i ng-show="user" class="icon ion-navicon-round lgicon floatleft pullright shownavbtn "></i>
 	<i class="icon ion-close lgicon floatleft pullright hidenavbtn hidden"></i>
 	<h1 class="floatleft flexelement">urbanoid</h1>
-    <span ng-show="user">[{{notifications.length}}]</span>
+    <span ng-show="user" ng-controller="notifications-controller">[{{notifications.length}}]</span>
 	<button ng-show="user" ng-click="logout()">RAUS!</button>
 	<div class="clear"></div>
 

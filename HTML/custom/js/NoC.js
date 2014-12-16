@@ -8,6 +8,7 @@ angular.module("NoC",
     , "NoC.error"
     , "NoC.topbar"
     , "NoC.login"
+    , "NoC.notifications"
     , "NoC.filters"
     , "NoC.model"
     , "NoC.user" 
