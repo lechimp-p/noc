@@ -142,15 +142,15 @@ module.exports = function (grunt) {
             , tasks : ['copy:custom-img', 'upload-dist']
             }
         , 'custom-controllers' :
-            { files : ['custom/controllers/*']
+            { files : ['custom/controllers/*.jss']
             , tasks : ['copy:custom-controllers', 'upload-dist']
             }
         , 'custom-directives' :
-            { files : ['custom/directives/*']
+            { files : ['custom/directives/*.jss']
             , tasks : ['copy:custom-directives', 'upload-dist']
             }
         , 'custom-partials' :
-            { files : ['custom/partials/*']
+            { files : ['custom/partials/*.html']
             , tasks : ['copy:custom-partials', 'upload-dist']
             }
         },
